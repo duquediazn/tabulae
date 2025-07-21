@@ -1,0 +1,113 @@
+# ------------------------------------------------------------------------------
+# Docker Compose for DEVELOPMENT
+# 
+# Includes:
+# - Live-reload backend and frontend using bind mounts
+# - pgAdmin for database management (optional)
+# - db_test with profile "test" for unit testing (run only when needed)
+#
+# Usage:
+# Run full development stack:
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Run backend test database only:
+#   docker compose -f docker-compose.dev.yml --profile test up db_test
+# ------------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:17
+    container_name: tabulae-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${TABULAE_DB_USER}
+      POSTGRES_PASSWORD: ${TABULAE_DB_PASSWORD}
+      POSTGRES_DB: ${TABULAE_DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db_init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - tabulae-network-dev
+
+  db_test:
+    image: postgres:17
+    container_name: tabulae-db-test
+    restart: always
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+      POSTGRES_DB: test_db
+    ports:
+      - "5433:5432" # Expose on a different port to avoid conflict with main db
+    volumes:
+      - pgdata_test:/var/lib/postgresql/data # Separate persistent volume for testing
+    networks:
+      - tabulae-network-dev
+
+    # PROFILE: This service is only used for backend unit tests.
+    # It will NOT start by default when running `docker compose up`.
+    # To start it explicitly, use:
+    #    docker compose --profile test up db-test
+    #
+    # This helps avoid running unnecessary services during regular development.
+
+    profiles: ["test"]
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: tabulae-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - tabulae-network-dev
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: tabulae-backend
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - tabulae-network-dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: tabulae-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:8000  # Inject Vite env var at runtime (needed in dev with volumes)
+    volumes:
+      - ./frontend:/app           # Mount source code to enable hot reload
+      - /app/node_modules         # Avoid overwriting node_modules with host's empty folder
+    ports:
+      - "5173:5173"               # Expose Vite dev server
+    depends_on:
+      - backend
+    networks:
+      - tabulae-network-dev
+
+volumes:
+  pgdata:
+  pgdata_test: # Volume for isolated test database used in unit testing
+
+networks:
+  tabulae-network-dev:
+    driver: bridge

@@ -1,0 +1,24 @@
+# Development Dockerfile for Vite + React
+# ----------------------------------------
+# This image is optimized for local development.
+# It uses Vite's development server (npm run dev),
+# allowing hot module replacement (HMR) and fast rebuilds.
+
+# Base image with Node.js and npm
+FROM node:lts-alpine
+
+# Set working directory inside the container
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of the frontend source code
+COPY . .
+
+# Expose the Vite dev server port
+EXPOSE 5173
+
+# Run the development server (with HMR)
+CMD ["npm", "run", "dev"]

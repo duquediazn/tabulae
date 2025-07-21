@@ -1,0 +1,64 @@
+# ------------------------------------------------------------------------------
+# Docker Compose for PRODUCTION
+#
+# Includes:
+# - Backend (FastAPI) with Gunicorn
+# - Frontend (Vite built static files served via Nginx)
+# - PostgreSQL database
+#
+# Usage:
+# Build and run the production stack:
+#    docker compose up --build
+# ------------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:17
+    container_name: tabulae-db
+    restart: unless-stopped # Restart unless manually stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${TABULAE_DB_USER}
+      POSTGRES_PASSWORD: ${TABULAE_DB_PASSWORD}
+      POSTGRES_DB: ${TABULAE_DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Persistent volume for production data
+      - ./db_init:/docker-entrypoint-initdb.d # Scripts in this folder are executed on first init (in aphabetical order)
+    ports:
+      - "5432:5432"
+    networks:
+      - tabulae-network # Shared network for internal service communication
+
+  backend:
+    build:
+      context: ./backend # Path to the Dockerfile for the backend
+    container_name: tabulae-backend
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    networks:
+      - tabulae-network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000 # Backend API URL for dev – change to production URL when deploying
+    container_name: tabulae-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    networks:
+      - tabulae-network
+
+volumes:
+  pgdata:
+
+networks:
+  tabulae-network:
+    driver: bridge
