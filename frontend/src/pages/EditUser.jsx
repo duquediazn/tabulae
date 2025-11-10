@@ -165,7 +165,7 @@ export default function EditUser() {
                 id="password"
                 type="password"
                 name="password"
-                minLength={8}
+                minLength={formData.password ? 8 : undefined}
                 maxLength={255}
                 value={formData.password}
                 onChange={handleChange}
