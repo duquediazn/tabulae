@@ -16,22 +16,38 @@ export async function getUserById(id, accessToken) {
 }
 
 export async function updateUser(id, token, data) {
+  const payload = { ...data };
+  if (!data.password) delete payload.password;
+
   const response = await fetch(`${API_URL}/users/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    const message = error.detail || "Failed to update profile.";
+    let message = "Failed to update profile.";
+
+    try {
+      const error = await response.json();
+
+      if (Array.isArray(error.detail)) {
+        message = error.detail.map((e) => e.msg).join("\n");
+      }
+
+      else if (typeof error.detail === "string") {
+        message = error.detail;
+      }
+    } catch {
+      message = await response.text();
+    }
+
     throw new Error(message);
   }
-
-  return await response.json(); // Updated user
+  return await response.json();
 }
 
 export async function getUsers({

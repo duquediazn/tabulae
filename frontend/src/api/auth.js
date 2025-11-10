@@ -22,12 +22,12 @@ export async function login({ email, password }) {
   return await response.json(); // { access_token, token_type }
 }
 
-export async function register({ nombre, email, password }) {
+export async function register({ name, email, password }) {
   const response = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ nombre, email, password: password }),
+    body: JSON.stringify({ name, email, password }),
   });
 
   if (!response.ok) {
