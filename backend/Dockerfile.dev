@@ -1,5 +1,5 @@
 # Development Dockerfile for FastAPI + Uvicorn with auto-reload
-FROM python:3-slim
+FROM python:3.12-slim
 
 EXPOSE 8000
 
