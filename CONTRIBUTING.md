@@ -42,9 +42,12 @@ refactor(stock): simplify stock query logic
 
 > Use git commit -m "type(scope): message" format consistently.
 
-### Example Git Flow (Manual)
+### Example Git Flow (with Protected Branches)
 
-Here’s a typical workflow using develop and a feature/\* branch:
+Because `develop` and `main` are protected, **you never push directly to them.**
+**All changes must go through a PR.**
+
+#### Typical workflow
 
 ```bash
 # Start from develop
@@ -67,38 +70,53 @@ git commit -m "feat(scope): implement X"
 # (Optional) Rebase to clean history
 git rebase -i HEAD~N
 
-# Merge into develop
-git checkout develop
-git pull --rebase origin develop
-git merge feat/some-feature
-
-# Delete local branch
-git branch -d feat/some-feature
-
-# Push changes
-git push origin develop
+# Push the branch
+git push origin feat/some-feature
 ```
-
 > If you rebased before pushing, use the following to avoid overwriting someone else’s work:
 
 ```bash
 git push --force-with-lease
 ```
-
 > --force-with-lease is safer than --force — it only pushes if no one else has updated the branch since your last pull, protecting shared work.
 
+Open a **Pull Request → develop.**
+Once the PR is approved and merged (Squash & Merge):
+```bash
+# Update your local develop after merge
+git checkout develop
+git pull origin develop
+
+# Delete the feature branch
+git branch -d feat/some-feature
+git push origin --delete feat/some-feature
+```
+
 ### Releasing a new version
+Releases also use PRs.
+You never merge to `main` locally.
 
 ```bash
-# Merge develop into main
+# Update local develop
+git checkout develop
+git pull origin develop
+
+# Create a release branch
+git checkout -b release/v1.2.0
+git push origin release/v1.2.0
+```
+
+Open PR → main
+Title example: chore(release): version 1.2.0
+Once merged:
+```bash
+# Locally sync main
 git checkout main
 git pull origin main
-git merge develop
 
-# Tag the release
-git tag -a v1.1.0 -m "Release: feature X completed"
-git push origin main
-git push origin v1.1.0
+# Tag the released version
+git tag -a v1.2.0 -m "Release: version 1.2.0"
+git push origin v1.2.0
 ```
 
 ---
@@ -109,7 +127,7 @@ To keep the project history clean and consistent, all changes must go through a 
 
 ### Pull Request Guidelines
 
-- Open all PRs against the `develop` branch (never directly into `main`).
+- Open PRs into `develop`, except for release branches (`release/*`) which target `main`.
 - Keep PRs focused and concise — one clear purpose per PR.
 - Use clear titles following the Conventional Commits format:
   - `feat(frontend): refactor user form`
@@ -127,10 +145,11 @@ To keep the project history clean and consistent, all changes must go through a 
 
 This repository uses protected branches to ensure a clean and safe workflow:
 
-| Branch | Purpose | Rules |
-|---------|----------|-------|
-| **main** | Stable releases | - Pull Request required<br>- Conversations must be resolved<br>- Linear history required<br>- Force pushes and deletions **not allowed** |
-| **develop** | Ongoing development | - Pull Request required<br>- Conversations must be resolved<br>- Linear history optional<br>- Force pushes and deletions **not allowed** |
+| Branch      | Purpose            | Rules                                                                                                |
+| ----------- | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| **main**    | Stable releases    | - PR required<br>- Conversations resolved<br>- Squash merge<br>- No direct pushes<br>- No force push |
+| **develop** | Active development | - PR required<br>- Conversations resolved<br>- Squash merge<br>- No direct pushes<br>- No force push |
+
 
 All other branches (`feature/*`, `hotfix/*`, `release/*`) are **not protected** and can be freely rebased, squashed, or force-pushed before opening a PR.
 
@@ -142,27 +161,6 @@ All other branches (`feature/*`, `hotfix/*`, `release/*`) are **not protected** 
 - Never rewrite history on `main` or `develop`.
 - Before force-pushing, make sure no one else has updated the branch (`--force-with-lease` is safer than `--force`).
 - Always prefer rebasing over merging to keep the history linear and easy to review.
-
----
-
-### Example PR Flow
-
-```bash
-# Start from develop
-git checkout develop
-git pull origin develop
-
-# Create a feature branch
-git checkout -b feat/improve-docs
-
-# Work and commit changes
-git add .
-git commit -m "docs(usage): fix outdated examples"
-git push origin feat/improve-docs
-
-# Open a Pull Request to 'develop'
-# Review your own code, resolve conversations, then squash & merge when ready
-
 
 ---
 
