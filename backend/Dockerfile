@@ -1,5 +1,5 @@
 # Base image: lightweight Python
-FROM python:3-slim
+FROM python:3.12-slim
 
 # Expose port 8000
 EXPOSE 8000
