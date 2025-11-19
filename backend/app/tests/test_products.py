@@ -451,6 +451,45 @@ def test_update_nonexistent_product_returns_404(client, session):
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 
+def test_admin_cannot_deactivate_product_with_stock(client, session): # this is new!!!
+    category = ProductCategory(name="FakeCategory")
+    session.add(category)
+    session.commit()
+    fake_prod = Product(sku="GHI123", short_name="FakeProd", category_id=category.id)
+    session.add(fake_prod)
+    session.commit()
+    
+    # Create warehouse required by FK
+    session.add(Warehouse(id=555, description="WH555"))
+    session.commit()
+
+    # fake_prod has stock
+    stock = Stock(product_id=fake_prod.id, warehouse_id=555, lot="NO_LOT", quantity=5)
+    session.add(stock)
+    session.commit()
+
+    headers, _ = get_admin_headers(client, session)
+    response = client.put(f"/products/{fake_prod.id}", json={"is_active": False}, headers=headers)
+
+    session.refresh(fake_prod)
+    assert response.status_code == 400
+    assert fake_prod.is_active == True
+
+def test_admin_can_deactivate_products_without_stock(client, session):
+    category = ProductCategory(name="FakeCategory2")
+    session.add(category)
+    session.commit()
+    fake_prod = Product(sku="GHI456", short_name="FakeProd2", category_id=category.id)
+    session.add(fake_prod)
+    session.commit()
+
+    headers, _ = get_admin_headers(client, session)
+    response = client.put(f"/products/{fake_prod.id}", json={"is_active": False}, headers=headers)
+
+    session.refresh(fake_prod)
+    assert response.status_code == 200
+    assert fake_prod.is_active == False
+
 
 # [X] PUT    /products/bulk-status
 
