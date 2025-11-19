@@ -194,32 +194,28 @@ def bulk_update_product_status(
     admin: User = Depends(require_admin),
 ):
     try:
-        products = db.exec(
-            select(Product).where(Product.id.in_(data.ids))
-        ).all()
+        rows = db.exec( 
+            select(
+                Product,
+                func.coalesce(func.sum(Stock.quantity), 0).label("stock_total")
+            )
+            .join(Stock, Stock.product_id == Product.id, isouter=True)
+            .where(Product.id.in_(data.ids))
+            .group_by(Product.id)
+        ).all() # [(Product(...), stock_total), (Product(...), stock_total), ...]
 
-        update_products = []
+        updated_products = []
 
-        for product in products:
+        for product, stock_total in rows:
             if product.is_active == data.is_active:
                 continue
 
-            if data.is_active is False:
-                stock_total = (
-                    db.exec(
-                        select(func.sum(Stock.quantity)).where(
-                            Stock.product_id == product.id
-                        )
-                    ).first()
-                    or 0
-                )
-
-                if stock_total > 0:
-                    continue  # Product still has stock, cannot be deactivated
+            if data.is_active is False and stock_total > 0:
+                continue  # Product still has stock, cannot be deactivated
 
             product.is_active = data.is_active
             db.add(product)
-            update_products.append(product)
+            updated_products.append(product)
 
     except SQLAlchemyError:
         db.rollback()
@@ -227,9 +223,10 @@ def bulk_update_product_status(
 
     db.commit()
     return {
-        "message": f"{len(update_products)} products updated",
-        "skipped": len(data.ids) - len(update_products),
+        "message": f"{len(updated_products)} products updated",
+        "skipped": len(data.ids) - len(updated_products),
     }
+
 
 @router.put("/{id}", response_model=ProductResponse)
 def update_product(
