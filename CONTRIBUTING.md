@@ -125,6 +125,63 @@ git push origin v1.2.0
 
 ---
 
+## Hotfix Workflow (with Protected Branches)
+
+Hotfixes address critical issues that must be applied directly to `main` and deployed quickly.  
+Because both `main` and `develop` are protected branches, all hotfix updates must go through Pull Requests.
+
+---
+
+### 1. Creating a Hotfix
+
+Start a new hotfix branch from `main`:
+```bash
+git checkout main
+git pull origin main
+git checkout -b hotfix/<issue-description>
+```
+Apply the fix, commit using Conventional Commits, and push the branch:
+```bash
+git add .
+git commit -m "fix(scope): describe the fix"
+git push -u origin hotfix/<issue-description>
+```
+Open a Pull Request targeting `main`.
+
+Once approved and merged, tag the new patch version and push the tag:
+```bash
+git checkout main
+git pull origin main
+git tag -a vX.Y.Z -m "Release: version X.Y.Z"
+git push origin vX.Y.Z
+```
+
+### 2. Syncing `develop` After a Hotfix
+
+In Gitflow, any change merged into `main` must also be applied to `develop`, since `develop` represents ongoing work and future releases.
+
+Because `develop` is a protected branch, you cannot update it locally.  
+Instead, open a dedicated Pull Request:
+
+- **base:** `develop`  
+- **compare:** `main`
+
+This PR will contain only the hotfix commits.  
+Use a clear title such as:
+```bash
+chore(sync): merge hotfix changes from main into develop
+```
+After the PR is merged, update your local branches:
+```bash
+git checkout develop
+git pull origin develop
+
+git checkout main
+git pull origin main
+```
+
+---
+
 ## Pull Requests & Branch Protection Policy
 
 To keep the project history clean and consistent, all changes must go through a **Pull Request (PR)**.
