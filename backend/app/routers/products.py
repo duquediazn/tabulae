@@ -239,28 +239,73 @@ def update_product(
 
     try:
         # Search for the product in the database
-        statement = select(Product).where(Product.id == id)
-        product = db.exec(statement).first()
+        product = db.exec(
+            select(Product)
+            .where(Product.id == id)
+        ).first()
+
         if not product:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
             )
+        
         # Validate if the new SKU already exists in another product
-        if product_update.sku:
-            statement = select(Product).where(
-                Product.sku == product_update.sku, Product.id != id
-            )
-            existing_product = db.exec(statement).first()
+        if product_update.sku is not None and product_update.sku != product.sku:
+            existing_product = db.exec(
+                select(Product)
+                .where(Product.sku == product_update.sku, Product.id != id)
+            ).first()
+            
             if existing_product:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="SKU is already in use",
+                )    
+            
+        # Validate category and obtain category name (we need the name in the response as well)
+        if product_update.category_id is None:
+            category_id = product.category_id
+        elif product_update.category_id == product.category_id:
+            category_id = product.category_id
+        else:
+            category_id = product_update.category_id
+
+        # Load the category from the database
+        category = db.get(ProductCategory, category_id)
+        if not category:
+            raise HTTPException(404, detail="The specified category does not exist.")
+
+
+        # Only admin can change `is_active` status
+        if product_update.is_active is not None:
+            if not is_admin_user(current_user):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You do not have permission to change the product's status",
                 )
+        
+            # Validate if the product can be deactivated
+            if product_update.is_active is False:
+                stock_total = (
+                    db.exec(
+                        select(func.sum(Stock.quantity)).where(
+                            Stock.product_id == id
+                        )
+                    ).first()
+                    or 0
+                )
+                
+                if stock_total > 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="This product still has remaining stock and cannot be deactivated.",
+                    )  
+        
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error",
-        )
+        )         
 
     # Apply changes only if provided
     if product_update.sku:
@@ -270,23 +315,14 @@ def update_product(
     if product_update.description:
         product.description = product_update.description
     if product_update.category_id:
-        category = db.get(ProductCategory, product_update.category_id)
-        if not category:
-            raise HTTPException(404, detail="The specified category does not exist.")
-        product.category_id = product_update.category_id
-
-    # Only admin can change `is_active` status
+        product.category_id = category_id
     if product_update.is_active is not None:
-        if not is_admin_user(current_user):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to change the product's status",
-            )
         product.is_active = product_update.is_active
 
     try:
         # Save changes to the database
         db.add(product)
+        db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -299,11 +335,18 @@ def update_product(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal error while updating the product.",
         )
-    db.commit()
+    
+    response = ProductResponse(
+        sku=product.sku,
+        short_name=product.short_name,
+        description=product.description,
+        category_id=product.category_id,
+        category_name=category.name,
+        id=product.id,
+        is_active=product.is_active  
+    )
 
-    category = db.get(ProductCategory, product.category_id)
-
-    return {**product.model_dump(), "category_name": category.name}
+    return response
 
 
 @router.delete("/{id}", response_model=ProductResponse)
