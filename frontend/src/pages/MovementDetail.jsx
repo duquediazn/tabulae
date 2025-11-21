@@ -66,7 +66,7 @@ export default function MovementDetail() {
       <Breadcrumb />
       <div className="p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
-          Movement Detail #{movement.id_mov}
+          Movement Detail #{movement.move_id}
         </h1>
         <button
           role="button"
@@ -110,8 +110,8 @@ export default function MovementDetail() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {movement.lines.map((line) => (
-                <tr key={line.id_line}>
-                  <td className="px-4 py-2">{line.id_line}</td>
+                <tr key={line.line_id}>
+                  <td className="px-4 py-2">{line.line_id}</td>
                   <td className="px-4 py-2">{line.product_name}</td>
                   <td className="px-4 py-2">{line.warehouse_name}</td>
                   <td className="px-4 py-2">{line.lot}</td>
