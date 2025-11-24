@@ -111,10 +111,8 @@ def get_stock_by_warehouse(
             .join(Product, Product.id == Stock.product_id)
             .where(Stock.warehouse_id == warehouse_id)
             .order_by(Stock.warehouse_id, Stock.product_id, Stock.lot)
-            .limit(limit)
-            .offset(offset)
         )
-        stock = db.exec(statement).all()
+        stock = db.exec(statement.limit(limit).offset(offset)).all()
         total_records = db.exec(
             select(func.count()).select_from(statement.subquery())
         ).first()
