@@ -1,5 +1,5 @@
 # Stage 1: Build (Vite + Node.js)
-FROM node:lts-alpine AS builder 
+FROM node:lts-slim AS builder 
 
 # Declare build argument and expose it to the build environment
 ARG VITE_API_URL

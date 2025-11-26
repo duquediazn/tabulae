@@ -5,7 +5,7 @@
 # allowing hot module replacement (HMR) and fast rebuilds.
 
 # Base image with Node.js and npm
-FROM node:lts-alpine
+FROM node:lts-slim
 
 # Set working directory inside the container
 WORKDIR /app
