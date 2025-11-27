@@ -235,51 +235,50 @@ def deactivate_warehouse(
 ):
     """
     Deletes a warehouse only if it has no associated movements.
+    The warehouse must be inactive before deletion.
     Only administrators can perform this action.
     """
-    try:
-        warehouse = db.get(Warehouse, id)
-    except SQLAlchemyError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error",
-        )
 
+    warehouse = db.get(Warehouse, id)
     if not warehouse:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Warehouse not found"
         )
 
-    try:
-        movement_exists = db.exec(
-            select(StockMoveLine).where(StockMoveLine.warehouse_id == id)
-        ).first()
-    except SQLAlchemyError:
+    if warehouse.is_active:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Warehouse must be inactive before it can be deleted"
         )
+
+    # Efficient existence check
+    movement_exists = db.exec(
+        select(1)
+        .where(StockMoveLine.warehouse_id == id)
+        .limit(1)
+    ).first()
 
     if movement_exists:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete this warehouse because it has registered movements.",
+            detail="Cannot delete this warehouse because it has registered movements."
         )
 
     try:
         db.delete(warehouse)
+        db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Integrity error in the database.",
+            detail="Integrity error in the database."
         )
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error while deleting the warehouse. Error: {e}",
+            detail="Internal server error while deleting the warehouse."
         )
-    db.commit()
 
     return warehouse
