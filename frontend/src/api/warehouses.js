@@ -110,3 +110,19 @@ export async function warehouseUpdate(id, data, accessToken) {
 
   return await response.json();
 }
+
+export async function deleteWarehouse(id, accessToken) {
+  const response = await fetch(`${API_URL}/warehouses/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to delete product.");
+  }
+
+  return await response.json();
+}
