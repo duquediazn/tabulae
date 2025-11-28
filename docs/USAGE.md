@@ -510,8 +510,9 @@ You can:
 - See activation status (in green/red)
 - Perform actions:
   - **View** → View details and stats
-  - **Edit** → Change description or status
   - **View stock** → See stock breakdown by product
+  - **Edit** → Change description or status
+  - **Delete** → Delete the warehouse if empty, inactive and has no associated movements (only admins)
 
 ![warehouses list screenshot](./images/warehouses-list.png)
 
