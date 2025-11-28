@@ -235,7 +235,7 @@ def deactivate_warehouse(
 ):
     """
     Deletes a warehouse only if it has no associated movements.
-    The warehouse must be inactive before deletion.
+    The warehouse must be inactive and empty before deletion.
     Only administrators can perform this action.
     """
 
@@ -251,6 +251,24 @@ def deactivate_warehouse(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Warehouse must be inactive before it can be deleted"
         )
+    
+    stock = db.exec(
+        select(1)
+        .where(Stock.warehouse_id == id)
+        .limit(1)
+    ).first()
+
+    if stock:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Warehouse {id} is not empty and therefore cannot be deactivated.",
+        )
+
+    movement_exists = db.exec(
+        select(1)
+        .where(StockMoveLine.warehouse_id == id)
+        .limit(1)
+    ).first()
 
     # Efficient existence check
     movement_exists = db.exec(
