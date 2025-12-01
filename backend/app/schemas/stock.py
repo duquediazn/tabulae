@@ -91,12 +91,13 @@ class StockSemaphore(BaseModel):
     """Schema for stock expiration traffic light endpoint."""
 
     no_expiration: int = Field(
-        ..., ge=0, description="No expiration or expires in more than 6 months"
+        ..., ge=0, description="Stock without expiration date or with expiration date later than 6 months from today."
     )
     expiring_soon: int = Field(
-        ..., ge=0, description="Expires within the next 6 months"
+        ..., ge=0, description="Stock expiring between 1 month and 6 months from today (exclusive ranges: >1 month and <=6 months)."
     )
-    expiring_now: int = Field(..., ge=0, description="Expires within the next month")
+    expired: int = Field(..., ge=0, description="Stock expired or expiring within the next month (expiration date <= 1 month from today)."
+    )
 
     model_config = {"from_attributes": True}
 
