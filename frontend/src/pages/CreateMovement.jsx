@@ -102,8 +102,8 @@ export default function CreateMovement() {
     ) {
       try {
         const lots = await getAvailableLots({
-          product_id: line.product_id,
-          warehouse_id: line.warehouse_id,
+          productId: line.product_id,
+          warehouseId: line.warehouse_id,
           accessToken,
         });
         setAvailableLots((prev) => ({

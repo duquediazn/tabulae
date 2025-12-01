@@ -786,7 +786,7 @@ def get_stock_by_category_detail(
 
 
 @router.get("/available-lots", response_model=list[AvailableLotResponse])
-def get_lots_disponibles(
+def get_available_lots(
     product: int = Query(..., gt=0),
     warehouse: int = Query(..., gt=0),
     db: Session = Depends(get_db),
