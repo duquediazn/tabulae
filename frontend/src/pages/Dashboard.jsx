@@ -114,10 +114,6 @@ export default function Dashboard() {
     }
   };
 
-  const goToExpirationRange = (fromMonths, rangeMonths) => {
-    navigate(`/expiring?from_months=${fromMonths}&range_months=${rangeMonths}`);
-  };
-
   const pieColors = generateColors(productsByWarehouse.length);
 
   return (
@@ -144,7 +140,7 @@ export default function Dashboard() {
                 </div>
                 <div
                   className="cursor-pointer hover:opacity-80 transform hover:scale-105 flex flex-col items-center"
-                  onClick={() => goToExpirationRange(1, 6)}
+                  onClick={() => navigate("/expiration?preset=expiring_soon")}
                 >
                   <div className="w-16 h-16 rounded-full bg-yellow-500 flex items-center justify-center text-white text-lg">
                     {stockStatus?.expiring_soon ?? "-"}
@@ -153,12 +149,12 @@ export default function Dashboard() {
                 </div>
                 <div
                   className="cursor-pointer hover:opacity-80 transform hover:scale-105 flex flex-col items-center"
-                  onClick={() => goToExpirationRange(0, 1)}
+                  onClick={() => navigate("/expiration?preset=expired")}
                 >
                   <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center text-white text-lg">
-                    {stockStatus?.expiring_now ?? "-"}
+                    {stockStatus?.expired ?? "-"}
                   </div>
-                  <p className="text-sm mt-2 text-gray-700">Expiring now</p>
+                  <p className="text-sm mt-2 text-gray-700">Expired</p>
                 </div>
               </div>
             </div>
