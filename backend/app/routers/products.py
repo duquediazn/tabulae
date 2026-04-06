@@ -233,9 +233,9 @@ def update_product(
     id: int,
     product_update: ProductUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
-    """Allows updating a product (any user can do it, but only admins can change `is_active`)."""
+    """Allows updating a product. Only admin users can update products."""
 
     try:
         # Search for the product in the database
@@ -263,12 +263,7 @@ def update_product(
                 )    
             
         # Validate category and obtain category name (we need the name in the response as well)
-        if product_update.category_id is None:
-            category_id = product.category_id
-        elif product_update.category_id == product.category_id:
-            category_id = product.category_id
-        else:
-            category_id = product_update.category_id
+        category_id = product_update.category_id if product_update.category_id is not None else product.category_id
 
         # Load the category from the database
         category = db.get(ProductCategory, category_id)
@@ -276,15 +271,8 @@ def update_product(
             raise HTTPException(404, detail="The specified category does not exist.")
 
 
-        # Only admin can change `is_active` status
+        # If the active state is being updated, validate if the product can be deactivated
         if product_update.is_active is not None:
-            if not is_admin_user(current_user):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You do not have permission to change the product's status",
-                )
-        
-            # Validate if the product can be deactivated
             if product_update.is_active is False:
                 stock_total = (
                     db.exec(
@@ -308,13 +296,13 @@ def update_product(
         )         
 
     # Apply changes only if provided
-    if product_update.sku:
+    if product_update.sku is not None:
         product.sku = product_update.sku
-    if product_update.short_name:
+    if product_update.short_name is not None:
         product.short_name = product_update.short_name
-    if product_update.description:
+    if product_update.description is not None:
         product.description = product_update.description
-    if product_update.category_id:
+    if product_update.category_id is not None:
         product.category_id = category_id
     if product_update.is_active is not None:
         product.is_active = product_update.is_active
@@ -372,11 +360,11 @@ def delete_product(
     try:
         db.delete(product)
         db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="This product has associated movements and cannot be deleted.")
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="This product has associated movements and cannot be deleted.",
-        )
+        raise HTTPException(status_code=500, detail="Database connection error")
 
     return {**product.model_dump(), "category_name": category.name}
