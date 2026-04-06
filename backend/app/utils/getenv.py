@@ -6,5 +6,5 @@ load_dotenv()
 def get_required_env(name: str) -> str:
     value = os.getenv(name)
     if not value:
-        raise Exception(f"Environment variable '{name}' is required but not found.")
+        raise EnvironmentError(f"Environment variable '{name}' is required but not found.")
     return value
