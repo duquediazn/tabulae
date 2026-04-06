@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, func, select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.dependencies import require_admin
-from app.models import user
 from app.models.database import get_db
 from app.models.stock_move_line import StockMoveLine
 from app.models.stock import Stock

@@ -881,7 +881,7 @@ def get_available_lots(
             for row in results
         ]
 
-    except Exception as e:
+    except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error fetching available lots",
