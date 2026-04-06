@@ -53,3 +53,4 @@ dist-ssr
 *.sw?
 *.swp
 *.sublime*
+.github/
