@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date, datetime, time, timezone
 from sqlite3 import IntegrityError
 from dateutil.relativedelta import relativedelta
@@ -75,28 +76,30 @@ def get_movements(
         total_records = (
             db.exec(select(func.count()).select_from(statement.subquery())).first() or 0
         )
+        
+        # Extract move_ids from the results to fetch lines in a single query
+        move_ids = [movement.move_id for movement, _ in results]
+        
+        # Fetch all lines for the retrieved movements in a single query
+        all_lines = db.exec(
+            select(StockMoveLine).where(StockMoveLine.move_id.in_(move_ids))
+        ).all() 
 
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error",
         )
-
+    
+    # List to hold the final response objects
     movements_response = []
 
-    for movement, user_name in results:
-        try:
-            movement_lines = db.exec(
-                select(StockMoveLine)
-                .where(StockMoveLine.move_id == movement.move_id)
-                .order_by(StockMoveLine.line_id)
-            ).all()
-        except SQLAlchemyError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Database connection error",
-            )
+    # Group lines by move_id for easy association with movements
+    lines_by_move = defaultdict(list) # defaultdict to automatically create a list for new keys
+    for line in all_lines: 
+        lines_by_move[line.move_id].append(line)
 
+    for movement, user_name in results:
         movements_response.append(
             StockMoveResponse(
                 move_id=movement.move_id,
@@ -106,7 +109,7 @@ def get_movements(
                 user_name=user_name,
                 lines=[
                     StockMoveLineResponse.model_validate(line)
-                    for line in movement_lines
+                    for line in lines_by_move[movement.move_id]
                 ],
             )
         )
