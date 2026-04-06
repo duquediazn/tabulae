@@ -9,7 +9,7 @@ import Users from "../pages/Users";
 import Profile from "../pages/Profile";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
-import ExpiringStock from "../pages/ExpiringStock";
+import ExpirationStock from "../pages/ExpirationStock";
 import MovementList from "../pages/MovementList";
 import MovementDetail from "../pages/MovementDetail";
 import ProductList from "../pages/ProductList";
@@ -65,7 +65,7 @@ export default function AppRouter() {
         <Route path="/stock-movements" element={<StockMovements />} />
         <Route path="/warehouses" element={<Warehouses />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/expiring" element={<ExpiringStock />} />
+        <Route path="/expiration" element={<ExpirationStock />} />
         <Route path="/stock-movements/new" element={<CreateMovement />} />
         <Route path="/stock-movements/list" element={<MovementList />} />
         <Route path="/stock-movements/:id" element={<MovementDetail />} />

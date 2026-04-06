@@ -1,12 +1,16 @@
 # Tabulae
 
-An inventory management platform built as a portfolio project to explore full-stack development.
-Designed to deepen skills in modern tech stacks such as FastAPI, React, Docker, PostgreSQL, and more.
+A full-stack inventory management platform built with FastAPI, React, and PostgreSQL — featuring JWT authentication, role-based access control, real-time WebSocket updates, and a fully Dockerized deployment.
+
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.121-009688?logo=fastapi&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791?logo=postgresql&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white) ![License](https://img.shields.io/badge/License-GPLv3-brightgreen)
+
+![Tabulae dashboard](./docs/images/dashboard-readme.png)
 
 ## Table of Contents
 
 - [About the Project](#about-the-project)
 - [Main Features](#main-features)
+- [Technical Highlights](#technical-highlights)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
@@ -32,28 +36,7 @@ Built from scratch, Tabulae features a clear separation between frontend and bac
 
 It includes JWT authentication, role-based access, CSV exports, and real-time WebSocket notifications — all structured with scalability and modularity in mind.
 
-### Why Tabulae? Why inventory management?
-
-The name _Tabulae_ comes from Latin — it means boards, records, or tablets — a nod to both ancient inventories and modern databases.
-
-Why build an inventory management app, when there are so many out there already?
-
-Because inventory systems may seem simple at first glance… and then wonderfully complex under the hood. They involve:
-
-- users and permissions,
-- relational data and business logic,
-- forms, filters, tables, exports, imports...
-- stock calculations and validation,
-- batch and expiration tracking,
-- and even real-time updates!
-
-In other words: they touch **every layer** of a full-stack application.
-
-Inventory management is also a classic domain in programming tutorials — and for good reason. It's one of the best playgrounds to explore core concepts in web development while building something real and useful.
-
-And let’s be honest: inventory and logistics are one of the pillars of civilization.
-
-But above all, _Tabulae_ was created as a personal learning journey — a structured way to practice, connect concepts, and build something meaningful while drinking tea and debugging forms.
+The name _Tabulae_ comes from Latin — meaning boards, records, or tablets — a nod to both ancient inventories and modern databases. Inventory systems are a great domain for full-stack projects: they touch every layer of an application — auth, relational data, business logic, real-time updates, and data visualization — which made them the perfect challenge to build from the ground up.
 
 ---
 
@@ -91,6 +74,17 @@ But above all, _Tabulae_ was created as a personal learning journey — a struct
 
 - **Fully Dockerized setup**  
   Easy to run with Docker Compose. Includes backend, frontend, and PostgreSQL container orchestration.
+
+---
+
+## Technical Highlights
+
+- **Layered backend architecture** — Clear separation between models (SQLModel), schemas (Pydantic), and routers (FastAPI), with shared `Depends()` injection for auth, sessions, and permissions.
+- **JWT access + refresh token flow** — Short-lived access tokens paired with refresh tokens, with role-based guards (`require_admin`) applied at the dependency layer.
+- **Isolated test database** — Pytest uses a dedicated PostgreSQL container (port 5433) with per-test session cleanup, ensuring fully isolated and reproducible tests.
+- **Paginated responses** — All list endpoints return a consistent `{ data, total, limit, offset }` shape, ready for frontend pagination.
+- **Real-time WebSocket notifications** — Stock movement events broadcast to connected clients via a WebSocket endpoint.
+- **Docker Compose orchestration** — Separate dev (hot reload, pgAdmin) and production (Nginx + Gunicorn) configurations with independent Dockerfiles per service.
 
 ---
 
@@ -332,15 +326,6 @@ The frontend is built with Vite and served by Nginx, while the backend runs unde
 
 > ⚙️ See [Production Setup](./docs/SETUP.md#production-setup) for details on services, ports, volumes, and environment configuration.
 
-### Previous deployment (legacy)
-
-In earlier stages of development, the frontend and backend were deployed separately using:
-
-- [Vercel](https://vercel.com/) → React frontend
-- [Render](https://render.com/) → FastAPI backend
-
-These setups have been deprecated in favor of a unified Docker deployment.
-
 ### Future improvements
 
 The project is structured to support future deployment strategies, including:
@@ -380,10 +365,9 @@ The following documents provide more detail about using, installing, and evolvin
 
 ## Contributing
 
-Contributions are welcome!  
-If you’d like to report a bug, suggest a feature, or open a pull request, please follow the guidelines.
+Feedback, bug reports, and forks are welcome. If you spot something that could be improved or find an issue, feel free to open an issue or submit a pull request.
 
-> See [CONTRIBUTING.md](./CONTRIBUTING.md) for full details.
+> See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch conventions, commit guidelines, and PR workflow.
 
 ---
 
@@ -397,4 +381,4 @@ This project is licensed under the GNU General Public License v3.0.
 
 ## Author
 
-Tabulae was designed and developed by [@duquediazn](https://github.com/duquediazn) as a learning journey through the full-stack development realms. This is the result of months of learning, frustation, curiosity and quite a lot of tea.
+Tabulae was designed and developed by [@duquediazn](https://github.com/duquediazn) — a web developer with a focus on full-stack applications, clean architecture, and practical tooling. This project represents months of learning, problem-solving, and hands-on exploration across the entire stack.

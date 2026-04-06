@@ -3,7 +3,7 @@ import { useAuth } from "../context/useAuth";
 import Navbar from "../components/Navbar";
 import Breadcrumb from "../components/Breadcrumb";
 import Pagination from "../components/Pagination";
-import { getAllWarehouses, warehousesBulkUpdate } from "../api/warehouses";
+import { getAllWarehouses, warehousesBulkUpdate, deleteWarehouse } from "../api/warehouses";
 import { useNavigate } from "react-router-dom";
 import SearchInput from "../components/SearchInput";
 import SelectFilter from "../components/SelectFilter";
@@ -52,6 +52,19 @@ export default function WarehouseList() {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
+  };
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this warehouse?");
+    if (!confirmDelete) return;
+
+    try {
+      await deleteWarehouse(id, accessToken);
+      alert("Warehouse deleted successfully");
+      fetchWarehouses();
+    } catch (error) {
+      alert(error.message || "Error deleting the product");
+    }
   };
 
   useEffect(() => {
@@ -229,6 +242,19 @@ export default function WarehouseList() {
                       >
                         View
                       </button>
+                      <button
+                        role="button"
+                        onClick={() => {
+                          console.log(
+                            "Navigating to stock of warehouse:",
+                            w
+                          );
+                          navigate(`/stock/warehouse/${w.id}`);
+                        }}
+                        className="text-indigo-600 hover:underline"
+                      >
+                        View stock
+                      </button>
                       {user?.role === "admin" && (
                         <>
                           <button
@@ -240,16 +266,10 @@ export default function WarehouseList() {
                           </button>
                           <button
                             role="button"
-                            onClick={() => {
-                              console.log(
-                                "Navigating to stock of warehouse:",
-                                w
-                              );
-                              navigate(`/stock/warehouse/${w.id}`);
-                            }}
-                            className="text-indigo-600 hover:underline"
+                            onClick={() => handleDelete(w.id)}
+                            className="text-red-600 hover:underline"
                           >
-                            View stock
+                            Delete
                           </button>
                         </>
                       )}

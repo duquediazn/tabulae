@@ -17,6 +17,72 @@ This project is maintained as a portfolio and learning tool, but contributions a
 
 ---
 
+## Contributing as an External Collaborator (Fork Workflow)
+
+If you don't have write access to this repository, you'll need to fork it first.
+
+### 1. Fork and clone
+
+Fork the repository on GitHub, then clone your fork locally:
+
+```bash
+git clone https://github.com/<your-username>/tabulae.git
+cd tabulae
+```
+
+### 2. Add the upstream remote
+
+Add the original repository as `upstream` so you can keep your fork in sync:
+
+```bash
+git remote add upstream https://github.com/duquediazn/tabulae.git
+```
+
+You should now have two remotes:
+- `origin` → your fork
+- `upstream` → the original repository
+
+### 3. Sync before starting work
+
+Always sync your local `develop` with `upstream` before creating a new branch:
+
+```bash
+git checkout develop
+git fetch upstream
+git rebase upstream/develop
+git push origin develop
+```
+
+### 4. Create a feature branch and work
+
+Follow the same branching and commit conventions described below. Push to your fork:
+
+```bash
+git checkout -b feat/your-feature
+# ... make changes and commit ...
+git push origin feat/your-feature
+```
+
+### 5. Open a Pull Request
+
+Open a Pull Request from `<your-username>/tabulae:feat/your-feature` → `duquediazn/tabulae:develop` on GitHub.
+
+### 6. After the PR is merged
+
+Sync your fork again so it stays up to date:
+
+```bash
+git checkout develop
+git fetch upstream
+git rebase upstream/develop
+git push origin develop
+git branch -d feat/your-feature
+```
+
+> The rest of this document (branching model, commit format, PR guidelines, testing) applies the same way regardless of whether you have direct access or are working from a fork.
+
+---
+
 ## Branching and Commit Flow
 
 This project follows a simplified [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/) structure:
@@ -121,6 +187,63 @@ git pull origin main
 # Tag the released version
 git tag -a v1.2.0 -m "Release: version 1.2.0"
 git push origin v1.2.0
+```
+
+---
+
+## Hotfix Workflow (with Protected Branches)
+
+Hotfixes address critical issues that must be applied directly to `main` and deployed quickly.  
+Because both `main` and `develop` are protected branches, all hotfix updates must go through Pull Requests.
+
+---
+
+### 1. Creating a Hotfix
+
+Start a new hotfix branch from `main`:
+```bash
+git checkout main
+git pull origin main
+git checkout -b hotfix/<issue-description>
+```
+Apply the fix, commit using Conventional Commits, and push the branch:
+```bash
+git add .
+git commit -m "fix(scope): describe the fix"
+git push -u origin hotfix/<issue-description>
+```
+Open a Pull Request targeting `main`.
+
+Once approved and merged, tag the new patch version and push the tag:
+```bash
+git checkout main
+git pull origin main
+git tag -a vX.Y.Z -m "Release: version X.Y.Z"
+git push origin vX.Y.Z
+```
+
+### 2. Syncing `develop` After a Hotfix
+
+In Gitflow, any change merged into `main` must also be applied to `develop`, since `develop` represents ongoing work and future releases.
+
+Because `develop` is a protected branch, you cannot update it locally.  
+Instead, open a dedicated Pull Request:
+
+- **base:** `develop`  
+- **compare:** `main`
+
+This PR will contain only the hotfix commits.  
+Use a clear title such as:
+```bash
+chore(sync): merge hotfix changes from main into develop
+```
+After the PR is merged, update your local branches:
+```bash
+git checkout develop
+git pull origin develop
+
+git checkout main
+git pull origin main
 ```
 
 ---

@@ -55,7 +55,7 @@ This guide walks through the main user-facing features of the Tabulae inventory 
 
 ## Sign In and Register
 
-To start using Tabulae, users must log in with their credentials or create an account if they don't have one.  
+To start using Tabulae, users must log in with their credentials or create an account if they don't have one.
 
 ### Login
 
@@ -67,11 +67,11 @@ If the credentials are valid and your user is active, you will be redirected to 
 
 **Default demo users** (created automatically when running the app with Docker):
 
-| Name           | Email               | Password       | Role   | Status   |
-|----------------|---------------------|----------------|--------|----------|
-| Alice Smith    | alice@example.com   | alice_example  | Admin  | Active   |
-| Bob Johnson    | bob@example.com     | bob_example    | User   | Active   |
-| Charlie Lee    | charlie@example.com | charlie_example| User   | Inactive |
+| Name        | Email               | Password        | Role  | Status   |
+| ----------- | ------------------- | --------------- | ----- | -------- |
+| Alice Smith | alice@example.com   | alice_example   | Admin | Active   |
+| Bob Johnson | bob@example.com     | bob_example     | User  | Active   |
+| Charlie Lee | charlie@example.com | charlie_example | User  | Inactive |
 
 > You can use these accounts for testing.
 
@@ -84,8 +84,8 @@ If the credentials are valid and your user is active, you will be redirected to 
 Click on “Register here” from the login page to create a new account.  
 You’ll be asked to provide:
 
-- Full name  
-- Email address  
+- Full name
+- Email address
 - Password (8 characters minimum)
 
 Once submitted, a confirmation message will appear.
@@ -95,7 +95,6 @@ Once submitted, a confirmation message will appear.
 
 ![register screenshot](./images/register.png)
 
-
 ## Dashboard
 
 After logging in, you’ll land on the dashboard — the main overview of your stock and warehouse activity.
@@ -103,7 +102,6 @@ After logging in, you’ll land on the dashboard — the main overview of your s
 ![dashboard screenshot](./images/dashboard.png)
 
 ---
-
 
 ### Navigation
 
@@ -117,8 +115,8 @@ After logging in, you’ll land on the dashboard — the main overview of your s
 This section uses colored circles to summarize product expiration states:
 
 - 🟢 **No expiration**: Products without an expiration date or with an expiration date more than six months from today.
-- 🟡 **Expiring soon**: Products that expire between one and six months from today.
-- 🔴 **Expiring now**: Products that expire within the next 30 days (≤ 1 month).
+- 🟡 **Expiring soon**: Products that expire between one (non inclusive) and six months from today.
+- 🔴 **Expired**: Products already expired or that expire within the next 30 days (≤ 1 month).
 
 ![traffic light chart screenshot](./images/traffic-light-chart.png)
 
@@ -195,7 +193,7 @@ At the top of the Products page, you’ll find quick links for:
 
 - ➕ **Create product** (admin only)
 - 📋 **View product list**
-- 🧪 **By expiration** – navigate to the expiring stock filter view
+- 🧪 **Products expiring soon** – navigate to the products by expiration stock filter view
 
 ![quick access screenshot](./images/products-quick-access.png)
 
@@ -238,7 +236,6 @@ If the desired category doesn't exist, you can add it directly from the form.
 
 > 💡 Tip: All products must belong to a category and use capital letters/numbers for SKUs.
 
-
 ## Categories & Product Details
 
 ---
@@ -259,19 +256,19 @@ Each name must be between 3 and 50 characters.
 
 ---
 
-### Expiring Stock
+### Products by Expiration
 
-From the **Products** menu or the **dashboard traffic light**, you can access a dedicated view of expiring products.
+From the **Products** menu or the **dashboard traffic light**, you can access a dedicated view of products by expiration.
 
 This table displays:
 
-- Product name and SKU  
-- Warehouse and lot  
-- Expiration date  
-- Quantity available  
+- Product name and SKU
+- Warehouse and lot
+- Expiration date
+- Quantity available
 - Actions to view stock history or create an outgoing movement directly
 
-You can filter this view by time range using the dashboard controls.
+> Note: In the current version this list will show products expiring between 1 and 6 month from the current date. Future improvements will allow the user to filter this view by time range, etc.
 
 ![expiring products screenshot](./images/expiring-products.png)
 
@@ -281,10 +278,10 @@ You can filter this view by time range using the dashboard controls.
 
 From the product list, you have quick access to:
 
-- **View** → See product details  
-- **View stock** → See stock summary across warehouses  
-- **Edit** (admin only) → Update name, description, category, or status  
-- **Delete** (admin only) → Remove the product if allowed  
+- **View** → See product details
+- **View stock** → See stock summary across warehouses
+- **Edit** (admin only) → Update name, description, category, or status
+- **Delete** (admin only) → Remove the product if allowed
 
 ![product actions screenshot](./images/product-actions.png)
 
@@ -294,9 +291,9 @@ From the product list, you have quick access to:
 
 The edit form allows you to:
 
-- Modify SKU, name, description, or category  
-- Add a new category inline if needed  
-- Activate or deactivate the product  
+- Modify SKU, name, description, or category
+- Add a new category inline if needed
+- Activate or deactivate the product
 - Delete it permanently (if allowed)
 
 ![edit product screenshot](./images/product-edit-form.png)
@@ -307,8 +304,8 @@ The edit form allows you to:
 
 Clicking **View stock** opens a summary showing the product’s distribution across warehouses.
 
-- See stock per warehouse and total  
-- Click “View warehouse history” for details  
+- See stock per warehouse and total
+- Click “View warehouse history” for details
 - Or “View total history” for the full product lifecycle
 
 ![product stock summary screenshot](./images/product-stock-summary.png)
@@ -319,7 +316,7 @@ Clicking **View stock** opens a summary showing the product’s distribution acr
 
 Shows how the product’s quantity changed over time in one specific warehouse.
 
-- Includes a **line chart** of stock evolution  
+- Includes a **line chart** of stock evolution
 - And a **table of movements** with type, date, lot, and user
 
 ![product history by warehouse screenshot](./images/product-history-warehouse.png)
@@ -330,7 +327,7 @@ Shows how the product’s quantity changed over time in one specific warehouse.
 
 The complete historical view shows all stock changes for the product, across all warehouses.
 
-- Line chart to visualize changes  
+- Line chart to visualize changes
 - Table of all movements (incoming/outgoing)
 
 Ideal for audits, incident analysis, or inventory trends.
@@ -340,7 +337,6 @@ Ideal for audits, incident analysis, or inventory trends.
 ---
 
 > 💡 Tip: Use “View stock” and “View history” actions to access these insights quickly from any product.
-
 
 ## Stock Movements
 
@@ -379,17 +375,18 @@ You must:
    - Quantity
 
 **Smart autocomplete**:
+
 - Warehouse and product fields use search-as-you-type (min. 4 characters)
 - For **outgoing movements**, selecting a product + warehouse loads available lots
 
 You can:
+
 - Add or remove lines
 - Register multiple items in a single movement
 
 Once submitted, the movement is saved and reflected in product stock and history.
 
 ![new movement screenshot](./images/stock-movement-create.png)
-
 
 ### Stock Movements List
 
@@ -439,7 +436,6 @@ Useful for audit purposes or confirming stock updates.
 
 > 💡 Tip: Each movement updates the stock in real time and is immediately reflected across product and warehouse views.
 
-
 ## Warehouses
 
 The **Warehouses** section gives you visual insights and quick access to stock data grouped by location.
@@ -455,12 +451,13 @@ From the main page, you can:
 
 You’ll also see two interactive charts:
 
-1. **Total stock per warehouse** (bar chart)  
-   - Shows the total quantity stored in each location  
+1. **Total stock per warehouse** (bar chart)
+
+   - Shows the total quantity stored in each location
    - Click on a bar to load the second chart
 
-2. **Products in selected warehouse** (pie chart)  
-   - Breaks down the selected warehouse’s stock by product  
+2. **Products in selected warehouse** (pie chart)
+   - Breaks down the selected warehouse’s stock by product
    - Click on a product to view its history within that warehouse
 
 This is useful for identifying stock concentration and navigating directly to deeper insights.
@@ -510,8 +507,9 @@ You can:
 - See activation status (in green/red)
 - Perform actions:
   - **View** → View details and stats
-  - **Edit** → Change description or status
   - **View stock** → See stock breakdown by product
+  - **Edit** → Change description or status
+  - **Delete** → Delete the warehouse if empty, inactive and has no associated movements (only admins)
 
 ![warehouses list screenshot](./images/warehouses-list.png)
 
@@ -521,8 +519,8 @@ You can:
 
 From the **Warehouses List**, clicking "View" opens the detail page of that warehouse.
 
-- See its ID, description and current status  
-- Use the **Edit warehouse** button to change name or toggle active/inactive  
+- See its ID, description and current status
+- Use the **Edit warehouse** button to change name or toggle active/inactive
 
 ![warehouse detail screenshot](./images/warehouse-detail.png)
 
@@ -532,9 +530,9 @@ From the **Warehouses List**, clicking "View" opens the detail page of that ware
 
 You can:
 
-- Change the warehouse description  
-- Activate or deactivate it  
-- Cancel or save the changes  
+- Change the warehouse description
+- Activate or deactivate it
+- Cancel or save the changes
 
 ![edit warehouse screenshot](./images/warehouse-edit.png)
 
@@ -544,10 +542,10 @@ You can:
 
 Clicking “View stock” opens a table with:
 
-- List of products stored in that warehouse  
-- Each row includes product name, SKU and quantity  
-- Use the **View history** link to see movement history for that product in this warehouse  
-- The last row shows the total quantity and allows viewing complete movement history of the warehouse  
+- List of products stored in that warehouse
+- Each row includes product name, SKU and quantity
+- Use the **View history** link to see movement history for that product in this warehouse
+- The last row shows the total quantity and allows viewing complete movement history of the warehouse
 
 ![stock per warehouse screenshot](./images/warehouse-stock.png)
 

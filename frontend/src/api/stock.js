@@ -12,7 +12,7 @@ export async function getSemaphore(accessToken) {
     throw new Error(error.detail || "Failed to fetch semaphore state.");
   }
 
-  return await response.json(); // { no_expiry, expiring_soon, expired }
+  return await response.json(); // { no_expiration, expiring_soon, expired }
 }
 
 export async function getWarehouseDetail(accessToken) {
@@ -224,10 +224,24 @@ export async function getAvailableLots({ productId, warehouseId, accessToken }) 
   return await response.json(); // [{ lot, expiration_date, quantity }]
 }
 
-export async function getExpiringProducts({ accessToken, fromMonths, rangeMonths, limit, offset }) {
-  const url = new URL(`${API_URL}/stock/product/expiring`);
-  url.searchParams.append("from_months", fromMonths);
-  url.searchParams.append("range_months", rangeMonths);
+export async function getExpirationProducts({
+  accessToken,
+  preset,
+  fromDate,
+  toDate,
+  limit = 10,
+  offset = 0,
+}) {
+  const url = new URL(`${API_URL}/stock/product/expiration`);
+
+  // Only allow one mode: preset OR dates
+  if (preset) {
+    url.searchParams.append("preset", preset);
+  } else {
+    if (fromDate) url.searchParams.append("from_date", fromDate);
+    if (toDate) url.searchParams.append("to_date", toDate);
+  }
+
   url.searchParams.append("limit", limit);
   url.searchParams.append("offset", offset);
 
@@ -239,8 +253,9 @@ export async function getExpiringProducts({ accessToken, fromMonths, rangeMonths
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail || "Failed to fetch expiring products.");
+    throw new Error(error.detail || "Failed to fetch products by expiration.");
   }
 
   return await response.json();
 }
+

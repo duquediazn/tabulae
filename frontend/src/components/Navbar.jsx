@@ -53,7 +53,7 @@ export default function Navbar() {
           name: "Create new",
           href: "/products/new",
         },
-        { name: "By expiration", href: "/expiring?from_months=0&range_months=6" },
+        { name: "Products expiring soon", href: "/expiration?preset=expiring_soon" },
         user?.role === "admin" && {
           name: "Manage categories",
           href: "/categories",

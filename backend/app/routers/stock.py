@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import List
 from dateutil.relativedelta import relativedelta
 from app.models.product_category import ProductCategory
@@ -181,28 +181,92 @@ def get_stock_by_warehouse_pie_chart(
 
 
 @router.get(
-    "/product/expiring",
+    "/product/expiration",
     response_model=PaginatedStockResponse,
 )
-def get_stock_by_product_expiration_date(
-    from_months: int = Query(
-        0, ge=0, description="Start of the expiration window in months from today"
+def get_stock_by_expiration(
+    preset: str | None = Query(
+        None,
+        description="Preset filter: expired, expiring_soon, no_expiration"
     ),
-    range_months: int = Query(
-        1, ge=1, description="Duration of the expiration window in months"
+    from_date: date | None = Query(
+        None,
+        description="Start of the expiration window (incluive)"
+    ),
+    to_date: date | None = Query(
+        None, 
+        description="End of expiration window (exclusive)"
     ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
 ):
-    """Returns total stock of products expiring within a given date range (relative to today)."""
+    """
+    Returns stock filtered by expiration date using either:
+    - Predefined presets (expired, expiring_soon, no_expiration)
+    - Custom date ranges (from_date, to_date)
+    """
+
+    today = datetime.now(timezone.utc).date()
+    in_1_month = today + relativedelta(months=1)
+    in_6_months = today + relativedelta(months=6)
+
+    # Validations:
+    # No filters at all
+    if not preset and not from_date and not to_date:
+        raise HTTPException(
+            400,
+            "No expiration filter provided. Use a preset or date range.",
+        )
+
+    # Preset + dates mixed
+    if preset and (from_date or to_date):
+        raise HTTPException(
+            400,
+            "Use either 'preset' OR 'from_date/to_date', not both.",
+        )
+
+    # Invalid date range
+    if from_date and to_date and from_date >= to_date:
+        raise HTTPException(
+            400,
+            "'from_date' must be earlier than 'to_date'."
+        )
+
+    # Build WHERE clauses
+    filters = [Stock.quantity > 0]
+
+    if preset:
+        if preset == "expired":
+            filters.append(Stock.expiration_date != None)
+            filters.append(Stock.expiration_date <= in_1_month)
+
+        elif preset == "expiring_soon":
+            filters.append(Stock.expiration_date > in_1_month)
+            filters.append(Stock.expiration_date <= in_6_months)
+
+        elif preset == "no_expiration":
+            filters.append(
+                (Stock.expiration_date == None)
+                | (Stock.expiration_date > in_6_months)
+            )
+
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid preset: {preset}"
+            )
+
+    else:
+        # Custom date filtering
+        if from_date:
+            filters.append(Stock.expiration_date >= from_date)
+
+        if to_date:
+            filters.append(Stock.expiration_date < to_date)
 
     try:
-        today_utc = datetime.now(timezone.utc).date()
-        start_date = today_utc + relativedelta(months=from_months)
-        end_date = start_date + relativedelta(months=range_months)
-
         statement = (
             select(
                 Stock.warehouse_id,
@@ -216,11 +280,7 @@ def get_stock_by_product_expiration_date(
             )
             .join(Warehouse, Warehouse.id == Stock.warehouse_id)
             .join(Product, Product.id == Stock.product_id)
-            .where(
-                Stock.expiration_date > start_date,
-                Stock.expiration_date <= end_date,
-                Stock.quantity > 0,
-            )
+            .where(*filters)
         )
 
         stock = db.exec(statement.limit(limit).offset(offset)).all()
@@ -628,11 +688,10 @@ def get_stock_status_semaphore(
         in_1_month = today + relativedelta(months=1)
         in_6_months = today + relativedelta(months=6)
 
-        expiring_now = (
+        expired = (
             db.exec(
                 select(func.sum(Stock.quantity)).where(
                     Stock.expiration_date != None,
-                    Stock.expiration_date > today,
                     Stock.expiration_date <= in_1_month,
                 )
             ).first()
@@ -666,7 +725,7 @@ def get_stock_status_semaphore(
         )
 
     return {
-        "expiring_now": expiring_now,
+        "expired": expired,
         "expiring_soon": expiring_soon,
         "no_expiration": no_expiration,
     }

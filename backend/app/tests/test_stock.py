@@ -9,7 +9,7 @@ TESTED ENDPOINTS:
 [x] GET    /stock/product/{product_id}
 [x] GET    /stock/product-categories
 [x] GET    /stock/category/{category_id}/products
-[x] GET    /stock/product/expiring
+[x] GET    /stock/product/expiration
 [x] GET    /stock/semaphore
 [x] GET    /stock/warehouse/{warehouse_id}/product/{product_id}
 [x] GET    /stock/available-lots
@@ -21,6 +21,7 @@ TESTED ENDPOINTS:
 
 from sqlmodel import select
 from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
 
 from app.models.product import Product
 from app.models.stock import Stock
@@ -339,53 +340,210 @@ def test_category_with_no_stock_returns_empty_list(client, session):
     assert data == []
 
 
-# [x] GET    /stock/product/expiring
+# [x] GET    /stock/product/expiration
 
+def test_admin_can_get_expired_products(client, session):
+    """Admin should retrieve products expired or expiring within 1 month."""
 
-def test_admin_can_get_expiring_products_by_date_range(client, session):
-    """Ensure admin can retrieve products expiring within a time window"""
     headers, _ = get_admin_headers(client, session)
 
-    category = ProductCategory(name="ExpireCat")
+    category = ProductCategory(name="CatExpired")
     session.add(category)
     session.commit()
 
     product = Product(
-        id=13, sku="EXP123", short_name="Expiring", category_id=category.id
+        id=101, sku="EXPIRED01", short_name="Expired", category_id=category.id
     )
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=11, description="WH Exp", is_active=True)
+    warehouse = Warehouse(id=201, description="WH Expired", is_active=True)
     session.add(warehouse)
     session.commit()
 
-    # Stock that expires in ~1.5 months
-    future_date = date.today() + timedelta(days=45)
+    today = date.today()
+    in_10_days = today + timedelta(days=10)
+
     stock = Stock(
-        warehouse_id=11,
-        product_id=13,
-        lot="EXP1",
-        expiration_date=future_date,
+        warehouse_id=201,
+        product_id=101,
+        lot="LOT1",
+        expiration_date=in_10_days,   # ≤ 1 mes → expired
         quantity=5,
     )
     session.add(stock)
     session.commit()
 
     response = client.get(
-        "/stock/product/expiring?from_months=1&range_months=1", headers=headers
+        "/stock/product/expiration?preset=expired",
+        headers=headers
     )
+
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] >= 1
-    assert any(item["sku"] == "EXP123" for item in data["data"])
+    assert data["total"] == 1
+    assert data["data"][0]["sku"] == "EXPIRED01"
+
+def test_admin_can_get_expiring_soon_products(client, session):
+    """Admin should retrieve products expiring between 1 and 6 months."""
+
+    headers, _ = get_admin_headers(client, session)
+
+    category = ProductCategory(name="CatSoon")
+    session.add(category)
+    session.commit()
+
+    product = Product(
+        id=102, sku="SOON01", short_name="Soon", category_id=category.id
+    )
+    session.add(product)
+    session.commit()
+
+    warehouse = Warehouse(id=202, description="WH Soon", is_active=True)
+    session.add(warehouse)
+    session.commit()
+
+    today = date.today()
+    in_2_months = today + relativedelta(months=2)
+
+    stock = Stock(
+        warehouse_id=202,
+        product_id=102,
+        lot="LOT2",
+        expiration_date=in_2_months,
+        quantity=7,
+    )
+    session.add(stock)
+    session.commit()
+
+    response = client.get(
+        "/stock/product/expiration?preset=expiring_soon",
+        headers=headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["data"][0]["sku"] == "SOON01"
+
+def test_admin_can_get_no_expiration_products(client, session):
+    """Admin should retrieve products with no expiration or >6 months."""
+
+    headers, _ = get_admin_headers(client, session)
+
+    category = ProductCategory(name="CatNoExp")
+    session.add(category)
+    session.commit()
+
+    product = Product(
+        id=103, sku="NOEXP01", short_name="NoExp", category_id=category.id
+    )
+    session.add(product)
+    session.commit()
+
+    warehouse = Warehouse(id=203, description="WH NoExp", is_active=True)
+    session.add(warehouse)
+    session.commit()
+
+    # stock without expiration
+    stock = Stock(
+        warehouse_id=203,
+        product_id=103,
+        lot="LOT3",
+        expiration_date=None,
+        quantity=10,
+    )
+    session.add(stock)
+    session.commit()
+
+    response = client.get(
+        "/stock/product/expiration?preset=no_expiration",
+        headers=headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["data"][0]["sku"] == "NOEXP01"
+
+def test_admin_can_get_products_by_date_range(client, session):
+    """Admin can retrieve products within a custom date range."""
+
+    headers, _ = get_admin_headers(client, session)
+
+    category = ProductCategory(name="CatDateRange")
+    session.add(category)
+    session.commit()
+
+    product = Product(
+        id=104, sku="RANGE01", short_name="Range", category_id=category.id
+    )
+    session.add(product)
+    session.commit()
+
+    warehouse = Warehouse(id=204, description="WH Range", is_active=True)
+    session.add(warehouse)
+    session.commit()
+
+    today = date.today()
+    in_45_days = today + timedelta(days=45)
+
+    stock = Stock(
+        warehouse_id=204,
+        product_id=104,
+        lot="LOT4",
+        expiration_date=in_45_days,
+        quantity=8,
+    )
+    session.add(stock)
+    session.commit()
+
+    response = client.get(
+        f"/stock/product/expiration?from_date={today}&to_date={today + timedelta(days=60)}",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["data"][0]["sku"] == "RANGE01"
+
+def test_expiration_requires_filters(client, session):
+    headers, _ = get_admin_headers(client, session)
+
+    response = client.get("/stock/product/expiration", headers=headers)
+
+    assert response.status_code == 400
+
+def test_cannot_mix_preset_and_dates(client, session):
+    headers, _ = get_admin_headers(client, session)
+
+    today = date.today()
+
+    response = client.get(
+        f"/stock/product/expiration?preset=expired&from_date={today}",
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+
+def test_invalid_date_range_returns_400(client, session):
+    headers, _ = get_admin_headers(client, session)
+
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+
+    response = client.get(
+        f"/stock/product/expiration?from_date={tomorrow}&to_date={today}",
+        headers=headers,
+    )
+
+    assert response.status_code == 400
 
 
 # [x] GET    /stock/semaphore
 
-
 def test_admin_can_get_semaphore_stock_summary(client, session):
-    """Ensure admin gets stock summary segmented by expiration status"""
     headers, _ = get_admin_headers(client, session)
 
     category = ProductCategory(name="SemaforoCat")
@@ -404,70 +562,23 @@ def test_admin_can_get_semaphore_stock_summary(client, session):
     session.commit()
 
     today = date.today()
-    in_20_days = today + timedelta(days=20)
-    in_2_months = today + timedelta(days=60)
-    in_7_months = today + timedelta(days=210)
+    in_20_days = today + timedelta(days=20)    # expired
+    in_2_months = today + timedelta(days=60)   # expiring_soon
+    in_7_months = today + timedelta(days=210)  # no_expiration
 
-    s1 = Stock(
-        warehouse_id=12, product_id=14, lot="S1", expiration_date=in_20_days, quantity=3
-    )
-    s2 = Stock(
-        warehouse_id=12,
-        product_id=15,
-        lot="S2",
-        expiration_date=in_2_months,
-        quantity=7,
-    )
-    s3 = Stock(
-        warehouse_id=12,
-        product_id=16,
-        lot="S3",
-        expiration_date=in_7_months,
-        quantity=10,
-    )
+    s1 = Stock(warehouse_id=12, product_id=14, lot="S1", expiration_date=in_20_days, quantity=3)
+    s2 = Stock(warehouse_id=12, product_id=15, lot="S2", expiration_date=in_2_months, quantity=7)
+    s3 = Stock(warehouse_id=12, product_id=16, lot="S3", expiration_date=in_7_months, quantity=10)
 
     session.add_all([s1, s2, s3])
     session.commit()
 
     response = client.get("/stock/semaphore", headers=headers)
-    assert response.status_code == 200
     data = response.json()
 
-    assert data["expiring_now"] == 3
+    assert data["expired"] == 3
     assert data["expiring_soon"] == 7
     assert data["no_expiration"] == 10
-
-
-def test_stock_with_no_expiration_date_counts_as_no_expiration(client, session):
-    """Ensure stock without expiration date is included in 'no_expiration' in semaphore"""
-    headers, _ = get_admin_headers(client, session)
-
-    category = ProductCategory(name="NoExpireCat")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(id=13, description="WH NoExp", is_active=True)
-    session.add(warehouse)
-    session.commit()
-
-    product = Product(
-        id=17, sku="NOEXP", short_name="NoExpire", category_id=category.id
-    )
-    session.add(product)
-    session.commit()
-
-    # Stock without expiration date
-    stock = Stock(
-        warehouse_id=13, product_id=17, lot="NE1", expiration_date=None, quantity=9
-    )
-    session.add(stock)
-    session.commit()
-
-    response = client.get("/stock/semaphore", headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data["no_expiration"] >= 9
 
 
 # [x] GET    /stock/warehouse/{warehouse_id}/product/{product_id}

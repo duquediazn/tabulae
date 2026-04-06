@@ -39,7 +39,7 @@ export default function Products() {
   }, []);
 
   const goToExpiration = () => {
-    navigate("/expiring?from_months=0&range_months=6");
+    navigate("/expiration?preset=expiring_soon");
   };
 
   const categoryColors = generateColors(categoryData.length);
@@ -91,7 +91,7 @@ export default function Products() {
                 onClick={goToExpiration}
                 className="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded text-sm font-medium"
               >
-                🧪 By expiration
+                🧪 Products expiring soon
               </button>
             </div>
           </div>

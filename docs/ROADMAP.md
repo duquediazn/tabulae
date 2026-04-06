@@ -4,28 +4,28 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ---
 
-## Next steps (short term)
+## Automations
 
-- [ ] **Automations**
+- [ ] **GitHub Actions
 
   - Set up GitHub Actions for CI (tests, linting, build).
   - Consider a basic deployment pipeline for a staging environment.
 
-- [ ] **Testing**
+---
 
+## Testing
+- [ ] **Frontend Testing** 
   - Add **unit tests for the frontend** (Jest + React Testing Library).
   - Explore E2E testing (Playwright or Cypress).
+    
+- [ ] **Backend Testing** 
   - Ensure backend coverage is solid for critical endpoints.
 
-- [ ] **Date and time handling**
+---
 
-  - Frontend: display dates in local timezone when needed, use UTC for grouping/filtering.
-  - Consider showing time (not just date) in key views such as movement history.
+## Performance
 
 - [ ] **Performance improvements**
-  - Benchmark FastAPI: sync vs async
-    - https://thedkpatel.medium.com/fastapi-performance-showdown-sync-vs-async-which-is-better-77188d5b1e3a
-    - https://fastapi.tiangolo.com/async/
   - Use async SQLAlchemy sessions where possible.
   - Optimize rendering and API usage in frontend.
 
@@ -69,6 +69,14 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ---
 
+## Date and time handling
+
+- [ ] **Date and time handling**
+  - Frontend: display dates in local timezone when needed, use UTC for grouping/filtering.
+  - Consider showing time (not just date) in key views such as movement history.
+
+---
+
 ## Real-time features
 
 - [ ] Expand WebSocket usage:
@@ -97,7 +105,7 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 --- 
 
-## Documentation Enhancements (Future)
+## Documentation Enhancements
 
 - [ ] Create `docs/architecture.md` with:
   - System overview diagram (frontend, backend, DB, Nginx)
