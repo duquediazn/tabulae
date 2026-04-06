@@ -52,7 +52,7 @@ class UserUpdate(BaseModel):
     )
     is_active: Optional[bool] = None
     password: Optional[str] = Field(
-        None, min_length=6, description="New password (optional)"
+        None, min_length=8, description="New password (optional)"
     )
 
 

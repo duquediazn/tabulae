@@ -1,5 +1,6 @@
 from app.utils.validation import normalize_category
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from app.routers.auth import get_current_user
 from sqlmodel import Session, select, func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from typing import Optional
@@ -21,6 +22,7 @@ router = APIRouter(prefix="/categories", tags=["Product Categories"])
 @router.get("/", response_model=PaginatedProductCategoryResponse)
 def list_categories(
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):

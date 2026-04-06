@@ -53,7 +53,6 @@ def test_admin_can_create_movement_with_lines(client, session):
     # Define movement payload
     movement_payload = {
         "move_type": "incoming",
-        "user_id": admin.id,
         "lines": [
             {
                 "warehouse_id": warehouse.id,
@@ -86,7 +85,7 @@ def test_admin_can_create_movement_with_lines(client, session):
     assert data["lines"][1]["product_id"] == product2.id
 
 
-def test_user_can_create_own_movement(client, session):
+def test_user_can_create_movement(client, session):
     """Ensure regular user can create a movement for themselves"""
     # Create user and get headers
     user = create_user_in_db(
@@ -116,7 +115,6 @@ def test_user_can_create_own_movement(client, session):
     # Valid payload
     payload = {
         "move_type": "outgoing",
-        "user_id": user.id,
         "lines": [
             {
                 "warehouse_id": warehouse.id,
@@ -138,43 +136,31 @@ def test_user_can_create_own_movement(client, session):
     assert data["lines"][0]["quantity"] == 3
 
 
-def test_user_cannot_create_movement_for_another_user(client, session):
-    """Ensure a regular user cannot create a movement for another user (forbidden)"""
-    # Create two users
-    user1 = create_user_in_db(
-        session, "User1", "u1@example.com", "pass1", is_active=True
-    )
-    user2 = create_user_in_db(
-        session, "User2", "u2@example.com", "pass2", is_active=True
-    )
-
+def test_movement_is_always_created_for_authenticated_user(client, session):
+    """Ensure movement is always assigned to the authenticated user"""
+    user1 = create_user_in_db(session, "User1", "u1@example.com", "pass1", is_active=True)
     token = get_token_for_user(client, user1.email, "pass1")
     headers = get_auth_headers(token)
 
-    # Setup category, warehouse, product
-    category = ProductCategory(name="Cross")
+    category = ProductCategory(name="AuthCat")
     session.add(category)
     session.commit()
 
     warehouse = Warehouse(id=20, description="WH", is_active=True)
-    product = Product(
-        id=20, sku="SKU-X", short_name="X", category_id=category.id, is_active=True
-    )
+    product = Product(id=20, sku="SKU-X", short_name="X", category_id=category.id, is_active=True)
     session.add_all([warehouse, product])
     session.commit()
 
     payload = {
         "move_type": "incoming",
-        "user_id": user2.id,  # <- user1 tries to register for user2
         "lines": [
             {"warehouse_id": warehouse.id, "product_id": product.id, "quantity": 2}
         ],
     }
 
     response = client.post("/stock-movements/", json=payload, headers=headers)
-
-    assert response.status_code == 403
-    assert "another user" in response.json()["detail"].lower()
+    assert response.status_code == 201
+    assert response.json()["user_id"] == user1.id
 
 
 def test_movement_requires_at_least_one_line(client, session):
@@ -183,7 +169,6 @@ def test_movement_requires_at_least_one_line(client, session):
 
     payload = {
         "move_type": "incoming",
-        "user_id": admin.id,
         "lines": [],  # <- Empty on purpose
     }
 
@@ -220,7 +205,6 @@ def test_movement_rejects_expired_lot_in_incoming(client, session):
 
     payload = {
         "move_type": "incoming",
-        "user_id": admin.id,
         "lines": [
             {
                 "warehouse_id": warehouse.id,
@@ -257,7 +241,6 @@ def test_movement_rejects_inactive_warehouse(client, session):
 
     payload = {
         "move_type": "incoming",
-        "user_id": admin.id,
         "lines": [
             {"warehouse_id": warehouse.id, "product_id": product.id, "quantity": 2}
         ],
@@ -292,7 +275,6 @@ def test_movement_rejects_inactive_product(client, session):
 
     payload = {
         "move_type": "incoming",
-        "user_id": admin.id,
         "lines": [
             {"warehouse_id": warehouse.id, "product_id": product.id, "quantity": 5}
         ],
@@ -335,7 +317,7 @@ def test_movement_rejects_more_than_100_lines(client, session):
         for i in range(101)
     ]
 
-    payload = {"move_type": "incoming", "user_id": admin.id, "lines": lines}
+    payload = {"move_type": "incoming", "lines": lines}
 
     response = client.post("/stock-movements/", json=payload, headers=headers)
 

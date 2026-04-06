@@ -1,11 +1,10 @@
 from collections import defaultdict
 from datetime import date, datetime, time, timezone
-from sqlite3 import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from dateutil.relativedelta import relativedelta
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, func, select
-from sqlalchemy.exc import SQLAlchemyError
 from app.models.database import get_db
 from app.models.stock_move import StockMove
 from app.models.stock_move_line import StockMoveLine
@@ -233,19 +232,9 @@ def create_movement(
 ):
     """
     Registers a stock movement with all its lines in a single request.
-
-    - A **regular user** can only register movements for themselves.
-    - An **admin** can register movements for any user.
     - If a product is inactive, the operation is interrupted.
     - If a warehouse is inactive, the operation is interrupted.
     """
-
-    # Not admin users can only register their own stock movements
-    if not is_admin_user(current_user) and movement_data.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You cannot register a movement for another user.",
-        )
 
     if not movement_data.lines:
         raise HTTPException(
@@ -278,7 +267,7 @@ def create_movement(
     # Create the stock movement
     new_movement = StockMove(
         move_type=movement_data.move_type,
-        user_id=movement_data.user_id,
+        user_id=current_user.id,
     )
 
     try:
@@ -350,7 +339,7 @@ def create_movement(
     # Retrieve user associated with the movement
     try:
         user_name = db.exec(
-            select(User.name).where(User.id == movement_data.user_id)
+            select(User.name).where(User.id == current_user.id)
         ).first()
     except SQLAlchemyError:
         raise HTTPException(
