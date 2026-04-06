@@ -328,10 +328,10 @@ def create_movement(
         db.commit()
     except SQLAlchemyError as e:
         db.rollback()
-        msg_error = (str(e.orig) if hasattr(e, "orig") else str(e)).split("\n")[0]
+        # logger.error("DB error on create_movement: %s", str(e))
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Integrity error: {msg_error}",
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Integrity error: duplicate or invalid reference.",
         )
     except HTTPException as e:
         db.rollback()
