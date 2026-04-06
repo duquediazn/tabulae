@@ -22,16 +22,16 @@ export default function CreateMovement() {
   const [lines, setLines] = useState([
     initialData.line
       ? {
-          ...initialData.line,
-          quantity: initialData.line.quantity || 1,
-        }
+        ...initialData.line,
+        quantity: initialData.line.quantity || 1,
+      }
       : {
-          warehouse_id: "",
-          product_id: "",
-          lot: "",
-          expiration_date: "",
-          quantity: 1,
-        },
+        warehouse_id: "",
+        product_id: "",
+        lot: "",
+        expiration_date: "",
+        quantity: 1,
+      },
   ]);
 
   useEffect(() => {
@@ -162,7 +162,6 @@ export default function CreateMovement() {
 
     const movement = {
       move_type: type,
-      user_id: user.id, // from context
       lines: lines.map((l) => ({
         quantity: parseInt(l.quantity),
         warehouse_id: parseInt(l.warehouse_id),
@@ -267,11 +266,11 @@ export default function CreateMovement() {
                           value={
                             line.warehouse_id
                               ? {
-                                  value: line.warehouse_id,
-                                  label:
-                                    line.warehouse_label ||
-                                    "Selected warehouse",
-                                }
+                                value: line.warehouse_id,
+                                label:
+                                  line.warehouse_label ||
+                                  "Selected warehouse",
+                              }
                               : null
                           }
                           placeholder="Select a warehouse..."
@@ -305,9 +304,9 @@ export default function CreateMovement() {
                           value={
                             line.product_id
                               ? {
-                                  value: line.product_id,
-                                  label: line.product_label,
-                                }
+                                value: line.product_id,
+                                label: line.product_label,
+                              }
                               : null
                           }
                           placeholder="Select a product..."
@@ -325,7 +324,7 @@ export default function CreateMovement() {
                       {/* Lot */}
                       <td className="px-4 py-2">
                         {type === "outgoing" &&
-                        availableLots[index]?.length > 0 ? (
+                          availableLots[index]?.length > 0 ? (
                           <select
                             value={line.lot}
                             onChange={(e) => {
@@ -354,8 +353,8 @@ export default function CreateMovement() {
                                 {lot.lot} ({lot.quantity} units){" "}
                                 {lot.expiration_date
                                   ? `- exp: ${new Date(
-                                      lot.expiration_date
-                                    ).toLocaleDateString()}`
+                                    lot.expiration_date
+                                  ).toLocaleDateString()}`
                                   : ""}
                               </option>
                             ))}
@@ -395,11 +394,10 @@ export default function CreateMovement() {
                                   e.target.value
                                 )
                               }
-                              className={`h-[36px] border border-gray-300 rounded px-2 py-1 w-full text-sm ${
-                                lotInList
+                              className={`h-[36px] border border-gray-300 rounded px-2 py-1 w-full text-sm ${lotInList
                                   ? "bg-gray-100 cursor-not-allowed"
                                   : "bg-white"
-                              }`}
+                                }`}
                             />
                           );
                         })()}
@@ -419,11 +417,10 @@ export default function CreateMovement() {
                               parseInt(e.target.value)
                             )
                           }
-                          className={`h-[36px] border rounded px-2 py-1 w-full ${
-                            errors[`quantity_${index}`]
+                          className={`h-[36px] border rounded px-2 py-1 w-full ${errors[`quantity_${index}`]
                               ? "border-red-500"
                               : "border-gray-300"
-                          }`}
+                            }`}
                         />
                         <div className="min-h-[1.25rem]">
                           <ErrorMessage message={errors[`quantity_${index}`]} />
