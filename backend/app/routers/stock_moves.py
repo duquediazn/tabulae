@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timezone
+from sqlite3 import IntegrityError
 from dateutil.relativedelta import relativedelta
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -326,21 +327,21 @@ def create_movement(
             db.add(new_line)
 
         db.commit()
-    except SQLAlchemyError as e:
+    except IntegrityError:
         db.rollback()
         # logger.error("DB error on create_movement: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Integrity error: duplicate or invalid reference.",
         )
-    except HTTPException as e:
+    except HTTPException:
         db.rollback()
-        raise e
-    except Exception as e:
+        raise
+    except SQLAlchemyError:
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database internal server error",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Database internal server error"
         )
 
     # Retrieve user associated with the movement
