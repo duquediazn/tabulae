@@ -6,6 +6,7 @@ This file handles user authentication in the API, including:
 """
 
 from datetime import timedelta
+import os
 from fastapi import Request, Response
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -41,6 +42,9 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # OAuth2 auth scheme configuration
 oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+# Determine if we are in production environment for cookie settings
+is_production = os.getenv("ENVIRONMENT") == "production"
 
 
 ### USER REGISTRATION ###
@@ -151,8 +155,8 @@ def login(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=is_production,
+        samesite="lax" if not is_production else "none",
         path="/auth/refresh",
         max_age=REFRESH_TOKEN_DURATION * 24 * 60 * 60,
     )
@@ -273,6 +277,9 @@ def verify_user_password(
 def logout(response: Response):
     """Deletes the refresh token cookie when the user logs out."""
     response.delete_cookie(
-        key="refresh_token", path="/auth/refresh", secure=True, samesite="none"
+        key="refresh_token",
+        path="/auth/refresh", 
+        secure=is_production, 
+        samesite="lax" if not is_production else "none"
     )
     return {"message": "Logged out successfully"}
