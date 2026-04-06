@@ -354,8 +354,8 @@ def test_admin_cannot_create_product_with_invalid_data(client, session):
     assert response.status_code == 422
 
 # [X] PUT    /products/{id}
-def test_user_can_update_product_fields_except_is_active(client, session):
-    """Ensure user can update name/sku/category, but not is_active"""
+def test_user_cannot_update_product_fields(client, session):
+    """Ensure regular user cannot update product fields (forbidden)"""
     category1 = ProductCategory(name="Cat1")
     category2 = ProductCategory(name="Cat2")
     session.add_all([category1, category2])
@@ -373,20 +373,17 @@ def test_user_can_update_product_fields_except_is_active(client, session):
         "sku": "UPD999",
         "short_name": "NewName",
         "description": "Updated",
-        "category_id": category2.id
+        "category_id": category2.id,
+        "is_active": False
     }
 
     response = client.put(f"/products/{product.id}", json=update_data, headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["sku"] == "UPD999"
-    assert data["short_name"] == "NewName"
-    assert data["description"] == "Updated"
-    assert data["category_id"] == category2.id
+    assert response.status_code == 403
+    assert "permission" in response.json()["detail"].lower()
 
 
 def test_admin_can_update_all_fields_in_product(client, session):
-    """Ensure admin can update all fields including is_active"""
+    """Ensure admin can update all fields"""
     headers, _ = get_admin_headers(client, session)
     cat = ProductCategory(name="AdminCat")
     session.add(cat)
@@ -408,24 +405,22 @@ def test_admin_can_update_all_fields_in_product(client, session):
     assert response.json()["is_active"] is False
 
 
-def test_user_cannot_change_product_is_active(client, session):
-    """Ensure user cannot change is_active field (forbidden)"""
-    category = ProductCategory(name="RestrictedCat")
+def test_admin_can_reactivate_product(client, session):
+    """Ensure admin can reactivate an inactive product"""
+    category = ProductCategory(name="ReactivateCat")
     session.add(category)
     session.commit()
 
-    product = Product(sku="LOCK1", short_name="Product", category_id=category.id)
+    product = Product(sku="REACT1", short_name="Inactive", category_id=category.id, is_active=False)
     session.add(product)
     session.commit()
 
-    user = create_user_in_db(session, "User", "usr@x.com", "pass", is_active=True)
-    token = get_token_for_user(client, user.email, "pass")
-    headers = get_auth_headers(token)
+    headers, _ = get_admin_headers(client, session)
+    response = client.put(f"/products/{product.id}", json={"is_active": True}, headers=headers)
 
-    response = client.put(f"/products/{product.id}", json={"is_active": False}, headers=headers)
-    assert response.status_code == 403
-    assert "permission" in response.json()["detail"].lower()
-
+    session.refresh(product)
+    assert response.status_code == 200
+    assert product.is_active is True
 
 def test_update_product_with_existing_sku_fails(client, session):
     """Ensure update fails if SKU is already used by another product"""
@@ -451,7 +446,7 @@ def test_update_nonexistent_product_returns_404(client, session):
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 
-def test_admin_cannot_deactivate_product_with_stock(client, session): # this is new!!!
+def test_admin_cannot_deactivate_product_with_stock(client, session):
     category = ProductCategory(name="FakeCategory")
     session.add(category)
     session.commit()
@@ -631,7 +626,7 @@ def test_admin_cannot_delete_product_with_movements(client, session):
     session.commit()
 
     response = client.delete("/products/1", headers=headers)
-    assert response.status_code == 500
+    assert response.status_code == 409
     assert "associated movements" in response.json()["detail"].lower()
 
 
