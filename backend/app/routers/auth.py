@@ -173,11 +173,12 @@ def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)
     payload = decode_access_token(token)
 
     # Validate that the token contains the "sub" field
-    user_id = int(payload["sub"])
-    if not user_id:
+    user_id_str = payload.get("sub")
+    if not user_id_str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token."
         )
+    user_id = int(user_id_str)  # Convert user ID from string to integer
 
     # Check if the user still exists in the database
     try:
@@ -224,7 +225,12 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
     # decode_access_token() already handles InvalidTokenError and returns HTTP 401
     payload = decode_access_token(refresh_token)
 
-    user_id = payload["sub"]
+    user_id_str = payload.get("sub")
+    if not user_id_str:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token."
+        )
+    user_id = int(user_id_str)
 
     try:
         statement = select(User).where(User.id == user_id)
