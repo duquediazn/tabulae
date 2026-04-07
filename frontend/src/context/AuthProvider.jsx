@@ -102,6 +102,9 @@ export function AuthProvider({ children }) {
       await fetch(`${API_URL}/auth/logout`, {
         method: "POST",
         credentials: "include", // Needed to send the cookie
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
       });
     } catch (error) {
       console.error("Error logging out from backend:", error);

@@ -375,29 +375,37 @@ def test_verify_password_failure(client, active_user):
 
 
 # POST   /auth/logout
-def test_logout(client, active_user):
+def test_user_can_logout(client, active_user):
+    token = get_token_for_user(client, active_user.email, "testpass123")
+    headers = get_auth_headers(token)
+
     login_response = client.post(
         "/auth/login",
         data={"username": active_user.email, "password": "testpass123"},
     )
-    assert login_response.status_code == 200
-    assert "set-cookie" in login_response.headers
-
-    logout_response = client.post("/auth/logout", cookies=login_response.cookies)
+    logout_response = client.post(
+        "/auth/logout", headers=headers, cookies=login_response.cookies
+    )
 
     assert logout_response.status_code == 200
     assert logout_response.json()["message"] == "Logged out successfully"
-    assert "set-cookie" in logout_response.headers
     assert "Max-Age=0" in logout_response.headers["set-cookie"]
 
+def test_user_token_is_revoked_after_logout(client, active_user):
+    token = get_token_for_user(client, active_user.email, "testpass123")
+    headers = get_auth_headers(token)
 
-def test_logout_without_cookie(client):
+    login_response = client.post(
+        "/auth/login",
+        data={"username": active_user.email, "password": "testpass123"},
+    )
+    client.post("/auth/logout", headers=headers, cookies=login_response.cookies)
+
+    # After logout, the token should be revoked. Attempting to access a protected endpoint should fail.
+    response = client.get("/auth/profile", headers=headers)
+    assert response.status_code == 401
+    assert "revoked" in response.json()["detail"].lower()
+
+def test_user_cannot_logout_without_token(client):
     response = client.post("/auth/logout")
-    assert response.status_code == 200
-    assert response.json()["message"] == "Logged out successfully"
-
-
-def test_logout_always_sets_cookie_removal(client):
-    response = client.post("/auth/logout")
-    assert "set-cookie" in response.headers
-    assert "Max-Age=0" in response.headers["set-cookie"]
+    assert response.status_code == 401

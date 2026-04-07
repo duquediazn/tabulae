@@ -16,6 +16,7 @@ from passlib.context import (
 )  # To hash and verify passwords securely with bcrypt
 import jwt  # To create and decode JWT tokens
 import os  # To access environment variables
+from uuid import uuid4  # To generate unique identifiers for JWT tokens (jti)
 
 # Secret key used to sign JWT tokens
 SECRET_KEY = get_required_env("SECRET_KEY")
@@ -51,7 +52,7 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
     """Creates a JWT access token with an expiration time."""
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + expires_delta
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "jti": str(uuid4())})  # Add expiration and unique ID (jti) to the token
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
