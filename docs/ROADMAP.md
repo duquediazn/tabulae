@@ -74,6 +74,14 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ---
 
+## Date and time handling
+
+- [ ] **Date and time handling**
+  - Frontend: display dates in local timezone when needed, use UTC for grouping/filtering.
+  - Consider showing time (not just date) in key views such as movement history.
+
+---
+
 ## Real-time features
 
 - [ ] Expand WebSocket usage:
