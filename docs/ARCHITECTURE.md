@@ -100,7 +100,7 @@ Each resource has its own `APIRouter` with a fixed prefix and tag:
 | `warehouses.py`          | `/warehouses`        | Read: any user; Write: `require_admin` |
 | `stock.py`               | `/stock`             | `get_current_user` |
 | `stock_moves.py`         | `/stock-moves`       | `get_current_user` |
-| `websocket.py`           | `/ws`                | None (connection-level) |
+| `websocket.py`           | `/ws`                | Token validated on first message (see [WebSocket](#websocket)) |
 
 Paginated list endpoints return a consistent shape:
 
@@ -122,14 +122,18 @@ Authentication uses **JWT** (PyJWT, HS256). Two token types are in play:
 
 Authorization is enforced through two FastAPI dependencies:
 
-- `get_current_user` — decodes the access token from the `Authorization: Bearer` header and returns the `User` ORM object. Used for routes any authenticated user can access.
+- `get_current_user` — decodes the access token from the `Authorization: Bearer` header, checks the `revoked_tokens` blocklist (see below), and returns the `User` ORM object. Used for routes any authenticated user can access.
 - `require_admin` (in `dependencies.py`) — calls `get_current_user` and additionally checks `user.role == "admin"`. Raises `HTTP 403` otherwise.
 
 Role checks are never inlined inside route functions; they are always delegated to these dependencies.
 
+**Token revocation:** every JWT includes a `jti` (JWT ID) claim — a UUID generated at creation time. On logout, the `jti` of the access token is stored in the `revoked_tokens` table alongside its expiration time. `get_current_user` rejects any token whose `jti` appears in this table, making logout effectively immediate regardless of token lifetime.
+
 ### WebSocket
 
-A single WebSocket endpoint is registered at `/ws/stock-moves`. It uses a `ConnectionManager` class that maintains a list of active connections and broadcasts text messages to all of them.
+A single WebSocket endpoint is registered at `/ws/stock-moves`. It uses a `ConnectionManager` class that maintains a list of **authenticated** active connections and broadcasts text messages to all of them.
+
+**Authentication flow:** connections are authenticated via a first-message pattern. The client connects and immediately sends the access token as the first text message. The server validates the token (signature, expiry, and `is_active` status) before adding the connection to the broadcast list. Connections that fail validation are closed with code `1008` (Policy Violation). This avoids exposing the token as a URL query parameter, which would appear in server logs.
 
 When a stock movement is created via the REST API, the `stock_moves` router broadcasts a notification through this manager, so connected clients can update their UI without polling.
 
@@ -150,6 +154,7 @@ Seven tables make up the schema. The diagram below shows the foreign key relatio
 | `stock`             | (`warehouse_id`, `product_id`, `lot`) | `quantity`, `expiration_date`                       |
 | `stock_move`        | `move_id`                             | `move_type` (`IN`/`OUT`), `user_id` FK, `created_at`|
 | `stock_move_line`   | (`move_id`, `line_id`)                | `warehouse_id`, `product_id`, `lot`, `quantity`     |
+| `revoked_tokens`    | `jti`                                 | `expires_at` — used to invalidate tokens on logout  |
 
 The schema is created at application startup by SQLModel's `create_db_and_tables()`. SQL init scripts in `db_init/` run once on first PostgreSQL volume creation and seed the initial data and database triggers.
 
@@ -235,7 +240,10 @@ Page/Component
 5. 5 minutes before expiry, AuthProvider calls POST /auth/refresh:
      - Browser automatically sends the HttpOnly cookie
      - Backend validates refresh token, issues new access_token
-6. On logout → POST /auth/logout clears the cookie server-side.
+6. On logout → POST /auth/logout:
+     - Clears the HttpOnly refresh token cookie server-side.
+     - Stores the access token's `jti` in `revoked_tokens` (with its expiration time).
+     - Subsequent requests using the same access token are rejected immediately by `get_current_user`.
 ```
 
 The refresh token is never accessible to JavaScript (`HttpOnly`). In production (`ENVIRONMENT=production`), both tokens' cookies are set with `Secure=True`, requiring HTTPS.
