@@ -5,14 +5,19 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 ---
 
 ## Automations
+## Automations
 
+- [ ] **GitHub Actions**
 - [ ] **GitHub Actions**
 
   - Set up GitHub Actions for CI (tests, linting, build).
   - Consider a basic deployment pipeline for a staging environment.
 
 ---
+---
 
+## Testing
+- [ ] **Frontend Testing** 
 ## Testing
 - [ ] **Frontend Testing** 
   - Add **unit tests for the frontend** (Jest + React Testing Library).
@@ -21,7 +26,14 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 - [x] **Backend Testing**
   - [x] WebSocket endpoint coverage added (`test_websocket.py`): valid token, invalid token, inactive user.
   - [ ] Review and extend coverage for remaining critical endpoints.
+    
+- [x] **Backend Testing**
+  - [x] WebSocket endpoint coverage added (`test_websocket.py`): valid token, invalid token, inactive user.
+  - [ ] Review and extend coverage for remaining critical endpoints.
 
+---
+
+## Performance
 ---
 
 ## Performance
@@ -35,10 +47,17 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 ## Security & resilience
 
 - [x] **WebSocket hardening** 
+- [x] **WebSocket hardening** 
 
   - [x] Validate token via first-message pattern (token sent as first WebSocket message after connection, not exposed in URL or server logs).
   - [ ] Handle reconnection policies and expiration correctly.
+  - [x] Validate token via first-message pattern (token sent as first WebSocket message after connection, not exposed in URL or server logs).
+  - [ ] Handle reconnection policies and expiration correctly.
 
+- [x] **Stronger authentication** 
+  - [x] Forced token expiration after logout: `jti` claim added to all tokens; `revoked_tokens` blocklist table invalidates tokens on logout.
+  - [ ] Detect multiple active sessions per user.
+  - [ ] Add account recovery via email.
 - [x] **Stronger authentication** 
   - [x] Forced token expiration after logout: `jti` claim added to all tokens; `revoked_tokens` blocklist table invalidates tokens on logout.
   - [ ] Detect multiple active sessions per user.
@@ -103,7 +122,9 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 --- 
 
 ## Documentation Enhancements
+## Documentation Enhancements
 
+- [x] Create `docs/architecture.md` with:
 - [x] Create `docs/architecture.md` with:
   - System overview diagram (frontend, backend, DB, Nginx)
   - Flow of requests (e.g., login, WebSocket, stock updates)
