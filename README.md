@@ -359,6 +359,7 @@ The following documents provide more detail about using, installing, and evolvin
 
 - [How to Use the App](./docs/USAGE.md) — Overview of the UI and main flows
 - [Setup Guide](./docs/SETUP.md) — Detailed installation & local dev workflow
+- [Architecture](./docs/ARCHITECTURE.md) — System design, data model, and request flows
 - [Version History](./docs/VERSIONS.md) — Release notes and SemVer tags
 - [Roadmap](./docs/ROADMAP.md) — Planned improvements and ideas
 
