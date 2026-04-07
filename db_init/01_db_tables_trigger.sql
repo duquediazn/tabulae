@@ -137,3 +137,27 @@ CREATE TRIGGER trg_update_stock
 AFTER INSERT ON stock_move_line
 FOR EACH ROW
 EXECUTE FUNCTION update_stock();
+
+-- INDEXES
+-- These indexes cover the most frequently filtered and sorted columns across the API:
+--   - stock_move: filtered by user_id, move_type, and date range in GET /stock-movements/
+--                 and ordered by created_at in most listing endpoints.
+--   - stock_move_line: filtered by warehouse_id and product_id in stock history endpoints.
+--
+-- Trade-off: each index adds a small overhead on INSERT/UPDATE operations and disk space,
+-- but given the read-heavy usage pattern of this application, the benefit outweighs the cost.
+--
+CREATE INDEX ix_stock_move_user_id    ON stock_move (user_id);
+CREATE INDEX ix_stock_move_created_at ON stock_move (created_at);
+CREATE INDEX ix_stock_move_move_type  ON stock_move (move_type);
+
+CREATE INDEX ix_stock_move_line_warehouse_id ON stock_move_line (warehouse_id);
+CREATE INDEX ix_stock_move_line_product_id   ON stock_move_line (product_id);
+
+-- Note: this script only runs on first volume creation. To apply these indexes to an
+-- existing database, run the CREATE INDEX statements manually (e.g. via pgAdmin).
+-- CREATE INDEX IF NOT EXISTS ix_stock_move_user_id      ON stock_move (user_id);
+-- CREATE INDEX IF NOT EXISTS ix_stock_move_created_at   ON stock_move (created_at);
+-- CREATE INDEX IF NOT EXISTS ix_stock_move_move_type    ON stock_move (move_type);
+-- CREATE INDEX IF NOT EXISTS ix_stock_move_line_warehouse_id ON stock_move_line (warehouse_id);
+-- CREATE INDEX IF NOT EXISTS ix_stock_move_line_product_id   ON stock_move_line (product_id);

@@ -51,9 +51,8 @@ class StockMoveSummary(BaseModel):
 
 
 class StockMoveLastYearGraph(BaseModel):
-    move_id: int
-    user_id: int
-    created_at: datetime
-    move_type: str
+    month: datetime
+    incoming: int
+    outgoing: int
 
     model_config = {"from_attributes": True}

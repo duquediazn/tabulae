@@ -100,26 +100,8 @@ export async function movementsLastYearByMonth(accessToken) {
   const data = await response.json();
   const movements = data || [];
 
-  const groupBy = {};
-
-  for (const mov of movements) {
-    const date = new Date(mov.created_at);
-    const key = `${date.getUTCFullYear()}-${String(
-      date.getUTCMonth() + 1
-    ).padStart(2, "0")}`;
-
-    const moveType = mov.move_type.toLowerCase().trim();
-
-    if (!groupBy[key]) {
-      groupBy[key] = { month: key, incoming: 0, outgoing: 0 };
-    }
-
-    if (moveType === "incoming" || moveType === "outgoing") {
-      groupBy[key][moveType]++;
-    } else {
-      console.warn("Unknown move type:", mov.move_type);
-    }
-  }
-
-  return Object.values(groupBy).sort((a, b) => (a.month > b.month ? 1 : -1));
+  return movements.map((row) => ({
+    ...row,
+    month: row.month.slice(0, 7)  // "2025-05-01T..." → "2025-05"
+  }));
 }

@@ -51,6 +51,8 @@ def get_all_stock(
                 Stock.expiration_date,
                 Stock.quantity,
             )
+            .join(Warehouse, Warehouse.id == Stock.warehouse_id)
+            .join(Product, Product.id == Stock.product_id)
             .order_by(Stock.warehouse_id, Stock.product_id, Stock.lot)
             .limit(limit)
             .offset(offset)
