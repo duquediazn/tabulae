@@ -5,7 +5,7 @@ This file handles user authentication in the API, including:
 - Get authenticated user data (/auth/profile) → Uses the JWT token to return user info.
 """
 
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 import os
 from fastapi import Request, Response
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -16,6 +16,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
 from app.models.user import User
+from app.models.revoked_token import RevokedToken
 from app.schemas.user import UserCreate, UserResponse
 from app.utils.authentication import (
     ACCESS_TOKEN_DURATION,
@@ -178,6 +179,12 @@ def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token."
         )
+    
+    # Check if the token has been revoked by looking up its jti in the RevokedToken table.
+    jti = payload.get("jti")
+    if jti and db.get(RevokedToken, jti):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked.")
+    
     user_id = int(user_id_str)  # Convert user ID from string to integer
 
     # Check if the user still exists in the database
@@ -280,12 +287,41 @@ def verify_user_password(
 
 ### LOGOUT ###
 @router.post("/logout")
-def logout(response: Response):
+def logout(
+    response: Response, 
+    token: str = Depends(oauth2), 
+    db: Session = Depends(get_db)
+):
     """Deletes the refresh token cookie when the user logs out."""
+
     response.delete_cookie(
         key="refresh_token",
         path="/auth/refresh", 
         secure=is_production, 
         samesite="lax" if not is_production else "none"
     )
+
+    # Revoke the access token by storing its jti in the RevokedToken table.
+    try:
+        payload = decode_access_token(token)
+        jti = payload.get("jti")
+        exp = payload.get("exp")
+
+        if jti and exp:
+            revoked_token = RevokedToken(
+                jti=jti, 
+                expires_at=datetime.fromtimestamp(exp, timezone.utc)
+            )
+            db.add(revoked_token)
+            db.commit()
+    except HTTPException:
+        pass # If the token is invalid or expired, we can ignore it since the user is logging out anyway.
+    except IntegrityError:
+        db.rollback() 
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error while revoking token.",
+        )
+
     return {"message": "Logged out successfully"}
