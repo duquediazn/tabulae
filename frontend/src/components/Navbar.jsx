@@ -204,8 +204,9 @@ export default function Navbar() {
                           onClick={() => navigate("/stock-movements/list")}
                         >
                           <span>• {message}</span>
-                          <button
+                          <span
                             role="button"
+                            tabIndex={0}
                             className="text-lg text-red-500 hover:text-red-700 ml-2"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -218,9 +219,22 @@ export default function Navbar() {
                                 JSON.stringify(updated)
                               );
                             }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.stopPropagation();
+                                const updated = notifications.filter(
+                                  (_, i) => i !== idx
+                                );
+                                setNotifications(updated);
+                                localStorage.setItem(
+                                  "notifications",
+                                  JSON.stringify(updated)
+                                );
+                              }
+                            }}
                           >
                             ✕
-                          </button>
+                          </span>
                         </li>
                       ))
                     )}
