@@ -6,7 +6,7 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ## Automations
 
-- [ ] **GitHub Actions
+- [ ] **GitHub Actions**
 
   - Set up GitHub Actions for CI (tests, linting, build).
   - Consider a basic deployment pipeline for a staging environment.
