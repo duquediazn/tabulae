@@ -18,8 +18,9 @@ This file outlines the planned features and improvements for **Tabulae**, both t
   - Add **unit tests for the frontend** (Jest + React Testing Library).
   - Explore E2E testing (Playwright or Cypress).
     
-- [ ] **Backend Testing** 
-  - Ensure backend coverage is solid for critical endpoints.
+- [x] **Backend Testing** *(partially complete)*
+  - [x] WebSocket endpoint coverage added (`test_websocket.py`): valid token, invalid token, inactive user.
+  - [ ] Review and extend coverage for remaining critical endpoints.
 
 ---
 
@@ -33,15 +34,15 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ## Security & resilience
 
-- [ ] **WebSocket hardening**
+- [x] **WebSocket hardening** *(partially complete)*
 
-  - Validate token before accepting a connection.
-  - Handle reconnection policies and expiration correctly.
+  - [x] Validate token via first-message pattern (token sent as first WebSocket message after connection, not exposed in URL or server logs).
+  - [ ] Handle reconnection policies and expiration correctly.
 
-- [ ] **Stronger authentication**
-  - Implement forced token expiration after logout/inactivity.
-  - Detect multiple active sessions per user.
-  - Add account recovery via email.
+- [x] **Stronger authentication** *(partially complete)*
+  - [x] Forced token expiration after logout: `jti` claim added to all tokens; `revoked_tokens` blocklist table invalidates tokens on logout.
+  - [ ] Detect multiple active sessions per user.
+  - [ ] Add account recovery via email.
 
 ---
 
