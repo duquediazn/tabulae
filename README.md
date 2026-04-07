@@ -265,6 +265,7 @@ cp .env.template .env
 
 This file includes essential configuration such as:
 
+- Runtime environment mode (`development` / `production`)
 - PostgreSQL credentials
 - JWT secret and token durations
 - pgAdmin login
