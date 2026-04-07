@@ -18,7 +18,7 @@ This file outlines the planned features and improvements for **Tabulae**, both t
   - Add **unit tests for the frontend** (Jest + React Testing Library).
   - Explore E2E testing (Playwright or Cypress).
     
-- [x] **Backend Testing** *(partially complete)*
+- [x] **Backend Testing**
   - [x] WebSocket endpoint coverage added (`test_websocket.py`): valid token, invalid token, inactive user.
   - [ ] Review and extend coverage for remaining critical endpoints.
 
@@ -34,12 +34,12 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ## Security & resilience
 
-- [x] **WebSocket hardening** *(partially complete)*
+- [x] **WebSocket hardening** 
 
   - [x] Validate token via first-message pattern (token sent as first WebSocket message after connection, not exposed in URL or server logs).
   - [ ] Handle reconnection policies and expiration correctly.
 
-- [x] **Stronger authentication** *(partially complete)*
+- [x] **Stronger authentication** 
   - [x] Forced token expiration after logout: `jti` claim added to all tokens; `revoked_tokens` blocklist table invalidates tokens on logout.
   - [ ] Detect multiple active sessions per user.
   - [ ] Add account recovery via email.
@@ -63,10 +63,6 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
   - Create a custom component for unknown routes.
   - Add fallback route in `AppRouter`.
-
-- [ ] **Documentation**
-  - Improve code-level documentation and inline comments.
-  - Extend README or developer guides as needed.
 
 ---
 
@@ -108,7 +104,7 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ## Documentation Enhancements
 
-- [ ] Create `docs/architecture.md` with:
+- [x] Create `docs/architecture.md` with:
   - System overview diagram (frontend, backend, DB, Nginx)
   - Flow of requests (e.g., login, WebSocket, stock updates)
   - Tech decisions and tradeoffs
@@ -119,4 +115,3 @@ This file outlines the planned features and improvements for **Tabulae**, both t
   - Auth and context usage
 
 - [ ] Expand code-level comments across backend
-- [ ] Consider documenting services using Mermaid or Excalidraw
