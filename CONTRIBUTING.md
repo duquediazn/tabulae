@@ -176,8 +176,20 @@ git checkout -b release/v1.2.0
 git push origin release/v1.2.0
 ```
 
-Open PR → main
-Title example: chore(release): version 1.2.0
+While on the release branch, update the version documentation **before opening any PR**:
+- `docs/VERSIONS.md` — add the release notes for the new version
+- `README.md` — update the version badge or changelog reference if applicable
+
+Commit those changes on the release branch:
+```bash
+git add docs/VERSIONS.md
+git commit -m "docs(versions): add release notes for v1.2.0"
+git push origin release/v1.2.0
+```
+
+**Step 1 — Open PR → `main`**
+Title example: `chore(release): version 1.2.0`
+
 Once merged:
 ```bash
 # Locally sync main
@@ -187,6 +199,21 @@ git pull origin main
 # Tag the released version
 git tag -a v1.2.0 -m "Release: version 1.2.0"
 git push origin v1.2.0
+```
+
+**Step 2 — Open PR → `develop`** (required)
+Open a second PR from the same `release/v1.2.0` branch targeting `develop`.  
+Title example: `chore(sync): merge release v1.2.0 into develop`
+
+> Do this **before** deleting the release branch. Skipping this step will leave `develop` behind `main`.
+
+Once merged, update local branches and delete the release branch:
+```bash
+git checkout develop
+git pull origin develop
+
+git branch -d release/v1.2.0
+git push origin --delete release/v1.2.0
 ```
 
 ---
