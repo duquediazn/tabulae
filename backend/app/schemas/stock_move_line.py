@@ -33,8 +33,7 @@ class StockMoveLineResponse(StockMoveLineBase):
     move_id: int
     line_id: int
 
-    class Config:
-        from_attributes = True  # Allows converting SQLModel to JSON responses
+    model_config = {"from_attributes": True}
 
 
 class PaginatedStockMoveLineResponse(BaseModel):

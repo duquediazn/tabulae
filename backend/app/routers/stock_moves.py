@@ -1,10 +1,10 @@
+from collections import defaultdict
 from datetime import date, datetime, time, timezone
-from sqlite3 import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from dateutil.relativedelta import relativedelta
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session, func, select
-from sqlalchemy.exc import SQLAlchemyError
+from sqlmodel import Session, func, select, case
 from app.models.database import get_db
 from app.models.stock_move import StockMove
 from app.models.stock_move_line import StockMoveLine
@@ -75,28 +75,30 @@ def get_movements(
         total_records = (
             db.exec(select(func.count()).select_from(statement.subquery())).first() or 0
         )
+        
+        # Extract move_ids from the results to fetch lines in a single query
+        move_ids = [movement.move_id for movement, _ in results]
+        
+        # Fetch all lines for the retrieved movements in a single query
+        all_lines = db.exec(
+            select(StockMoveLine).where(StockMoveLine.move_id.in_(move_ids))
+        ).all() 
 
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error",
         )
-
+    
+    # List to hold the final response objects
     movements_response = []
 
-    for movement, user_name in results:
-        try:
-            movement_lines = db.exec(
-                select(StockMoveLine)
-                .where(StockMoveLine.move_id == movement.move_id)
-                .order_by(StockMoveLine.line_id)
-            ).all()
-        except SQLAlchemyError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Database connection error",
-            )
+    # Group lines by move_id for easy association with movements
+    lines_by_move = defaultdict(list) # defaultdict to automatically create a list for new keys
+    for line in all_lines: 
+        lines_by_move[line.move_id].append(line)
 
+    for movement, user_name in results:
         movements_response.append(
             StockMoveResponse(
                 move_id=movement.move_id,
@@ -106,7 +108,7 @@ def get_movements(
                 user_name=user_name,
                 lines=[
                     StockMoveLineResponse.model_validate(line)
-                    for line in movement_lines
+                    for line in lines_by_move[movement.move_id]
                 ],
             )
         )
@@ -132,15 +134,20 @@ def get_movements_last_year(
 
     try:
         statement = (
-            select(StockMove)
+            select(
+                func.date_trunc("month", StockMove.created_at).label("month"),
+                func.count(case((StockMove.move_type == "incoming", 1))).label("incoming"),
+                func.count(case((StockMove.move_type == "outgoing", 1))).label("outgoing"),
+            )
             .where(StockMove.created_at >= date_from)
             .where(StockMove.created_at <= date_to)
+            .group_by(func.date_trunc("month", StockMove.created_at))
+            .order_by(func.date_trunc("month", StockMove.created_at))
         )
 
         if not is_admin_user(current_user):
             statement = statement.where(StockMove.user_id == current_user.id)
 
-        statement = statement.order_by(StockMove.created_at.desc())
         results = db.exec(statement).all()
 
     except SQLAlchemyError:
@@ -151,10 +158,9 @@ def get_movements_last_year(
 
     return [
         StockMoveLastYearGraph(
-            move_id=row.move_id,
-            user_id=row.user_id,
-            created_at=row.created_at,
-            move_type=row.move_type,
+            month=row.month,
+            incoming=row.incoming,
+            outgoing=row.outgoing,
         )
         for row in results
     ]
@@ -171,33 +177,30 @@ def get_movement(
     - **Admins** can view any movement.
     """
     try:
-        statement = select(StockMove).where(StockMove.move_id == move_id)
-        movement = db.exec(statement).first()
+        statement = (
+            select(StockMove, User.name)
+            .join(User, StockMove.user_id == User.id)
+            .where(StockMove.move_id == move_id)
+)
+        result = db.exec(statement).first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error",
         )
 
-    if not movement:
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Movement not found"
         )
+
+    movement, user_name = result
 
     # If not admin and the movement does not belong to the authenticated user, deny access
     if not is_admin_user(current_user) and movement.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this movement.",
-        )
-
-    # Retrieve the user associated with the movement
-    try:
-        user = db.exec(select(User.name).where(User.id == movement.user_id)).first()
-    except SQLAlchemyError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error retrieving the user associated with the movement.",
         )
 
     # Retrieve movement lines
@@ -217,7 +220,7 @@ def get_movement(
         created_at=movement.created_at,
         move_type=movement.move_type,
         user_id=movement.user_id,
-        user_name=user or "Unknown",
+        user_name=user_name or "Unknown",
         lines=[StockMoveLineResponse.model_validate(line) for line in movement_lines],
     )
 
@@ -230,19 +233,9 @@ def create_movement(
 ):
     """
     Registers a stock movement with all its lines in a single request.
-
-    - A **regular user** can only register movements for themselves.
-    - An **admin** can register movements for any user.
     - If a product is inactive, the operation is interrupted.
     - If a warehouse is inactive, the operation is interrupted.
     """
-
-    # Not admin users can only register their own stock movements
-    if not is_admin_user(current_user) and movement_data.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You cannot register a movement for another user.",
-        )
 
     if not movement_data.lines:
         raise HTTPException(
@@ -275,7 +268,7 @@ def create_movement(
     # Create the stock movement
     new_movement = StockMove(
         move_type=movement_data.move_type,
-        user_id=movement_data.user_id,
+        user_id=current_user.id,
     )
 
     try:
@@ -347,7 +340,7 @@ def create_movement(
     # Retrieve user associated with the movement
     try:
         user_name = db.exec(
-            select(User.name).where(User.id == movement_data.user_id)
+            select(User.name).where(User.id == current_user.id)
         ).first()
     except SQLAlchemyError:
         raise HTTPException(

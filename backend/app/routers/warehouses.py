@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, func, select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.dependencies import require_admin
-from app.models import user
 from app.models.database import get_db
 from app.models.stock_move_line import StockMoveLine
 from app.models.stock import Stock
@@ -238,52 +237,44 @@ def deactivate_warehouse(
     The warehouse must be inactive and empty before deletion.
     Only administrators can perform this action.
     """
-
-    warehouse = db.get(Warehouse, id)
-    if not warehouse:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Warehouse not found"
-        )
-
-    if warehouse.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Warehouse must be inactive before it can be deleted"
-        )
-    
-    stock = db.exec(
-        select(1)
-        .where(Stock.warehouse_id == id)
-        .limit(1)
-    ).first()
-
-    if stock:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Warehouse {id} is not empty and therefore cannot be deactivated.",
-        )
-
-    movement_exists = db.exec(
-        select(1)
-        .where(StockMoveLine.warehouse_id == id)
-        .limit(1)
-    ).first()
-
-    # Efficient existence check
-    movement_exists = db.exec(
-        select(1)
-        .where(StockMoveLine.warehouse_id == id)
-        .limit(1)
-    ).first()
-
-    if movement_exists:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete this warehouse because it has registered movements."
-        )
-
     try:
+        warehouse = db.get(Warehouse, id)
+        if not warehouse:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Warehouse not found"
+            )
+
+        if warehouse.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Warehouse must be inactive before it can be deleted"
+            )
+        
+        stock = db.exec(
+            select(1)
+            .where(Stock.warehouse_id == id)
+            .limit(1)
+        ).first()
+
+        if stock:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Warehouse {id} is not empty and therefore cannot be deactivated.",
+            )
+
+        movement_exists = db.exec(
+            select(1)
+            .where(StockMoveLine.warehouse_id == id)
+            .limit(1)
+        ).first()
+
+        if movement_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete this warehouse because it has registered movements."
+            )
+            
         db.delete(warehouse)
         db.commit()
     except IntegrityError:

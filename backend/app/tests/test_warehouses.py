@@ -387,7 +387,7 @@ def test_admin_can_delete_warehouse_without_movements(client, session):
     """Ensure admin can delete a warehouse without stock movements"""
     headers, _ = get_admin_headers(client, session)
 
-    wh = Warehouse(description="To Delete", is_active=True)
+    wh = Warehouse(description="To Delete", is_active=False)
     session.add(wh)
     session.commit()
 
@@ -407,7 +407,7 @@ def test_admin_cannot_delete_warehouse_with_movements(client, session):
     session.add(Product(id=1, sku="SKUDEL", short_name="Prod", category_id=1))
     session.commit()
 
-    wh = Warehouse(id=1, description="With Movement", is_active=True)
+    wh = Warehouse(id=1, description="With Movement", is_active=False)
     session.add(wh)
     session.commit()
 

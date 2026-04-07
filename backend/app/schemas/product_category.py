@@ -17,7 +17,7 @@ class ProductCategoryUpdate(BaseModel):
 class ProductCategoryResponse(ProductCategoryBase):
     id: int
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True} # Allows automatic conversion from SQLModel to JSON responses
 
 
 class PaginatedProductCategoryResponse(BaseModel):

@@ -51,6 +51,8 @@ def get_all_stock(
                 Stock.expiration_date,
                 Stock.quantity,
             )
+            .join(Warehouse, Warehouse.id == Stock.warehouse_id)
+            .join(Product, Product.id == Stock.product_id)
             .order_by(Stock.warehouse_id, Stock.product_id, Stock.lot)
             .limit(limit)
             .offset(offset)
@@ -881,7 +883,7 @@ def get_available_lots(
             for row in results
         ]
 
-    except Exception as e:
+    except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error fetching available lots",
