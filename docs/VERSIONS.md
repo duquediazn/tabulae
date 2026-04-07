@@ -4,6 +4,18 @@ This file lists the tagged versions of the project and their key milestones.
 
 ---
 
+## v1.2.0 – April 2026
+
+- Restricted product create/update/delete endpoints to admin users only
+- Fixed: removed user_id from movement creation request body (derived from token)
+- Optimized movement detail retrieval with a single JOIN query instead of two separate queries
+- Optimized movement lines retrieval using batch query instead of per-line queries
+- Aggregated monthly movement stats (incoming/outgoing) in the database instead of the frontend
+- Added DB indexes on `stock_move` (user_id, created_at, move_type) and `stock_move_line` (warehouse_id, product_id)
+- Enhanced model field definitions with explicit indexes and constraints
+
+---
+
 ## v1.1.0 – April 2026
 
 - Redesigned expiration logic across backend and frontend
