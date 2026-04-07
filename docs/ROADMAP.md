@@ -6,7 +6,7 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ## Automations
 
-- [ ] **GitHub Actions
+- [ ] **GitHub Actions**
 
   - Set up GitHub Actions for CI (tests, linting, build).
   - Consider a basic deployment pipeline for a staging environment.
@@ -18,8 +18,9 @@ This file outlines the planned features and improvements for **Tabulae**, both t
   - Add **unit tests for the frontend** (Jest + React Testing Library).
   - Explore E2E testing (Playwright or Cypress).
     
-- [ ] **Backend Testing** 
-  - Ensure backend coverage is solid for critical endpoints.
+- [x] **Backend Testing**
+  - [x] WebSocket endpoint coverage added (`test_websocket.py`): valid token, invalid token, inactive user.
+  - [ ] Review and extend coverage for remaining critical endpoints.
 
 ---
 
@@ -33,15 +34,15 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ## Security & resilience
 
-- [ ] **WebSocket hardening**
+- [x] **WebSocket hardening** 
 
-  - Validate token before accepting a connection.
-  - Handle reconnection policies and expiration correctly.
+  - [x] Validate token via first-message pattern (token sent as first WebSocket message after connection, not exposed in URL or server logs).
+  - [ ] Handle reconnection policies and expiration correctly.
 
-- [ ] **Stronger authentication**
-  - Implement forced token expiration after logout/inactivity.
-  - Detect multiple active sessions per user.
-  - Add account recovery via email.
+- [x] **Stronger authentication** 
+  - [x] Forced token expiration after logout: `jti` claim added to all tokens; `revoked_tokens` blocklist table invalidates tokens on logout.
+  - [ ] Detect multiple active sessions per user.
+  - [ ] Add account recovery via email.
 
 ---
 
@@ -63,9 +64,13 @@ This file outlines the planned features and improvements for **Tabulae**, both t
   - Create a custom component for unknown routes.
   - Add fallback route in `AppRouter`.
 
-- [ ] **Documentation**
-  - Improve code-level documentation and inline comments.
-  - Extend README or developer guides as needed.
+---
+
+## Date and time handling
+
+- [ ] **Date and time handling**
+  - Frontend: display dates in local timezone when needed, use UTC for grouping/filtering.
+  - Consider showing time (not just date) in key views such as movement history.
 
 ---
 
@@ -107,7 +112,7 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 ## Documentation Enhancements
 
-- [ ] Create `docs/architecture.md` with:
+- [x] Create `docs/architecture.md` with:
   - System overview diagram (frontend, backend, DB, Nginx)
   - Flow of requests (e.g., login, WebSocket, stock updates)
   - Tech decisions and tradeoffs
@@ -118,4 +123,3 @@ This file outlines the planned features and improvements for **Tabulae**, both t
   - Auth and context usage
 
 - [ ] Expand code-level comments across backend
-- [ ] Consider documenting services using Mermaid or Excalidraw

@@ -224,6 +224,7 @@ cp .env.template .env
 
 | Variable                   | Description                      | Used by     |
 | -------------------------- | -------------------------------- | ----------- |
+| `ENVIRONMENT`              | Runtime mode: `development` or `production`. Enables secure cookies and disables SQL logging in production. | backend |
 | `TABULAE_DB_USER`          | PostgreSQL username              | db, backend |
 | `TABULAE_DB_PASSWORD`      | PostgreSQL password              | db, backend |
 | `TABULAE_DB_NAME`          | PostgreSQL database name         | db, backend |
@@ -383,6 +384,6 @@ If the frontend can't connect to the WebSocket:
 ✅ Solution:
 
 - Confirm the backend WebSocket endpoint is reachable:  
-  `ws://localhost:8000/ws/movements`
+  `ws://localhost:8000/ws/stock-moves`
 - In production, make sure Nginx is configured to proxy WebSocket connections properly.
 - Ensure the backend container exposes and listens on the correct port (`8000`).

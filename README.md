@@ -80,10 +80,10 @@ The name _Tabulae_ comes from Latin — meaning boards, records, or tablets — 
 ## Technical Highlights
 
 - **Layered backend architecture** — Clear separation between models (SQLModel), schemas (Pydantic), and routers (FastAPI), with shared `Depends()` injection for auth, sessions, and permissions.
-- **JWT access + refresh token flow** — Short-lived access tokens paired with refresh tokens, with role-based guards (`require_admin`) applied at the dependency layer.
+- **JWT access + refresh token flow** — Short-lived access tokens with `jti` claims paired with HttpOnly refresh token cookies. Token revocation on logout via a `revoked_tokens` blocklist, with role-based guards (`require_admin`) applied at the dependency layer.
 - **Isolated test database** — Pytest uses a dedicated PostgreSQL container (port 5433) with per-test session cleanup, ensuring fully isolated and reproducible tests.
 - **Paginated responses** — All list endpoints return a consistent `{ data, total, limit, offset }` shape, ready for frontend pagination.
-- **Real-time WebSocket notifications** — Stock movement events broadcast to connected clients via a WebSocket endpoint.
+- **Real-time WebSocket notifications** — Stock movement events broadcast to authenticated clients via a WebSocket endpoint. Authentication uses a first-message pattern to avoid token exposure in URLs.
 - **Docker Compose orchestration** — Separate dev (hot reload, pgAdmin) and production (Nginx + Gunicorn) configurations with independent Dockerfiles per service.
 
 ---
@@ -265,6 +265,7 @@ cp .env.template .env
 
 This file includes essential configuration such as:
 
+- Runtime environment mode (`development` / `production`)
 - PostgreSQL credentials
 - JWT secret and token durations
 - pgAdmin login
@@ -358,6 +359,7 @@ The following documents provide more detail about using, installing, and evolvin
 
 - [How to Use the App](./docs/USAGE.md) — Overview of the UI and main flows
 - [Setup Guide](./docs/SETUP.md) — Detailed installation & local dev workflow
+- [Architecture](./docs/ARCHITECTURE.md) — System design, data model, and request flows
 - [Version History](./docs/VERSIONS.md) — Release notes and SemVer tags
 - [Roadmap](./docs/ROADMAP.md) — Planned improvements and ideas
 
