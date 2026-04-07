@@ -4,6 +4,18 @@ This file lists the tagged versions of the project and their key milestones.
 
 ---
 
+## v1.3.0 – April 2026
+
+- Secured WebSocket endpoint: authentication via first-message pattern — client sends access token as first message after connecting; invalid or expired tokens are rejected with close code `1008`
+- Added `jti` (JWT ID) claim to all access and refresh tokens
+- Implemented token revocation blocklist: `revoked_tokens` table stores revoked `jti` values on logout; `get_current_user` checks the blocklist on every authenticated request
+- `/auth/logout` now requires the access token and persists the revoked `jti` with its expiration time
+- Added `test_websocket.py`: covers authenticated connection, invalid token rejection, and inactive user rejection
+- Fixed: `/ws/movements` typo in `docs/SETUP.md` troubleshooting — corrected to `/ws/stock-moves`
+- Updated `docs/ARCHITECTURE.md`, `README.md` and `docs/ROADMAP.md`
+
+---
+
 ## v1.2.0 – April 2026
 
 - Restricted product create/update/delete endpoints to admin users only
