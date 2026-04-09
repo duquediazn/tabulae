@@ -190,7 +190,7 @@ This uses docker-compose.yml and starts:
 
 Once running:
 
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:8080
 - Backend (API): http://localhost:8000
 - API Docs: http://localhost:8000/docs
 
@@ -300,7 +300,7 @@ pytest
 
 ### Test structure
 
-Tests are located in the `backend/tests/` directory and organized by feature:
+Tests are located in the `backend/app/tests/` directory and organized by feature:
 
 - `test_users.py`: user creation, roles, permissions
 - `test_auth.py`: login, tokens, password verification

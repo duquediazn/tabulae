@@ -85,7 +85,7 @@ backend/app/
     └── validation.py      # Shared validation helpers
 ```
 
-Data flows strictly downward: **routers → dependencies / schemas → models**. Routers never import from other routers, except `auth.py` which exposes `get_current_user` as a reusable dependency.
+Data flows strictly downward: **routers → dependencies / schemas → models**. Routers never import from other routers.
 
 ### Routers
 
@@ -127,7 +127,7 @@ Authorization is enforced through two FastAPI dependencies:
 
 Role checks are never inlined inside route functions; they are always delegated to these dependencies.
 
-**Token revocation:** every JWT includes a `jti` (JWT ID) claim — a UUID generated at creation time. On logout, the `jti` of the access token is stored in the `revoked_tokens` table alongside its expiration time. `get_current_user` rejects any token whose `jti` appears in this table, making logout effectively immediate regardless of token lifetime.
+**Token revocation:** every JWT includes a `jti` (JWT ID) claim — a UUID generated at creation time. On logout, the `jti` of both the access and refresh tokens is stored in the `revoked_tokens` table alongside their expiration times. `get_current_user` rejects any token whose `jti` appears in this table, making logout effectively immediate regardless of token lifetime.
 
 ### WebSocket
 
