@@ -11,9 +11,7 @@ from datetime import (
 from jwt import DecodeError
 from app.utils.getenv import get_required_env
 from fastapi import HTTPException, status
-from passlib.context import (
-    CryptContext,
-)  # To hash and verify passwords securely with bcrypt
+import bcrypt as _bcrypt  # To hash and verify passwords securely
 import jwt  # To create and decode JWT tokens
 import os  # To access environment variables
 from uuid import uuid4  # To generate unique identifiers for JWT tokens (jti)
@@ -28,20 +26,14 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_DURATION = int(os.getenv("ACCESS_TOKEN_DURATION", 30))  # 30 minutes
 REFRESH_TOKEN_DURATION = int(os.getenv("REFRESH_TOKEN_DURATION", 7))  # 7 days
 
-# Password hashing context
-# - CryptContext with bcrypt is used to securely hash passwords.
-# - bcrypt is the recommended standard for storing passwords due to its salting and resistance to attacks.
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
 def hash_password(password: str) -> str:
     """Generates a secure hash for the given password."""
-    return pwd_context.hash(password)
+    return _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Checks if the entered password matches the stored hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return _bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
 
 
 # Bcrypt uses "salting", so each hash generated is different.

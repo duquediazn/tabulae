@@ -132,7 +132,7 @@ def login(
         httponly=True,
         secure=is_production,
         samesite="lax" if not is_production else "none",
-        path="/auth/refresh",
+        path="/auth/", 
         max_age=REFRESH_TOKEN_DURATION * 24 * 60 * 60,
     )
 
@@ -240,7 +240,7 @@ def logout(
 
     response.delete_cookie(
         key="refresh_token",
-        path="/auth/refresh",
+        path="/auth/", 
         secure=is_production,
         samesite="lax" if not is_production else "none",
     )

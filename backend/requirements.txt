@@ -9,7 +9,7 @@ python-multipart==0.0.9
 SQLAlchemy==2.0.44
 sqlmodel==0.0.27
 psycopg2-binary==2.9.10
-passlib==1.7.4
+bcrypt==4.2.1
 PyJWT==2.10.1
 email-validator==2.2.0
 pytest
