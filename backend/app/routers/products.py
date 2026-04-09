@@ -76,7 +76,7 @@ def get_products(
 
     # Format response
     products = [
-        {**product.__dict__, "category_name": category_name}
+        {**product.model_dump(), "category_name": category_name}
         for product, category_name in products_raw
     ]
 
