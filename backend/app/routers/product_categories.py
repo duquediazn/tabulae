@@ -1,6 +1,6 @@
 from app.utils.validation import normalize_category
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from app.routers.auth import get_current_user
+from app.dependencies import get_current_user
 from sqlmodel import Session, select, func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from typing import Optional

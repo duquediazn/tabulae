@@ -1,17 +1,10 @@
-"""
-This file handles user authentication in the API, including:
-- User registration (/auth/register) → Saves new users in the DB with hashed passwords.
-- Login (/auth/login) → Verifies credentials and returns a JWT token.
-- Get authenticated user data (/auth/profile) → Uses the JWT token to return user info.
-"""
-
 from datetime import timedelta, datetime, timezone
 import os
 from fastapi import Request, Response
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import jwt
 from pydantic import BaseModel
+from app.dependencies import get_current_user, oauth2
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
@@ -27,26 +20,9 @@ from app.utils.authentication import (
     decode_access_token,
 )
 
-"""
-- APIRouter → Creates a route group (/auth).
-- Depends → Manages dependencies, like database and authentication.
-- HTTPException → Raises HTTP errors with custom messages.
-- status → Contains HTTP status codes (400, 401, etc.).
-- OAuth2PasswordBearer → Handles OAuth2 auth with JWT tokens.
-- get_db() → Retrieves a database session.
-- UserCreate, UserResponse → Pydantic validation schemas.
-- hash_password, verify_password, create_access_token, decode_access_token → Auth helper functions.
-"""
-
-# Router configuration
-router = APIRouter(prefix="/auth", tags=["Authentication"])
-
-# OAuth2 auth scheme configuration
-oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
-# Determine if we are in production environment for cookie settings
 is_production = os.getenv("ENVIRONMENT") == "production"
 
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 ### USER REGISTRATION ###
 @router.post(
@@ -117,20 +93,17 @@ def login(
             detail="Database connection error.",
         )
 
-    if not user:
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials."   
         )
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User is inactive. Please contact an administrator to activate your account.",
         )
-    if not verify_password(form_data.password, user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect credentials."
-        )
-
+    
     access_token = create_access_token(
         {"sub": str(user.id), "role": user.role},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_DURATION),
@@ -167,50 +140,7 @@ def login(
         "token_type": "bearer",
     }
 
-
 ### GET AUTHENTICATED USER DATA ###
-def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)):
-    """Retrieves the current user based on the JWT token."""
-    payload = decode_access_token(token)
-
-    # Validate that the token contains the "sub" field
-    user_id_str = payload.get("sub")
-    if not user_id_str:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token."
-        )
-    
-    # Check if the token has been revoked by looking up its jti in the RevokedToken table.
-    jti = payload.get("jti")
-    if jti and db.get(RevokedToken, jti):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked.")
-    
-    user_id = int(user_id_str)  # Convert user ID from string to integer
-
-    # Check if the user still exists in the database
-    try:
-        statement = select(User).where(User.id == user_id)
-        user = db.exec(statement).first()
-    except SQLAlchemyError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error.",
-        )
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found or deleted.",
-        )
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User is inactive. Please contact an administrator to activate your account.",
-        )
-
-    return user
-
-
 @router.get("/profile", response_model=UserResponse)
 def get_profile(user: User = Depends(get_current_user)):
     """Returns the authenticated user's data."""
@@ -229,8 +159,20 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
             detail="Refresh token not found in cookies.",
         )
 
-    # decode_access_token() already handles InvalidTokenError and returns HTTP 401
     payload = decode_access_token(refresh_token)
+
+    jti = payload.get("jti")
+    try:
+        if jti and db.get(RevokedToken, jti):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has been revoked.",
+            )
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error.",
+        )
 
     user_id_str = payload.get("sub")
     if not user_id_str:
@@ -288,36 +230,50 @@ def verify_user_password(
 ### LOGOUT ###
 @router.post("/logout")
 def logout(
-    response: Response, 
-    token: str = Depends(oauth2), 
-    db: Session = Depends(get_db)
+    request: Request,
+    response: Response,
+    token: str = Depends(oauth2),
+    db: Session = Depends(get_db),
 ):
-    """Deletes the refresh token cookie when the user logs out."""
+    """Deletes the refresh token cookie and revokes the access and refresh tokens when the user logs out."""
 
     response.delete_cookie(
         key="refresh_token",
-        path="/auth/refresh", 
-        secure=is_production, 
-        samesite="lax" if not is_production else "none"
+        path="/auth/refresh",
+        secure=is_production,
+        samesite="lax" if not is_production else "none",
     )
 
-    # Revoke the access token by storing its jti in the RevokedToken table.
+    # Revoke both the access token and the refresh token by storing their JTIs.
     try:
-        payload = decode_access_token(token)
-        jti = payload.get("jti")
-        exp = payload.get("exp")
+        access_payload = decode_access_token(token)
+        access_jti = access_payload.get("jti")
+        access_exp = access_payload.get("exp")
+        if access_jti and access_exp:
+            db.add(RevokedToken(
+                jti=access_jti,
+                expires_at=datetime.fromtimestamp(access_exp, timezone.utc),
+            ))
 
-        if jti and exp:
-            revoked_token = RevokedToken(
-                jti=jti, 
-                expires_at=datetime.fromtimestamp(exp, timezone.utc)
-            )
-            db.add(revoked_token)
-            db.commit()
+        refresh_token_value = request.cookies.get("refresh_token")
+        if refresh_token_value:
+            try:
+                refresh_payload = decode_access_token(refresh_token_value)
+                refresh_jti = refresh_payload.get("jti")
+                refresh_exp = refresh_payload.get("exp")
+                if refresh_jti and refresh_exp:
+                    db.add(RevokedToken(
+                        jti=refresh_jti,
+                        expires_at=datetime.fromtimestamp(refresh_exp, timezone.utc),
+                    ))
+            except HTTPException:
+                pass  # If the refresh token is invalid or expired, we can ignore it since it's already unusable.
+
+        db.commit()
     except HTTPException:
-        pass # If the token is invalid or expired, we can ignore it since the user is logging out anyway.
+        pass  
     except IntegrityError:
-        db.rollback() 
+        db.rollback()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
 from app.models.stock_move import StockMove
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.dependencies import get_current_user
 from app.schemas.user import (
     BulkStatusUpdate,
     PaginatedUserResponse,
@@ -96,6 +96,8 @@ def create_user(
 
     try:
         db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -108,8 +110,6 @@ def create_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while registering the user.",
         )
-    db.commit()
-    db.refresh(new_user)
 
     return new_user  # `UserResponse` automatically excludes the password
 
@@ -270,6 +270,8 @@ def update_user(
 
     try:
         db.add(user)
+        db.commit()
+        db.refresh(user)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -282,8 +284,6 @@ def update_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while updating the user.",
         )
-    db.commit()
-    db.refresh(user)
     return user
 
 
@@ -324,11 +324,11 @@ def delete_user(
 
     try:
         db.delete(user)
+        db.commit()
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error deleting the user",
         )
-    db.commit()
     return user  # Returns the deleted user's data

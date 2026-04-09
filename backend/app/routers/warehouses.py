@@ -8,7 +8,7 @@ from app.models.stock_move_line import StockMoveLine
 from app.models.stock import Stock
 from app.models.warehouse import Warehouse
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.dependencies import get_current_user
 from app.schemas.warehouse import (
     PaginatedWarehouseResponse,
     WarehouseCreate,
@@ -97,11 +97,11 @@ def bulk_update_is_active_warehouses(
             db.add(warehouse)
             updated.append(warehouse)
 
+        db.commit()
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(500, detail="Error updating warehouses")
 
-    db.commit()
     return {
         "message": f"{len(updated)} warehouses updated",
         "skipped": len(data.ids) - len(updated),
@@ -142,13 +142,15 @@ def get_warehouse(
 def create_warehouse(
     warehouse_data: WarehouseCreate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),  # Only admins can create
+    admin: User = Depends(require_admin), 
 ):
     """Creates a new warehouse. Only administrators are allowed."""
     new_warehouse = Warehouse(**warehouse_data.model_dump())
 
     try:
         db.add(new_warehouse)
+        db.commit()
+        db.refresh(new_warehouse)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -161,8 +163,6 @@ def create_warehouse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while registering the warehouse.",
         )
-    db.commit()
-    db.refresh(new_warehouse)
     return new_warehouse
 
 
@@ -171,7 +171,7 @@ def update_warehouse(
     id: int,
     warehouse_update: WarehouseUpdate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),  # Only admins can modify
+    admin: User = Depends(require_admin), 
 ):
     """Edit the description or is_active status of a warehouse. Admins only."""
     try:
@@ -209,6 +209,8 @@ def update_warehouse(
 
     try:
         db.add(warehouse)
+        db.commit()
+        db.refresh(warehouse)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -221,8 +223,6 @@ def update_warehouse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while updating the warehouse.",
         )
-    db.commit()
-    db.refresh(warehouse)
     return warehouse
 
 

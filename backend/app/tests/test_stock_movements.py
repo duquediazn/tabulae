@@ -1032,34 +1032,51 @@ def test_user_sees_only_their_own_movement_summary(client, session):
 
 # [X] GET    /stock-movements/last-year
 
-def test_admin_can_view_all_movements_from_last_year(client, session):
-    """Ensure admin receives all movements from last 12 months"""
+def test_admin_can_view_all_aggregated_movements_from_last_year(client, session):
+    """Ensure admin receives aggregated data for all users in the last 12 months, excluding older movements."""
     headers, admin = get_admin_headers(client, session)
 
-    # Movement 1: within the last year
-    recent_date = datetime.now(timezone.utc) - timedelta(days=30)
-    move_recent = StockMove(
-        move_type="incoming", user_id=admin.id, created_at=recent_date
+    other_user = create_user_in_db(
+        session, "Other User", "other@example.com", "pass1234", is_active=True
     )
 
-    # Movement 2: older than one year
+    recent_date = datetime.now(timezone.utc) - timedelta(days=30)
+    # admin: 1 incoming; other_user: 1 outgoing — same month
+    move_admin = StockMove(move_type="incoming", user_id=admin.id, created_at=recent_date)
+    move_other = StockMove(move_type="outgoing", user_id=other_user.id, created_at=recent_date)
+
+    # Movement older than one year (should not appear in results)
     old_date = datetime.now(timezone.utc) - timedelta(days=400)
     move_old = StockMove(move_type="incoming", user_id=admin.id, created_at=old_date)
 
-    session.add_all([move_recent, move_old])
+    session.add_all([move_admin, move_other, move_old])
     session.commit()
 
     response = client.get("/stock-movements/last-year", headers=headers)
     assert response.status_code == 200
     data = response.json()
 
-    move_ids = [m["move_id"] for m in data]
-    assert move_recent.move_id in move_ids
-    assert move_old.move_id not in move_ids
+    # Response is a list of monthly aggregates: {month, incoming, outgoing}
+    assert isinstance(data, list)
+    for entry in data:
+        assert "month" in entry
+        assert "incoming" in entry
+        assert "outgoing" in entry
+
+    # Admin sees both users: at least 1 incoming (admin) and 1 outgoing (other_user)
+    total_incoming = sum(entry["incoming"] for entry in data)
+    total_outgoing = sum(entry["outgoing"] for entry in data)
+    assert total_incoming >= 1
+    assert total_outgoing >= 1
+
+    # The old movement must not appear in the results
+    months = [entry["month"] for entry in data]
+    old_month = old_date.strftime("%Y-%m")
+    assert not any(m.startswith(old_month) for m in months)
 
 
-def test_user_only_sees_own_movements_from_last_year(client, session):
-    """Ensure user sees only their own movements from last 12 months"""
+def test_user_only_sees_own_aggregated_movements_from_last_year(client, session):
+    """Ensure user receives only their own movements aggregated, not other users'."""
     user1 = create_user_in_db(
         session, "User1", "u1@example.com", "pass1", is_active=True
     )
@@ -1072,8 +1089,9 @@ def test_user_only_sees_own_movements_from_last_year(client, session):
 
     recent = datetime.now(timezone.utc) - timedelta(days=10)
 
+    # user1: 1 incoming; user2: 1 outgoing — same month
     move_user1 = StockMove(move_type="incoming", user_id=user1.id, created_at=recent)
-    move_user2 = StockMove(move_type="incoming", user_id=user2.id, created_at=recent)
+    move_user2 = StockMove(move_type="outgoing", user_id=user2.id, created_at=recent)
     session.add_all([move_user1, move_user2])
     session.commit()
 
@@ -1081,6 +1099,9 @@ def test_user_only_sees_own_movements_from_last_year(client, session):
     assert response.status_code == 200
     data = response.json()
 
-    assert all(m["user_id"] == user1.id for m in data)
-    assert move_user1.move_id in [m["move_id"] for m in data]
-    assert move_user2.move_id not in [m["move_id"] for m in data]
+    assert isinstance(data, list)
+    # user1 has 1 incoming and 0 outgoing; user2's outgoing must not appear
+    total_incoming = sum(entry["incoming"] for entry in data)
+    total_outgoing = sum(entry["outgoing"] for entry in data)
+    assert total_incoming >= 1
+    assert total_outgoing == 0

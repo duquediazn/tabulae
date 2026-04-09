@@ -129,8 +129,8 @@ def test_login_user_not_found(client):
         "/auth/login",
         data={"username": "nonexistent@example.com", "password": "whateverpass"},
     )
-    assert response.status_code == 404
-    assert response.json()["detail"] == "User not found."
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid credentials."
 
 
 def test_login_wrong_password(client, session):
