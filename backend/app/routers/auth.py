@@ -56,9 +56,11 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     )
 
     try:
-        db.add(new_user)  # Adds object to the session context (pending commit)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
     except IntegrityError:
-        db.rollback()  # Rollback uncommitted changes
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Database integrity error.",
@@ -70,8 +72,6 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Internal server error while registering user.",
         )
 
-    db.commit()  # Commit current transaction
-    db.refresh(new_user)  # Refresh instance with current DB values
     return new_user  # UserResponse will automatically exclude the password
 
 

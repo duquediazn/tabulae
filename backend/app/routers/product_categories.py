@@ -48,7 +48,6 @@ def create_category(
 
     try:
         db.add(category)
-        db.flush()
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -77,8 +76,8 @@ def update_category(
 
     try:
         db.add(category)
-        db.flush()
         db.commit()
+        db.refresh(category)
     except IntegrityError:
         db.rollback()
         raise HTTPException(400, detail="Another category with that name already exists")
@@ -110,7 +109,6 @@ def delete_category(
 
     try:
         db.delete(category)
-        db.flush()
         db.commit()
     except SQLAlchemyError:
         db.rollback()
