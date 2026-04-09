@@ -1,6 +1,7 @@
+import logging
 from collections import defaultdict
 from datetime import date, datetime, time, timezone
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError
 from dateutil.relativedelta import relativedelta
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -25,7 +26,10 @@ from app.schemas.stock_move_line import (
 )
 from app.utils.validation import is_admin_user
 from app.routers.websocket import manager
+from app.services.stock_move_service import create_stock_movement
 import anyio
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/stock-movements", tags=["Stock Movements"])
@@ -57,10 +61,12 @@ def get_movements(
             statement = statement.where(StockMove.move_type == move_type)
 
         if date_from:
-            statement = statement.where(StockMove.created_at >= date_from)
+            dt_from = datetime.combine(date_from, time.min, tzinfo=timezone.utc)
+            statement = statement.where(StockMove.created_at >= dt_from)
 
         if date_to:
-            statement = statement.where(StockMove.created_at <= date_to)
+            dt_to = datetime.combine(date_to, time.max, tzinfo=timezone.utc)
+            statement = statement.where(StockMove.created_at <= dt_to)
 
         if user_id and is_admin_user(current_user):
             statement = statement.where(StockMove.user_id == user_id)
@@ -236,155 +242,26 @@ def create_movement(
     - If a product is inactive, the operation is interrupted.
     - If a warehouse is inactive, the operation is interrupted.
     """
+    new_movement, created_lines = create_stock_movement(movement_data, current_user.id, db)
 
-    if not movement_data.lines:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The movement must contain at least one line.",
-        )
-
-    # Prevent registering products with expired expiration dates.
-    for line in movement_data.lines:
-        if (
-            line.expiration_date
-            and line.expiration_date <= date.today()
-            and movement_data.move_type == "incoming"
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    f"The line with product {line.product_id}, lot '{line.lot}', "
-                    f"has an expired or same-day expiration date: {line.expiration_date}."
-                ),
-            )
-
-    # Maximum number of lines per movement
-    if len(movement_data.lines) > 100:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The maximum number of allowed lines is 100.",
-        )
-
-    # Create the stock movement
-    new_movement = StockMove(
-        move_type=movement_data.move_type,
-        user_id=current_user.id,
-    )
-
+    # Broadcast to connected WebSocket clients.
     try:
-        db.add(new_movement)
-        db.flush()
+        message = f"New stock movement recorded: {new_movement.move_id} ({new_movement.move_type})"
 
-        warehouses = [line.warehouse_id for line in movement_data.lines]
-        products = [line.product_id for line in movement_data.lines]
+        async def _broadcast(msg: str):
+            await manager.broadcast(msg)
 
-        active_warehouses = db.exec(
-            select(Warehouse.id).where(
-                Warehouse.id.in_(warehouses), Warehouse.is_active == True
-            )
-        ).all()
-
-        diff = set(warehouses) - set(active_warehouses)
-        if diff:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"The following warehouses are inactive or do not exist: {diff}",
-            )
-
-        active_products = db.exec(
-            select(Product.id).where(
-                Product.id.in_(products), Product.is_active == True
-            )
-        ).all()
-
-        diff = set(products) - set(active_products)
-        if diff:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"The following products are inactive or do not exist: {diff}",
-            )
-
-        # Add the movement lines (if present)
-        for i, line_data in enumerate(movement_data.lines, 1):
-
-            # Creates stock movement lines
-            new_line = StockMoveLine(
-                move_id=new_movement.move_id,
-                line_id=i,
-                warehouse_id=line_data.warehouse_id,
-                product_id=line_data.product_id,
-                lot=line_data.lot or "NO_LOT",
-                expiration_date=line_data.expiration_date,
-                quantity=line_data.quantity,
-            )
-            db.add(new_line)
-
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        # logger.error("DB error on create_movement: %s", str(e))
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Integrity error: duplicate or invalid reference.",
-        )
-    except HTTPException:
-        db.rollback()
-        raise
-    except SQLAlchemyError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="Database internal server error"
-        )
-
-    # Retrieve user associated with the movement
-    try:
-        user_name = db.exec(
-            select(User.name).where(User.id == current_user.id)
-        ).first()
-    except SQLAlchemyError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error retrieving the user associated with the movement",
-        )
-
-    # Retrieve associated lines
-    try:
-        movement_lines = db.exec(
-            select(StockMoveLine).where(StockMoveLine.move_id == new_movement.move_id)
-        ).all()
-    except SQLAlchemyError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error",
-        )
-
-    # Send message to all connected WebSocket clients
-    try:
-        mensaje = f"New stock movement recorded: {new_movement.move_id} ({new_movement.move_type})"
-
-        # Asynchronous function to broadcast the message
-        async def emitir_websocket_mensaje(mensaje: str):
-            await manager.broadcast(mensaje)
-
-        """
-        AnyIO is used to emit a WebSocket message asynchronously from a synchronous route, 
-        ensuring compatibility with FastAPI's event loop.
-        """
-
-        anyio.from_thread.run(emitir_websocket_mensaje, mensaje)
-
+        anyio.from_thread.run(_broadcast, message)
     except Exception as e:
-        print("Error while emitting WebSocket:", str(e))
+        logger.warning("WebSocket broadcast failed: %s", str(e))
 
-    # Return the object with its lines
     return StockMoveResponse(
         move_id=new_movement.move_id,
         created_at=new_movement.created_at,
         move_type=new_movement.move_type,
         user_id=new_movement.user_id,
-        user_name=user_name or "Unknown",
-        lines=[StockMoveLineResponse.model_validate(line) for line in movement_lines],
+        user_name=current_user.name,
+        lines=[StockMoveLineResponse.model_validate(line) for line in created_lines],
     )
 
 
@@ -473,9 +350,7 @@ def count_movements_by_move_type(
 ):
     """Counts the number of stock movements grouped by move type (incoming, outgoing)."""
     try:
-        statement = select(StockMove.move_type, func.count()).join(
-            User, StockMove.user_id == User.id
-        )
+        statement = select(StockMove.move_type, func.count()).select_from(StockMove)
 
         if not is_admin_user(current_user):
             statement = statement.where(StockMove.user_id == current_user.id)
