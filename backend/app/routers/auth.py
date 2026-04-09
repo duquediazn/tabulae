@@ -17,6 +17,7 @@ from app.utils.authentication import (
     hash_password,
     verify_password,
     create_access_token,
+    create_refresh_token,
     decode_access_token,
 )
 
@@ -55,9 +56,11 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     )
 
     try:
-        db.add(new_user)  # Adds object to the session context (pending commit)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
     except IntegrityError:
-        db.rollback()  # Rollback uncommitted changes
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Database integrity error.",
@@ -69,8 +72,6 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Internal server error while registering user.",
         )
 
-    db.commit()  # Commit current transaction
-    db.refresh(new_user)  # Refresh instance with current DB values
     return new_user  # UserResponse will automatically exclude the password
 
 
@@ -108,7 +109,7 @@ def login(
         {"sub": str(user.id), "role": user.role},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_DURATION),
     )
-    refresh_token = create_access_token(
+    refresh_token = create_refresh_token(
         {"sub": str(user.id)}, expires_delta=timedelta(days=REFRESH_TOKEN_DURATION)
     )
 
@@ -131,7 +132,7 @@ def login(
         httponly=True,
         secure=is_production,
         samesite="lax" if not is_production else "none",
-        path="/auth/refresh",
+        path="/auth/", 
         max_age=REFRESH_TOKEN_DURATION * 24 * 60 * 60,
     )
 
@@ -159,7 +160,7 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
             detail="Refresh token not found in cookies.",
         )
 
-    payload = decode_access_token(refresh_token)
+    payload = decode_access_token(refresh_token, expected_type="refresh")
 
     jti = payload.get("jti")
     try:
@@ -239,7 +240,7 @@ def logout(
 
     response.delete_cookie(
         key="refresh_token",
-        path="/auth/refresh",
+        path="/auth/", 
         secure=is_production,
         samesite="lax" if not is_production else "none",
     )

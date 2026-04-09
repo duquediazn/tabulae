@@ -259,8 +259,8 @@ def deactivate_warehouse(
 
         if stock:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Warehouse {id} is not empty and therefore cannot be deactivated.",
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Warehouse {id} is not empty and therefore cannot be deleted.",
             )
 
         movement_exists = db.exec(
@@ -271,7 +271,7 @@ def deactivate_warehouse(
 
         if movement_exists:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_409_CONFLICT,
                 detail="Cannot delete this warehouse because it has registered movements."
             )
             

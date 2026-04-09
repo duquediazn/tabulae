@@ -137,6 +137,14 @@ A single WebSocket endpoint is registered at `/ws/stock-moves`. It uses a `Conne
 
 When a stock movement is created via the REST API, the `stock_moves` router broadcasts a notification through this manager, so connected clients can update their UI without polling.
 
+> **Production limitation — single-process only.** `ConnectionManager` stores active connections in a plain Python list inside the process that owns it. The production Docker Compose configuration runs Gunicorn with multiple worker processes. Each worker has its own independent `ConnectionManager` instance: a broadcast triggered by Worker 1 (handling a stock movement POST) will never reach clients connected to Worker 2 or 3. As a result, real-time notifications are unreliable under multi-worker deployments.
+>
+> Acceptable workarounds for a future production setup:
+> - **Sticky sessions** — configure the load balancer (e.g., Nginx `ip_hash`) so each client always routes to the same worker. Simple but does not survive worker restarts.
+> - **Redis Pub/Sub** — each worker subscribes to a shared Redis channel; any worker publishing a message reaches all connected clients regardless of which worker they are attached to. This is the standard scalable solution.
+>
+> The current single-worker development and demo setup is not affected.
+
 ---
 
 ## Data Model

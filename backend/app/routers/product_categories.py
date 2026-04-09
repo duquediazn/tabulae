@@ -30,8 +30,8 @@ def list_categories(
 
     try:
         statement = select(ProductCategory).order_by(ProductCategory.name)
+        total = db.exec(select(func.count()).select_from(statement.subquery())).first()
         categories = db.exec(statement.limit(limit).offset(offset)).all()
-        total = db.exec(select(func.count()).select_from(ProductCategory)).first()
     except SQLAlchemyError:
         raise HTTPException(500, detail="Error retrieving product categories")
     return {"data": categories, "total": total, "limit": limit, "offset": offset}
@@ -48,7 +48,6 @@ def create_category(
 
     try:
         db.add(category)
-        db.flush()
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -68,7 +67,10 @@ def update_category(
     admin=Depends(require_admin),
 ):
     """Updates a category (only admins)."""
-    category = db.get(ProductCategory, id)
+    try:
+        category = db.get(ProductCategory, id)
+    except SQLAlchemyError:
+        raise HTTPException(500, detail="Error updating category")
     if not category:
         raise HTTPException(404, detail="Category not found")
 
@@ -77,8 +79,8 @@ def update_category(
 
     try:
         db.add(category)
-        db.flush()
         db.commit()
+        db.refresh(category)
     except IntegrityError:
         db.rollback()
         raise HTTPException(400, detail="Another category with that name already exists")
@@ -96,7 +98,10 @@ def delete_category(
     admin=Depends(require_admin),
 ):
     """Deletes a category with no associated products (only admins)."""
-    category = db.get(ProductCategory, id)
+    try:
+        category = db.get(ProductCategory, id)
+    except SQLAlchemyError:
+        raise HTTPException(500, detail="Error deleting category")
     if not category:
         raise HTTPException(404, detail="Category not found")
 
@@ -110,7 +115,6 @@ def delete_category(
 
     try:
         db.delete(category)
-        db.flush()
         db.commit()
     except SQLAlchemyError:
         db.rollback()

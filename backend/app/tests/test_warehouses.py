@@ -429,7 +429,7 @@ def test_admin_cannot_delete_warehouse_with_movements(client, session):
     session.commit()
 
     response = client.delete(f"/warehouses/{wh.id}", headers=headers)
-    assert response.status_code == 400
+    assert response.status_code == 409
     assert "movements" in response.json()["detail"].lower()
 
 def test_admin_cannot_delete_nonexistent_warehouse(client, session):

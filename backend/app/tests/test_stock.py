@@ -71,6 +71,33 @@ def test_admin_can_list_all_stock(client, session):
     assert any(item["sku"] == "STOCK001" for item in data["data"])
 
 
+def test_stock_total_is_full_count_not_capped_by_limit(client, session):
+    """Verify that 'total' in paginated stock response reflects the real record count, not the limit."""
+    headers, _ = get_admin_headers(client, session)
+
+    category = ProductCategory(name="PagCat")
+    session.add(category)
+    session.commit()
+
+    warehouse = Warehouse(description="PagWH", is_active=True)
+    session.add(warehouse)
+    session.commit()
+
+    product = Product(sku="PAGSKU", short_name="PagProd", category_id=category.id)
+    session.add(product)
+    session.commit()
+
+    for i in range(15):
+        session.add(Stock(warehouse_id=warehouse.id, product_id=product.id, lot=f"LOT{i:02d}", quantity=1))
+    session.commit()
+
+    response = client.get("/stock/?limit=5", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 15
+    assert len(data["data"]) == 5
+
+
 # [x] GET    /stock/warehouse/{warehouse_id}
 
 

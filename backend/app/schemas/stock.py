@@ -4,13 +4,10 @@ import datetime
 
 
 class StockBase(BaseModel):
-    """Base schema with common fields for stock."""
+    """Base schema with native stock table fields."""
 
     warehouse_id: int = Field(..., description="Associated warehouse ID")
-    warehouse_name: str = Field(..., description="Associated warehouse name")
     product_id: int = Field(..., description="Associated product ID")
-    product_name: str = Field(..., description="Associated product name")
-    sku: str = Field(..., min_length=3, max_length=20, pattern="^[A-Z0-9]+$")
     lot: str = Field(default="NO_LOT", description="Product lot identifier")
     expiration_date: Optional[datetime.date] = Field(
         default=None, description="Lot expiration date (if applicable)"
@@ -19,10 +16,13 @@ class StockBase(BaseModel):
 
 
 class StockResponse(StockBase):
-    """Schema for returning stock details."""
+    """Schema for returning stock details, enriched with JOIN fields."""
 
-    class Config:
-        from_attributes = True
+    warehouse_name: str = Field(..., description="Associated warehouse name")
+    product_name: str = Field(..., description="Associated product name")
+    sku: str = Field(..., min_length=3, max_length=20, pattern="^[A-Z0-9]+$")
+
+    model_config = {"from_attributes": True}
 
 
 class StockSummary(BaseModel):

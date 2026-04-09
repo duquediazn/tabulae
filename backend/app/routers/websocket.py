@@ -28,8 +28,14 @@ class ConnectionManager:
 
     async def broadcast(self, message: str):
         """This method sends a text message to all connected clients."""
+        dead = []
         for connection in self.active_connections:
-            await connection.send_text(message)
+            try:
+                await connection.send_text(message)
+            except Exception:
+                dead.append(connection)
+        for conn in dead:
+            self.active_connections.remove(conn)
 
 
 # Instantiate so it can be used anywhere in the code

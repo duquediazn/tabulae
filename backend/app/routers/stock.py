@@ -31,6 +31,33 @@ from app.schemas.stock import (
 router = APIRouter(prefix="/stock", tags=["Stock"])
 
 
+def _row_to_stock_response(item) -> StockResponse:
+    return StockResponse(
+        warehouse_id=item.warehouse_id,
+        warehouse_name=item.description,
+        product_id=item.product_id,
+        product_name=item.short_name,
+        sku=item.sku,
+        lot=item.lot,
+        expiration_date=item.expiration_date,
+        quantity=item.quantity,
+    )
+
+
+def _row_to_stock_history(item) -> StockHistory:
+    return StockHistory(
+        move_id=item.move_id,
+        created_at=item.created_at,
+        move_type=item.move_type,
+        warehouse_id=item.warehouse_id,
+        product_id=item.product_id,
+        sku=item.sku,
+        lot=item.lot,
+        quantity=item.quantity,
+        user_name=item.user_name,
+    )
+
+
 @router.get("/", response_model=PaginatedStockResponse)
 def get_all_stock(
     db: Session = Depends(get_db),
@@ -67,19 +94,7 @@ def get_all_stock(
         )
 
     return PaginatedStockResponse(
-        data=[
-            StockResponse(
-                warehouse_id=item.warehouse_id,
-                warehouse_name=item.description,
-                product_id=item.product_id,
-                product_name=item.short_name,
-                sku=item.sku,
-                lot=item.lot,
-                expiration_date=item.expiration_date,
-                quantity=item.quantity,
-            )
-            for item in stock
-        ],
+        data=[_row_to_stock_response(item) for item in stock],
         total=total_records or 0,
         limit=limit,
         offset=offset,
@@ -123,19 +138,7 @@ def get_stock_by_warehouse(
             detail="Database connection error",
         )
     return PaginatedStockResponse(
-        data=[
-            StockResponse(
-                warehouse_id=item.warehouse_id,
-                warehouse_name=item.description,
-                product_id=item.product_id,
-                product_name=item.short_name,
-                sku=item.sku,
-                lot=item.lot,
-                expiration_date=item.expiration_date,
-                quantity=item.quantity,
-            )
-            for item in stock
-        ],
+        data=[_row_to_stock_response(item) for item in stock],
         total=total_records or 0,
         limit=limit,
         offset=offset,
@@ -295,19 +298,7 @@ def get_stock_by_expiration(
         )
 
     return PaginatedStockResponse(
-        data=[
-            StockResponse(
-                warehouse_id=item.warehouse_id,
-                warehouse_name=item.description,
-                product_id=item.product_id,
-                product_name=item.short_name,
-                sku=item.sku,
-                lot=item.lot,
-                expiration_date=item.expiration_date,
-                quantity=item.quantity,
-            )
-            for item in stock
-        ],
+        data=[_row_to_stock_response(item) for item in stock],
         total=total_records or 0,
         limit=limit,
         offset=offset,
@@ -412,19 +403,7 @@ def get_stock_by_warehouse_and_product(
         )
 
     return PaginatedStockResponse(
-        data=[
-            StockResponse(
-                warehouse_id=item.warehouse_id,
-                warehouse_name=item.description,
-                product_id=item.product_id,
-                product_name=item.short_name,
-                sku=item.sku,
-                lot=item.lot,
-                expiration_date=item.expiration_date,
-                quantity=item.quantity,
-            )
-            for item in stock
-        ],
+        data=[_row_to_stock_response(item) for item in stock],
         total=total_records or 0,
         limit=limit,
         offset=offset,
@@ -469,20 +448,7 @@ def get_stock_history(
         )
 
     return PaginatedStockHistory(
-        data=[
-            StockHistory(
-                move_id=item.move_id,
-                created_at=item.created_at,
-                move_type=item.move_type,
-                warehouse_id=item.warehouse_id,
-                product_id=item.product_id,
-                sku=item.sku,
-                lot=item.lot,
-                quantity=item.quantity,
-                user_name=item.user_name,
-            )
-            for item in history
-        ],
+        data=[_row_to_stock_history(item) for item in history],
         total=total_records or 0,
         limit=limit,
         offset=offset,
@@ -529,20 +495,7 @@ def get_product_stock_history(
         )
 
     return PaginatedStockHistory(
-        data=[
-            StockHistory(
-                move_id=item.move_id,
-                created_at=item.created_at,
-                move_type=item.move_type,
-                warehouse_id=item.warehouse_id,
-                product_id=item.product_id,
-                sku=item.sku,
-                lot=item.lot,
-                quantity=item.quantity,
-                user_name=item.user_name,
-            )
-            for item in history
-        ],
+        data=[_row_to_stock_history(item) for item in history],
         total=total_records or 0,
         limit=limit,
         offset=offset,
@@ -589,20 +542,7 @@ def get_warehouse_stock_history(
         )
 
     return PaginatedStockHistory(
-        data=[
-            StockHistory(
-                move_id=item.move_id,
-                created_at=item.created_at,
-                move_type=item.move_type,
-                warehouse_id=item.warehouse_id,
-                product_id=item.product_id,
-                sku=item.sku,
-                lot=item.lot,
-                quantity=item.quantity,
-                user_name=item.user_name,
-            )
-            for item in history
-        ],
+        data=[_row_to_stock_history(item) for item in history],
         total=total_records or 0,
         limit=limit,
         offset=offset,
@@ -656,20 +596,7 @@ def get_warehouse_and_product_stock_history(
         )
 
     return PaginatedStockHistory(
-        data=[
-            StockHistory(
-                move_id=item.move_id,
-                created_at=item.created_at,
-                move_type=item.move_type,
-                warehouse_id=item.warehouse_id,
-                product_id=item.product_id,
-                sku=item.sku,
-                lot=item.lot,
-                quantity=item.quantity,
-                user_name=item.user_name,
-            )
-            for item in history
-        ],
+        data=[_row_to_stock_history(item) for item in history],
         total=total_records or 0,
         limit=limit,
         offset=offset,

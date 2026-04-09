@@ -12,7 +12,7 @@ oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)):
     """Retrieves the current user based on the JWT token."""
-    payload = decode_access_token(token)
+    payload = decode_access_token(token, expected_type="access")
 
     # Validate that the token contains the "sub" field
     user_id_str = payload.get("sub")
@@ -23,9 +23,17 @@ def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)
     
     # Check if the token has been revoked by looking up its jti in the RevokedToken table.
     jti = payload.get("jti")
-    if jti and db.get(RevokedToken, jti):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked.")
-    
+    try:
+        if jti and db.get(RevokedToken, jti):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked.")
+    except HTTPException:
+        raise
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error.",
+        )
+
     user_id = int(user_id_str)  # Convert user ID from string to integer
 
     # Check if the user still exists in the database
