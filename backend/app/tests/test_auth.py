@@ -426,6 +426,23 @@ def test_user_token_is_revoked_after_logout(client, active_user):
     assert response.status_code == 401
     assert "revoked" in response.json()["detail"].lower()
 
+def test_refresh_token_is_revoked_after_logout(client, active_user):
+    """Ensure the refresh token is also revoked on logout and cannot be used to get a new access token."""
+    login_response = client.post(
+        "/auth/login",
+        data={"username": active_user.email, "password": "testpass123"},
+    )
+    assert login_response.status_code == 200
+    cookies = login_response.cookies
+    token = login_response.json()["access_token"]
+    headers = get_auth_headers(token)
+
+    client.post("/auth/logout", headers=headers, cookies=cookies)
+
+    refresh_response = client.post("/auth/refresh", cookies=cookies)
+    assert refresh_response.status_code == 401
+
+
 def test_user_cannot_logout_without_token(client):
     response = client.post("/auth/logout")
     assert response.status_code == 401

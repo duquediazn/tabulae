@@ -37,6 +37,7 @@ import pytest
 from sqlmodel import SQLModel, create_engine, Session, delete
 from app.models.database import get_db
 from app.models.user import User
+from app.models.revoked_token import RevokedToken
 from app.models.stock_move import StockMove
 from app.models.stock_move_line import StockMoveLine
 from app.models.warehouse import Warehouse
@@ -76,6 +77,7 @@ def session():
         session.exec(delete(User))
         session.exec(delete(Warehouse))
         session.exec(delete(ProductCategory))
+        session.exec(delete(RevokedToken))
         session.commit()
         yield session
 
