@@ -18,7 +18,7 @@ from app.schemas.stock_move import (
     PaginatedStockMovesResponse,
     StockMoveSummary,
 )
-from app.routers.auth import get_current_user
+from app.dependencies import get_current_user
 from app.schemas.stock_move_line import (
     StockMoveLineResponse,
     PaginatedStockMoveLineWithNamesResponse,

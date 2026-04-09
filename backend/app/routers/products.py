@@ -8,7 +8,7 @@ from app.models.database import get_db
 from app.models.product import Product
 from app.models.stock import Stock
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.dependencies import get_current_user
 from app.schemas.product import (
     BulkStatusUpdateRequest,
     PaginatedProductResponse,
@@ -168,6 +168,8 @@ def create_product(
 
     try:
         db.add(new_product)
+        db.commit()
+        db.refresh(new_product)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -180,9 +182,6 @@ def create_product(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal error while creating the product.",
         )
-
-    db.commit()
-    db.refresh(new_product)
 
     return {**new_product.model_dump(), "category_name": category.name}
 
@@ -217,11 +216,11 @@ def bulk_update_product_status(
             db.add(product)
             updated_products.append(product)
 
+        db.commit()
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(500, detail="Error while updating products")
 
-    db.commit()
     return {
         "message": f"{len(updated_products)} products updated",
         "skipped": len(data.ids) - len(updated_products),

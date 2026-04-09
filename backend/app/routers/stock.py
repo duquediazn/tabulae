@@ -12,7 +12,7 @@ from app.models.stock_move_line import StockMoveLine
 from app.models.product import Product
 from app.models.stock import Stock
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.dependencies import get_current_user
 from app.schemas.stock import (
     AvailableLotResponse,
     PaginatedStockHistory,
@@ -54,10 +54,8 @@ def get_all_stock(
             .join(Warehouse, Warehouse.id == Stock.warehouse_id)
             .join(Product, Product.id == Stock.product_id)
             .order_by(Stock.warehouse_id, Stock.product_id, Stock.lot)
-            .limit(limit)
-            .offset(offset)
         )
-        stock = db.exec(statement).all()
+        stock = db.exec(statement.limit(limit).offset(offset)).all()
         total_records = db.exec(
             select(func.count()).select_from(statement.subquery())
         ).first()
