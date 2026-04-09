@@ -258,6 +258,26 @@ def test_refresh_token_invalid_token(client):
     assert response.json()["detail"] == "Invalid token"
 
 
+def test_refresh_fails_with_access_token(client, active_user):
+    """An access token must not be accepted as a refresh token."""
+    access_token = get_token_for_user(client, active_user.email, "testpass123")
+    response = client.post("/auth/refresh", cookies={"refresh_token": access_token})
+    assert response.status_code == 401
+
+
+def test_profile_fails_with_refresh_token(client, active_user):
+    """A refresh token must not be accepted as a bearer access token."""
+    login_response = client.post(
+        "/auth/login",
+        data={"username": active_user.email, "password": "testpass123"},
+    )
+    assert login_response.status_code == 200
+    refresh_token_value = login_response.cookies.get("refresh_token")
+    headers = {"Authorization": f"Bearer {refresh_token_value}"}
+    response = client.get("/auth/profile", headers=headers)
+    assert response.status_code == 401
+
+
 def test_refresh_token_deleted_user(client, session):
     user = create_user_in_db(
         session, "Ghost", "ghost2@example.com", "ghostpass123", is_active=True

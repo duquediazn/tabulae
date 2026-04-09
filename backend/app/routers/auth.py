@@ -17,6 +17,7 @@ from app.utils.authentication import (
     hash_password,
     verify_password,
     create_access_token,
+    create_refresh_token,
     decode_access_token,
 )
 
@@ -108,7 +109,7 @@ def login(
         {"sub": str(user.id), "role": user.role},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_DURATION),
     )
-    refresh_token = create_access_token(
+    refresh_token = create_refresh_token(
         {"sub": str(user.id)}, expires_delta=timedelta(days=REFRESH_TOKEN_DURATION)
     )
 
@@ -159,7 +160,7 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
             detail="Refresh token not found in cookies.",
         )
 
-    payload = decode_access_token(refresh_token)
+    payload = decode_access_token(refresh_token, expected_type="refresh")
 
     jti = payload.get("jti")
     try:

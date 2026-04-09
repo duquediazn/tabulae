@@ -52,19 +52,25 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
     """Creates a JWT access token with an expiration time."""
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + expires_delta
-    to_encode.update({"exp": expire, "jti": str(uuid4())})  # Add expiration and unique ID (jti) to the token
+    to_encode.update({"exp": expire, "jti": str(uuid4()), "type": "access"})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-# data → Contains user information (e.g., email or ID).
-# The data is copied, expiration is added, and it's signed with SECRET_KEY and HS256.
-# Returns a secure JWT token that the user will send in each request.
+def create_refresh_token(data: dict, expires_delta: timedelta) -> str:
+    """Creates a JWT refresh token with an expiration time."""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + expires_delta
+    to_encode.update({"exp": expire, "jti": str(uuid4()), "type": "refresh"})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def decode_access_token(token: str):
-    """Decodes a JWT token and returns the payload or raises an exception if invalid."""
+def decode_access_token(token: str, expected_type: str | None = None):
+    """Decodes a JWT token and returns the payload or raises an exception if invalid.
+
+    If expected_type is provided, raises 401 when the token's 'type' claim does not match.
+    """
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
@@ -73,3 +79,10 @@ def decode_access_token(token: str):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
+
+    if expected_type is not None and payload.get("type") != expected_type:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    return payload

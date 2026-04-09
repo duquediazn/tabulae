@@ -12,7 +12,7 @@ oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)):
     """Retrieves the current user based on the JWT token."""
-    payload = decode_access_token(token)
+    payload = decode_access_token(token, expected_type="access")
 
     # Validate that the token contains the "sub" field
     user_id_str = payload.get("sub")
