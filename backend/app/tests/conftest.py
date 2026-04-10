@@ -97,8 +97,7 @@ def client(session):
 
     from fastapi.testclient import TestClient
 
-    client = TestClient(app)
-
-    yield client
+    with TestClient(app) as client:
+        yield client
 
     app.dependency_overrides.clear()
