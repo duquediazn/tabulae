@@ -349,7 +349,7 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
 - Stable versions are tagged on `main` using annotated Git tags.
 - Each version represents a stable milestone of the application.
 
-Current version: `v1.3.0`
+Current version: `v1.3.1`
 
 > 🏷️ See [docs/VERSIONS.md](./docs/VERSIONS.md) for version history and changelog.
 

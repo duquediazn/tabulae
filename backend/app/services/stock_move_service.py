@@ -100,7 +100,7 @@ def create_stock_movement(
         _validate_active_products(db, product_ids)
 
         db.add(new_movement)
-        db.flush()  # Obtain new_movement.move_id for the FK in lines.
+        db.flush()  # Obtain new_movement.id for the FK in lines.
 
         created_lines: list[StockMoveLine] = []
         for i, line_data in enumerate(movement_data.lines, 1):
