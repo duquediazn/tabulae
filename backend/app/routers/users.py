@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -24,8 +26,8 @@ def get_users(
     current_user: User = Depends(require_admin),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
-    search: str = Query(None),
-    is_active: bool = Query(None),
+    search: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
 ):
     """Lists all users (admin access only)."""
     try:
@@ -76,12 +78,12 @@ def create_user(
         )
 
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email is already registered.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already registered.")
 
     # Validate role
     if user_data.role.lower() not in ["user", "admin"]:
         raise HTTPException(
-            status_code=400, detail="Invalid role. Must be 'user' or 'admin'."
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role. Must be 'user' or 'admin'."
         )
 
     # Create user
