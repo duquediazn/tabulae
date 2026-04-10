@@ -72,7 +72,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Internal server error while registering user.",
         )
 
-    return new_user  # UserResponse will automatically exclude the password
+    return new_user  
 
 
 ### USER LOGIN ###

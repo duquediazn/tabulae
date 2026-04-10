@@ -1,19 +1,14 @@
-# This script handles authentication in our API using JWT (JSON Web Tokens)
-# and password hashing with bcrypt.
-# https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/
-
 from datetime import (
     datetime,
     timedelta,
     timezone,
-)  # To handle token expiration and timezones
+)  
 
 from jwt import DecodeError
 from app.utils.getenv import get_required_env
 from fastapi import HTTPException, status
-import bcrypt as _bcrypt  # To hash and verify passwords securely
-import jwt  # To create and decode JWT tokens
-import os  # To access environment variables
+import bcrypt as _bcrypt  
+import jwt  
 from uuid import uuid4  # To generate unique identifiers for JWT tokens (jti)
 
 # Secret key used to sign JWT tokens
@@ -23,8 +18,8 @@ SECRET_KEY = get_required_env("SECRET_KEY")
 ALGORITHM = "HS256"
 
 # Token expiration time (in minutes)
-ACCESS_TOKEN_DURATION = int(os.getenv("ACCESS_TOKEN_DURATION", 30))  # 30 minutes
-REFRESH_TOKEN_DURATION = int(os.getenv("REFRESH_TOKEN_DURATION", 7))  # 7 days
+ACCESS_TOKEN_DURATION = int(get_required_env("ACCESS_TOKEN_DURATION", 30))  # 30 minutes
+REFRESH_TOKEN_DURATION = int(get_required_env("REFRESH_TOKEN_DURATION", 7))  # 7 days
 
 def hash_password(password: str) -> str:
     """Generates a secure hash for the given password."""
@@ -34,10 +29,6 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Checks if the entered password matches the stored hash."""
     return _bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
-
-
-# Bcrypt uses "salting", so each hash generated is different.
-# Even so, verify_password() can still confirm if they match.
 
 
 def create_access_token(data: dict, expires_delta: timedelta) -> str:

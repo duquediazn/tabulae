@@ -268,6 +268,8 @@ This file includes essential configuration such as:
 - Runtime environment mode (`development` / `production`)
 - PostgreSQL credentials
 - JWT secret and token durations
+- Allowed CORS origins (`ALLOWED_ORIGINS`)
+- API version string (`API_VERSION`)
 - pgAdmin login
 - API URL for the frontend (injected during build or runtime)
 
@@ -347,7 +349,7 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
 - Stable versions are tagged on `main` using annotated Git tags.
 - Each version represents a stable milestone of the application.
 
-Current version: `v1.0.0`
+Current version: `v1.3.0`
 
 > 🏷️ See [docs/VERSIONS.md](./docs/VERSIONS.md) for version history and changelog.
 

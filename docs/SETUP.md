@@ -225,6 +225,8 @@ cp .env.template .env
 | Variable                   | Description                      | Used by     |
 | -------------------------- | -------------------------------- | ----------- |
 | `ENVIRONMENT`              | Runtime mode: `development` or `production`. Enables secure cookies and disables SQL logging in production. | backend |
+| `ALLOWED_ORIGINS`          | Comma-separated list of allowed frontend origins for CORS (e.g. `http://localhost:5173,http://localhost:8080`) | backend |
+| `API_VERSION`              | API version string shown in OpenAPI docs (e.g. `1.0.0`) | backend |
 | `TABULAE_DB_USER`          | PostgreSQL username              | db, backend |
 | `TABULAE_DB_PASSWORD`      | PostgreSQL password              | db, backend |
 | `TABULAE_DB_NAME`          | PostgreSQL database name         | db, backend |
