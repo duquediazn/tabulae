@@ -12,7 +12,7 @@ export default function EditWarehouse() {
   const { accessToken, user } = useAuth();
 
   const [form, setForm] = useState({
-    description: "",
+    name: "",
     is_active: true,
   });
   const [errors, setErrors] = useState({});
@@ -23,7 +23,7 @@ export default function EditWarehouse() {
       try {
         const warehouse = await getWarehouseById(id, accessToken);
         setForm({
-          description: warehouse.description,
+          name: warehouse.name,
           is_active: warehouse.is_active,
         });
       } catch (error) {
@@ -52,8 +52,8 @@ export default function EditWarehouse() {
 
   const validate = () => {
     const newErrors = {};
-    if (!form.description.trim()) {
-      newErrors.description = "Description is required";
+    if (!form.name.trim()) {
+      newErrors.name = "Name is required";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -92,25 +92,25 @@ export default function EditWarehouse() {
           <h1 className="text-2xl font-bold text-gray-800">Edit warehouse</h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Description */}
+            {/* Name */}
             <div>
               <label
-                htmlFor="description"
+                htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Description
+                Name
               </label>
               <input
-                id="description"
+                id="name"
                 type="text"
-                name="description"
-                value={form.description}
+                name="name"
+                value={form.name}
                 maxLength={255}
                 required
                 onChange={handleChange}
                 className="h-[36px] bg-white w-full rounded border border-gray-300 px-3 py-1 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
-              <ErrorMessage message={errors.description} />
+              <ErrorMessage message={errors.name} />
             </div>
 
             {/* Active (admin only) */}

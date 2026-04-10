@@ -80,7 +80,7 @@ BEGIN
     -- Retrieve the move type and user who created the stock move
     SELECT move_type, user_id INTO move_type_value, move_user 
     FROM stock_move 
-    WHERE id = NEW.id;
+    WHERE id = NEW.move_id;
 
     -- If lot is not specified, assign 'NO_LOT'
     processed_lot := COALESCE(NEW.lot, 'NO_LOT'); -- Replace NULL with 'NO_LOT'

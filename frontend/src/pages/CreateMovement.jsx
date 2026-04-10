@@ -68,7 +68,7 @@ export default function CreateMovement() {
       const warehouses = await searchWarehouses(inputValue, accessToken, 20, 0);
       const options = warehouses.map((w) => ({
         value: w.id,
-        label: w.description + (w.is_active ? "" : " (inactive)"),
+        label: w.name + (w.is_active ? "" : " (inactive)"),
         isDisabled: !w.is_active,
       }));
       callback(options);
@@ -395,8 +395,8 @@ export default function CreateMovement() {
                                 )
                               }
                               className={`h-[36px] border border-gray-300 rounded px-2 py-1 w-full text-sm ${lotInList
-                                  ? "bg-gray-100 cursor-not-allowed"
-                                  : "bg-white"
+                                ? "bg-gray-100 cursor-not-allowed"
+                                : "bg-white"
                                 }`}
                             />
                           );
@@ -418,8 +418,8 @@ export default function CreateMovement() {
                             )
                           }
                           className={`h-[36px] border rounded px-2 py-1 w-full ${errors[`quantity_${index}`]
-                              ? "border-red-500"
-                              : "border-gray-300"
+                            ? "border-red-500"
+                            : "border-gray-300"
                             }`}
                         />
                         <div className="min-h-[1.25rem]">
