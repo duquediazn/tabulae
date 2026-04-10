@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from app.dependencies import get_current_user, oauth2
 from app.utils.getenv import get_required_env
+from app.schemas.auth import PasswordCheckRequest
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
@@ -195,11 +196,6 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
     )
 
     return {"access_token": new_access_token, "token_type": "bearer"}
-
-
-### PASSWORD VERIFICATION ###
-class PasswordCheckRequest(BaseModel):
-    password: str
 
 
 @router.post("/verify-password")
