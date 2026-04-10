@@ -20,11 +20,12 @@ def create_user_in_db(session, name, email, password, role="user", is_active=Tru
 
 
 def get_token_for_user(client, email, password):
-    """ Logs in a user and returns the access token."""
-    response = client.post(
-        "/auth/login", data={"username": email, "password": password}
-    )
-    assert response.status_code == 200
+    """Logs in via the API and returns the access token."""
+    response = client.post("/auth/login", data={"username": email, "password": password})
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Login failed for {email}: {response.status_code} — {response.json()}"
+        )
     return response.json()["access_token"]
 
 

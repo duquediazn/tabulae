@@ -34,7 +34,7 @@ router = APIRouter(prefix="/stock", tags=["Stock"])
 def _row_to_stock_response(item) -> StockResponse:
     return StockResponse(
         warehouse_id=item.warehouse_id,
-        warehouse_name=item.description,
+        warehouse_name=item.name,
         product_id=item.product_id,
         product_name=item.short_name,
         sku=item.sku,
@@ -46,7 +46,7 @@ def _row_to_stock_response(item) -> StockResponse:
 
 def _row_to_stock_history(item) -> StockHistory:
     return StockHistory(
-        move_id=item.move_id,
+        move_id=item.id,
         created_at=item.created_at,
         move_type=item.move_type,
         warehouse_id=item.warehouse_id,
@@ -70,7 +70,7 @@ def get_all_stock(
         statement = (
             select(
                 Stock.warehouse_id,
-                Warehouse.description,
+                Warehouse.name,
                 Stock.product_id,
                 Product.short_name,
                 Product.sku,
@@ -114,7 +114,7 @@ def get_stock_by_warehouse(
         statement = (
             select(
                 Stock.warehouse_id,
-                Warehouse.description,
+                Warehouse.name,
                 Stock.product_id,
                 Product.short_name,
                 Product.sku,
@@ -258,7 +258,7 @@ def get_stock_by_expiration(
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid preset: {preset}"
+                detail="Invalid preset. Valid values: expired, expiring_soon, no_expiration"
             )
 
     else:
@@ -273,7 +273,7 @@ def get_stock_by_expiration(
         statement = (
             select(
                 Stock.warehouse_id,
-                Warehouse.description,
+                Warehouse.name,
                 Stock.product_id,
                 Product.short_name,
                 Product.sku,
@@ -323,12 +323,12 @@ def get_stock_by_product(
             select(
                 Stock.product_id,
                 Stock.warehouse_id,
-                Warehouse.description.label("warehouse_name"),
+                Warehouse.name.label("warehouse_name"),
                 func.sum(Stock.quantity).label("total_quantity"),
             )
             .join(Warehouse, Warehouse.id == Stock.warehouse_id)
             .where(Stock.product_id == product_id)
-            .group_by(Stock.product_id, Stock.warehouse_id, Warehouse.description)
+            .group_by(Stock.product_id, Stock.warehouse_id, Warehouse.name)
         )
 
         stock_summary = db.exec(statement.limit(limit).offset(offset)).all()
@@ -376,7 +376,7 @@ def get_stock_by_warehouse_and_product(
         statement = (
             select(
                 Stock.warehouse_id,
-                Warehouse.description,
+                Warehouse.name,
                 Stock.product_id,
                 Product.short_name,
                 Product.sku,
@@ -421,7 +421,7 @@ def get_stock_history(
     try:
         statement = (
             select(
-                StockMove.move_id,
+                StockMove.id,
                 StockMove.created_at,
                 StockMove.move_type,
                 StockMoveLine.warehouse_id,
@@ -431,7 +431,7 @@ def get_stock_history(
                 StockMoveLine.quantity,
                 User.name.label("user_name"),
             )
-            .join(StockMoveLine, StockMove.move_id == StockMoveLine.move_id)
+            .join(StockMoveLine, StockMove.id == StockMoveLine.move_id)
             .join(User, StockMove.user_id == User.id)
             .join(Product, Product.id == StockMoveLine.product_id)
             .order_by(StockMove.created_at.desc())
@@ -467,7 +467,7 @@ def get_product_stock_history(
     try:
         statement = (
             select(
-                StockMove.move_id,
+                StockMove.id,
                 StockMove.created_at,
                 StockMove.move_type,
                 StockMoveLine.warehouse_id,
@@ -477,7 +477,7 @@ def get_product_stock_history(
                 StockMoveLine.quantity,
                 User.name.label("user_name"),
             )
-            .join(StockMoveLine, StockMove.move_id == StockMoveLine.move_id)
+            .join(StockMoveLine, StockMove.id == StockMoveLine.move_id)
             .join(User, StockMove.user_id == User.id)
             .join(Product, Product.id == StockMoveLine.product_id)
             .where(Product.id == product_id)
@@ -514,7 +514,7 @@ def get_warehouse_stock_history(
     try:
         statement = (
             select(
-                StockMove.move_id,
+                StockMove.id,
                 StockMove.created_at,
                 StockMove.move_type,
                 StockMoveLine.warehouse_id,
@@ -524,7 +524,7 @@ def get_warehouse_stock_history(
                 StockMoveLine.quantity,
                 User.name.label("user_name"),
             )
-            .join(StockMoveLine, StockMove.move_id == StockMoveLine.move_id)
+            .join(StockMoveLine, StockMove.id == StockMoveLine.move_id)
             .join(User, StockMove.user_id == User.id)
             .join(Product, Product.id == StockMoveLine.product_id)
             .where(StockMoveLine.warehouse_id == warehouse_id)
@@ -565,7 +565,7 @@ def get_warehouse_and_product_stock_history(
     try:
         statement = (
             select(
-                StockMove.move_id,
+                StockMove.id,
                 StockMove.created_at,
                 StockMove.move_type,
                 StockMoveLine.warehouse_id,
@@ -575,7 +575,7 @@ def get_warehouse_and_product_stock_history(
                 StockMoveLine.quantity,
                 User.name.label("user_name"),
             )
-            .join(StockMoveLine, StockMove.move_id == StockMoveLine.move_id)
+            .join(StockMoveLine, StockMove.id == StockMoveLine.move_id)
             .join(User, StockMove.user_id == User.id)
             .join(Product, Product.id == StockMoveLine.product_id)
             .where(
@@ -647,7 +647,7 @@ def get_stock_status_semaphore(
 
     except SQLAlchemyError:
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error",
         )
 
@@ -668,7 +668,7 @@ def get_warehouse_stock_detail(
         statement = (
             select(
                 Stock.warehouse_id,
-                Warehouse.description,
+                Warehouse.name,
                 func.sum(Stock.quantity).label("total_quantity"),
             )
             .join(Warehouse, Warehouse.id == Stock.warehouse_id)
@@ -685,7 +685,7 @@ def get_warehouse_stock_detail(
     result = [
         StockByWarehouse(
             warehouse_id=item.warehouse_id,
-            warehouse_name=item.description,
+            warehouse_name=item.name,
             total_quantity=item.total_quantity,
         )
         for item in data
@@ -717,7 +717,7 @@ def get_stock_by_product_category(
         results = db.exec(statement).all()
     except SQLAlchemyError:
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving stock by category",
         )
 
@@ -757,7 +757,7 @@ def get_stock_by_category_detail(
         results = db.exec(statement).all()
     except SQLAlchemyError:
         raise HTTPException(
-            500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving stock data for products in the selected category.",
         )
 

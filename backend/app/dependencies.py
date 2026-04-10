@@ -34,7 +34,7 @@ def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)
             detail="Database connection error.",
         )
 
-    user_id = int(user_id_str)  # Convert user ID from string to integer
+    user_id = int(user_id_str) 
 
     # Check if the user still exists in the database
     try:
@@ -62,9 +62,9 @@ def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)
 
 def require_admin(user: User = Depends(get_current_user)) -> User:
     """Checks if the user is an administrator. Raises an exception if not."""
-    if user.role.lower() != "admin":
+    if user.role.strip().lower() != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to perform this action."
         )
-    return user  # Returns the user if they are an admin
+    return user 

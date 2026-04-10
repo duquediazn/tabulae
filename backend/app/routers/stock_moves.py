@@ -24,7 +24,6 @@ from app.schemas.stock_move_line import (
     StockMoveLineResponse,
     PaginatedStockMoveLineWithNamesResponse,
 )
-from app.utils.validation import is_admin_user
 from app.routers.websocket import manager
 from app.services.stock_move_service import create_stock_movement
 import anyio
@@ -68,10 +67,10 @@ def get_movements(
             dt_to = datetime.combine(date_to, time.max, tzinfo=timezone.utc)
             statement = statement.where(StockMove.created_at <= dt_to)
 
-        if user_id and is_admin_user(current_user):
+        if user_id and current_user.role.strip().lower() == "admin":
             statement = statement.where(StockMove.user_id == user_id)
 
-        if not is_admin_user(current_user):
+        if current_user.role.strip().lower() != "admin":
             statement = statement.where(StockMove.user_id == current_user.id)
 
         results = db.exec(
@@ -82,12 +81,12 @@ def get_movements(
             db.exec(select(func.count()).select_from(statement.subquery())).first() or 0
         )
         
-        # Extract move_ids from the results to fetch lines in a single query
-        move_ids = [movement.move_id for movement, _ in results]
+        # Extract movement ids from the results to fetch lines in a single query
+        ids = [movement.id for movement, _ in results]
         
         # Fetch all lines for the retrieved movements in a single query
         all_lines = db.exec(
-            select(StockMoveLine).where(StockMoveLine.move_id.in_(move_ids))
+            select(StockMoveLine).where(StockMoveLine.move_id.in_(ids))
         ).all() 
 
     except SQLAlchemyError:
@@ -107,14 +106,14 @@ def get_movements(
     for movement, user_name in results:
         movements_response.append(
             StockMoveResponse(
-                move_id=movement.move_id,
+                id=movement.id,
                 created_at=movement.created_at,
                 move_type=movement.move_type,
                 user_id=movement.user_id,
                 user_name=user_name,
                 lines=[
                     StockMoveLineResponse.model_validate(line)
-                    for line in lines_by_move[movement.move_id]
+                    for line in lines_by_move[movement.id]
                 ],
             )
         )
@@ -151,7 +150,7 @@ def get_movements_last_year(
             .order_by(func.date_trunc("month", StockMove.created_at))
         )
 
-        if not is_admin_user(current_user):
+        if current_user.role.strip().lower() != "admin":
             statement = statement.where(StockMove.user_id == current_user.id)
 
         results = db.exec(statement).all()
@@ -172,9 +171,9 @@ def get_movements_last_year(
     ]
 
 
-@router.get("/{move_id}", response_model=StockMoveResponse)
+@router.get("/{id}", response_model=StockMoveResponse)
 def get_movement(
-    move_id: int,
+    id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -186,7 +185,7 @@ def get_movement(
         statement = (
             select(StockMove, User.name)
             .join(User, StockMove.user_id == User.id)
-            .where(StockMove.move_id == move_id)
+            .where(StockMove.id == id)
 )
         result = db.exec(statement).first()
     except SQLAlchemyError:
@@ -203,7 +202,7 @@ def get_movement(
     movement, user_name = result
 
     # If not admin and the movement does not belong to the authenticated user, deny access
-    if not is_admin_user(current_user) and movement.user_id != current_user.id:
+    if current_user.role.strip().lower() != "admin" and movement.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this movement.",
@@ -212,7 +211,7 @@ def get_movement(
     # Retrieve movement lines
     try:
         statement_lines = select(StockMoveLine).where(
-            StockMoveLine.move_id == movement.move_id
+            StockMoveLine.move_id == movement.id
         )
         movement_lines = db.exec(statement_lines).all()
     except SQLAlchemyError:
@@ -222,7 +221,7 @@ def get_movement(
         )
 
     return StockMoveResponse(
-        move_id=movement.move_id,
+        id=movement.id,
         created_at=movement.created_at,
         move_type=movement.move_type,
         user_id=movement.user_id,
@@ -246,7 +245,7 @@ def create_movement(
 
     # Broadcast to connected WebSocket clients.
     try:
-        message = f"New stock movement recorded: {new_movement.move_id} ({new_movement.move_type})"
+        message = f"New stock movement recorded: {new_movement.id} ({new_movement.move_type})"
 
         async def _broadcast(msg: str):
             await manager.broadcast(msg)
@@ -256,7 +255,7 @@ def create_movement(
         logger.warning("WebSocket broadcast failed: %s", str(e))
 
     return StockMoveResponse(
-        move_id=new_movement.move_id,
+        id=new_movement.id,
         created_at=new_movement.created_at,
         move_type=new_movement.move_type,
         user_id=new_movement.user_id,
@@ -265,9 +264,9 @@ def create_movement(
     )
 
 
-@router.get("/{move_id}/lines", response_model=PaginatedStockMoveLineWithNamesResponse)
+@router.get("/{id}/lines", response_model=PaginatedStockMoveLineWithNamesResponse)
 def get_movement_lines(
-    move_id: int,
+    id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
@@ -276,7 +275,7 @@ def get_movement_lines(
     """Lists all lines of a movement with product and warehouse names."""
 
     try:
-        statement = select(StockMove).where(StockMove.move_id == move_id)
+        statement = select(StockMove).where(StockMove.id == id)
         movement = db.exec(statement).first()
     except SQLAlchemyError:
         raise HTTPException(
@@ -290,7 +289,7 @@ def get_movement_lines(
             detail="Movement not found",
         )
 
-    if not is_admin_user(current_user) and movement.user_id != current_user.id:
+    if current_user.role.strip().lower() != "admin" and movement.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this movement",
@@ -298,10 +297,10 @@ def get_movement_lines(
 
     try:
         statement_lines = (
-            select(StockMoveLine, Product.short_name, Warehouse.description)
+            select(StockMoveLine, Product.short_name, Warehouse.name)
             .join(Product, Product.id == StockMoveLine.product_id)
             .join(Warehouse, Warehouse.id == StockMoveLine.warehouse_id)
-            .where(StockMoveLine.move_id == move_id)
+            .where(StockMoveLine.move_id == id)
             .order_by(StockMoveLine.line_id)
         )
 
@@ -346,13 +345,13 @@ def get_movement_lines(
 @router.get("/summary/move-type", response_model=List[StockMoveSummary])
 def count_movements_by_move_type(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """Counts the number of stock movements grouped by move type (incoming, outgoing)."""
     try:
         statement = select(StockMove.move_type, func.count()).select_from(StockMove)
 
-        if not is_admin_user(current_user):
+        if current_user.role.strip().lower() != "admin":
             statement = statement.where(StockMove.user_id == current_user.id)
 
         statement = statement.group_by(StockMove.move_type)

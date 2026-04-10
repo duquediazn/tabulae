@@ -57,9 +57,6 @@ class PaginatedProductResponse(BaseModel):
     limit: int
     offset: int
 
-    model_config = {"from_attributes": True}
-
-
 class BulkStatusUpdateRequest(BaseModel):
-    ids: list[int]
+    ids: list[int] = Field(..., min_length=1)
     is_active: bool

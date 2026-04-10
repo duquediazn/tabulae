@@ -10,21 +10,22 @@ TESTED ENDPOINTS:
 [x] POST   /auth/logout
 """
 
+import jwt
+
 import pytest
-from app.models.user import User
-from app.utils.authentication import hash_password
-from sqlmodel import select
 from app.tests.utils import (
     create_user_in_db,
     get_auth_headers,
     get_token_for_user,
 )
 
-register_data = {
-    "name": "Test User",
-    "email": "testuser@example.com",
-    "password": "testpass123",
-}
+@pytest.fixture()
+def register_data():
+    return {
+        "name": "Test User",
+        "email": "testuser@example.com",
+        "password": "testpass123",
+    }
 
 
 @pytest.fixture()
@@ -45,24 +46,16 @@ def active_user(session):
 
 
 # POST   /auth/register
-def test_register_user_success(client, session):
+def test_register_user_success(client, register_data):
     response = client.post("/auth/register", json=register_data)
     assert response.status_code == 201
     assert response.json()["email"] == register_data["email"]
 
-    # Activate user for future login tests
-    user = session.exec(
-        select(User).where(User.email == register_data["email"])
-    ).first()
-    user.is_active = True
-    session.add(user)
-    session.commit()
 
-
-def test_register_user_duplicate(client):
+def test_register_user_duplicate(client, register_data):
     client.post("/auth/register", json=register_data)  # create user
     response = client.post("/auth/register", json=register_data)  # duplicate
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def test_register_missing_password(client):
@@ -105,17 +98,19 @@ def test_register_short_name(client):
     assert response.status_code == 422
 
 
-def test_register_invalid_role(client):
+def test_register_role_is_ignored(client):
+    """Even if a role is sent, it is ignored and the user is always created as 'user'."""
     response = client.post(
         "/auth/register",
         json={
             "name": "Wrong Role",
             "email": "new4@example.com",
             "password": "validpass123",
-            "role": "superadmin",
+            "role": "admin",
         },
     )
-    assert response.status_code == 422
+    assert response.status_code == 201
+    assert response.json()["role"] == "user"
 
 
 # POST   /auth/login
@@ -133,7 +128,7 @@ def test_login_user_not_found(client):
     assert response.json()["detail"] == "Invalid credentials."
 
 
-def test_login_wrong_password(client, session):
+def test_login_wrong_password(client, session, register_data):
     user = create_user_in_db(
         session,
         register_data["name"],
@@ -189,10 +184,7 @@ def test_profile_no_token(client):
 
 
 def test_profile_invalid_token(client):
-    # Fake but well-formed JWT
-    fake_token = (
-        "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9." "eyJzdWIiOiAiZmFrZSJ9.invalidsig"
-    )
+    fake_token = jwt.encode({"sub": "fake"}, "invalidsecret", algorithm="HS256")  
     headers = {"Authorization": f"Bearer {fake_token}"}
     response = client.get("/auth/profile", headers=headers)
     assert response.status_code == 401

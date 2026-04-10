@@ -2,15 +2,17 @@ from datetime import timedelta, datetime, timezone
 import os
 from fastapi import Request, Response
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from app.dependencies import get_current_user, oauth2
+from app.utils.getenv import get_required_env
+from app.schemas.auth import PasswordCheckRequest
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
 from app.models.user import User
 from app.models.revoked_token import RevokedToken
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserSelfRegister, UserResponse
 from app.utils.authentication import (
     ACCESS_TOKEN_DURATION,
     REFRESH_TOKEN_DURATION,
@@ -21,31 +23,14 @@ from app.utils.authentication import (
     decode_access_token,
 )
 
-is_production = os.getenv("ENVIRONMENT") == "production"
-
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 ### USER REGISTRATION ###
 @router.post(
     "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
 )
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
+def register(user_data: UserSelfRegister, db: Session = Depends(get_db)):
     """Registers a new user with encrypted password."""
-    try:
-        statement = select(User).where(User.email == user_data.email)
-        existing_user = db.exec(statement).first()
-    except SQLAlchemyError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error.",
-        )
-
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email is already registered.",
-        )
-
     # Create user
     new_user = User(
         name=user_data.name,
@@ -62,8 +47,8 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Database integrity error.",
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email is already registered.",
         )
     except SQLAlchemyError:
         db.rollback()
@@ -72,7 +57,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Internal server error while registering user.",
         )
 
-    return new_user  # UserResponse will automatically exclude the password
+    return new_user  
 
 
 ### USER LOGIN ###
@@ -112,6 +97,8 @@ def login(
     refresh_token = create_refresh_token(
         {"sub": str(user.id)}, expires_delta=timedelta(days=REFRESH_TOKEN_DURATION)
     )
+    
+    is_production = get_required_env("ENVIRONMENT", fallback="development") == "production"
 
     # Cookie settings explanation:
     #
@@ -211,11 +198,6 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
     return {"access_token": new_access_token, "token_type": "bearer"}
 
 
-### PASSWORD VERIFICATION ###
-class PasswordCheckRequest(BaseModel):
-    password: str
-
-
 @router.post("/verify-password")
 def verify_user_password(
     data: PasswordCheckRequest, current_user: User = Depends(get_current_user)
@@ -237,7 +219,9 @@ def logout(
     db: Session = Depends(get_db),
 ):
     """Deletes the refresh token cookie and revokes the access and refresh tokens when the user logs out."""
-
+   
+    is_production = get_required_env("ENVIRONMENT", fallback="development") == "production"
+    
     response.delete_cookie(
         key="refresh_token",
         path="/auth/", 

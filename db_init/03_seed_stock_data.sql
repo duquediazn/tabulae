@@ -6,7 +6,7 @@ DELETE FROM stock_move;
 DELETE FROM "stock";
 
 -- 2. Restart ID sequences for stock_move and others
-ALTER SEQUENCE public.stock_move_move_id_seq
+ALTER SEQUENCE public.stock_move_id_seq
 RESTART WITH 1;
 
 ALTER SEQUENCE public.user_id_seq
@@ -23,484 +23,964 @@ RESTART WITH 1;
 
 -- 3. Insert into stock_move
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (1, CURRENT_DATE - INTERVAL '130 days', 'incoming', 1);
+    (
+        1,
+        CURRENT_DATE - INTERVAL '130 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (2, CURRENT_DATE - INTERVAL '129 days', 'incoming', 1);
+    (
+        2,
+        CURRENT_DATE - INTERVAL '129 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (3, CURRENT_DATE - INTERVAL '125 days', 'incoming', 1);
+    (
+        3,
+        CURRENT_DATE - INTERVAL '125 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (4, CURRENT_DATE - INTERVAL '125 days', 'outgoing', 1);
+    (
+        4,
+        CURRENT_DATE - INTERVAL '125 days',
+        'outgoing',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (5, CURRENT_DATE - INTERVAL '125 days', 'incoming', 2);
+    (
+        5,
+        CURRENT_DATE - INTERVAL '125 days',
+        'incoming',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (6, CURRENT_DATE - INTERVAL '124 days', 'outgoing', 2);
+    (
+        6,
+        CURRENT_DATE - INTERVAL '124 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (7, CURRENT_DATE - INTERVAL '122 days', 'outgoing', 2);
+    (
+        7,
+        CURRENT_DATE - INTERVAL '122 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (8, CURRENT_DATE - INTERVAL '122 days', 'outgoing', 2);
+    (
+        8,
+        CURRENT_DATE - INTERVAL '122 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (9, CURRENT_DATE - INTERVAL '117 days', 'outgoing', 2);
+    (
+        9,
+        CURRENT_DATE - INTERVAL '117 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (10, CURRENT_DATE - INTERVAL '112 days', 'incoming', 1);
+    (
+        10,
+        CURRENT_DATE - INTERVAL '112 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (11, CURRENT_DATE - INTERVAL '112 days', 'outgoing', 1);
+    (
+        11,
+        CURRENT_DATE - INTERVAL '112 days',
+        'outgoing',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (12, CURRENT_DATE - INTERVAL '112 days', 'incoming', 2);
+    (
+        12,
+        CURRENT_DATE - INTERVAL '112 days',
+        'incoming',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (13, CURRENT_DATE - INTERVAL '112 days', 'incoming', 3);
+    (
+        13,
+        CURRENT_DATE - INTERVAL '112 days',
+        'incoming',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (14, CURRENT_DATE - INTERVAL '111 days', 'outgoing', 3);
+    (
+        14,
+        CURRENT_DATE - INTERVAL '111 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (15, CURRENT_DATE - INTERVAL '109 days', 'outgoing', 2);
+    (
+        15,
+        CURRENT_DATE - INTERVAL '109 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (16, CURRENT_DATE - INTERVAL '109 days', 'outgoing', 2);
+    (
+        16,
+        CURRENT_DATE - INTERVAL '109 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (17, CURRENT_DATE - INTERVAL '109 days', 'outgoing', 3);
+    (
+        17,
+        CURRENT_DATE - INTERVAL '109 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (18, CURRENT_DATE - INTERVAL '105 days', 'incoming', 1);
+    (
+        18,
+        CURRENT_DATE - INTERVAL '105 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (19, CURRENT_DATE - INTERVAL '104 days', 'outgoing', 2);
+    (
+        19,
+        CURRENT_DATE - INTERVAL '104 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (20, CURRENT_DATE - INTERVAL '102 days', 'outgoing', 2);
+    (
+        20,
+        CURRENT_DATE - INTERVAL '102 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (21, CURRENT_DATE - INTERVAL '102 days', 'outgoing', 3);
+    (
+        21,
+        CURRENT_DATE - INTERVAL '102 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (22, CURRENT_DATE - INTERVAL '102 days', 'outgoing', 3);
+    (
+        22,
+        CURRENT_DATE - INTERVAL '102 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (23, CURRENT_DATE - INTERVAL '102 days', 'outgoing', 3);
+    (
+        23,
+        CURRENT_DATE - INTERVAL '102 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (24, CURRENT_DATE - INTERVAL '98 days', 'incoming', 1);
+    (
+        24,
+        CURRENT_DATE - INTERVAL '98 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (25, CURRENT_DATE - INTERVAL '96 days', 'outgoing', 1);
+    (
+        25,
+        CURRENT_DATE - INTERVAL '96 days',
+        'outgoing',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (26, CURRENT_DATE - INTERVAL '96 days', 'incoming', 2);
+    (
+        26,
+        CURRENT_DATE - INTERVAL '96 days',
+        'incoming',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (27, CURRENT_DATE - INTERVAL '96 days', 'incoming', 3);
+    (
+        27,
+        CURRENT_DATE - INTERVAL '96 days',
+        'incoming',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (28, CURRENT_DATE - INTERVAL '96 days', 'outgoing', 3);
+    (
+        28,
+        CURRENT_DATE - INTERVAL '96 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (29, CURRENT_DATE - INTERVAL '93 days', 'outgoing', 2);
+    (
+        29,
+        CURRENT_DATE - INTERVAL '93 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (30, CURRENT_DATE - INTERVAL '90 days', 'outgoing', 2);
+    (
+        30,
+        CURRENT_DATE - INTERVAL '90 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (31, CURRENT_DATE - INTERVAL '87 days', 'outgoing', 2);
+    (
+        31,
+        CURRENT_DATE - INTERVAL '87 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (32, CURRENT_DATE - INTERVAL '87 days', 'outgoing', 3);
+    (
+        32,
+        CURRENT_DATE - INTERVAL '87 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (33, CURRENT_DATE - INTERVAL '87 days', 'outgoing', 2);
+    (
+        33,
+        CURRENT_DATE - INTERVAL '87 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (34, CURRENT_DATE - INTERVAL '84 days', 'incoming', 1);
+    (
+        34,
+        CURRENT_DATE - INTERVAL '84 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (35, CURRENT_DATE - INTERVAL '83 days', 'outgoing', 2);
+    (
+        35,
+        CURRENT_DATE - INTERVAL '83 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (36, CURRENT_DATE - INTERVAL '75 days', 'outgoing', 2);
+    (
+        36,
+        CURRENT_DATE - INTERVAL '75 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (37, CURRENT_DATE - INTERVAL '70 days', 'incoming', 2);
+    (
+        37,
+        CURRENT_DATE - INTERVAL '70 days',
+        'incoming',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (38, CURRENT_DATE - INTERVAL '70 days', 'outgoing', 1);
+    (
+        38,
+        CURRENT_DATE - INTERVAL '70 days',
+        'outgoing',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (39, CURRENT_DATE - INTERVAL '68 days', 'outgoing', 1);
+    (
+        39,
+        CURRENT_DATE - INTERVAL '68 days',
+        'outgoing',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (40, CURRENT_DATE - INTERVAL '68 days', 'incoming', 3);
+    (
+        40,
+        CURRENT_DATE - INTERVAL '68 days',
+        'incoming',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (41, CURRENT_DATE - INTERVAL '62 days', 'outgoing', 3);
+    (
+        41,
+        CURRENT_DATE - INTERVAL '62 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (42, CURRENT_DATE - INTERVAL '62 days', 'outgoing', 3);
+    (
+        42,
+        CURRENT_DATE - INTERVAL '62 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (43, CURRENT_DATE - INTERVAL '59 days', 'outgoing', 2);
+    (
+        43,
+        CURRENT_DATE - INTERVAL '59 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (44, CURRENT_DATE - INTERVAL '56 days', 'incoming', 1);
+    (
+        44,
+        CURRENT_DATE - INTERVAL '56 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (45, CURRENT_DATE - INTERVAL '54 days', 'outgoing', 2);
+    (
+        45,
+        CURRENT_DATE - INTERVAL '54 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (46, CURRENT_DATE - INTERVAL '53 days', 'outgoing', 3);
+    (
+        46,
+        CURRENT_DATE - INTERVAL '53 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (47, CURRENT_DATE - INTERVAL '53 days', 'outgoing', 3);
+    (
+        47,
+        CURRENT_DATE - INTERVAL '53 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (48, CURRENT_DATE - INTERVAL '53 days', 'outgoing', 2);
+    (
+        48,
+        CURRENT_DATE - INTERVAL '53 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (49, CURRENT_DATE - INTERVAL '52 days', 'outgoing', 2);
+    (
+        49,
+        CURRENT_DATE - INTERVAL '52 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (50, CURRENT_DATE - INTERVAL '52 days', 'outgoing', 2);
+    (
+        50,
+        CURRENT_DATE - INTERVAL '52 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (51, CURRENT_DATE - INTERVAL '52 days', 'outgoing', 3);
+    (
+        51,
+        CURRENT_DATE - INTERVAL '52 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (52, CURRENT_DATE - INTERVAL '49 days', 'outgoing', 2);
+    (
+        52,
+        CURRENT_DATE - INTERVAL '49 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (53, CURRENT_DATE - INTERVAL '49 days', 'outgoing', 3);
+    (
+        53,
+        CURRENT_DATE - INTERVAL '49 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (54, CURRENT_DATE - INTERVAL '49 days', 'outgoing', 3);
+    (
+        54,
+        CURRENT_DATE - INTERVAL '49 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (55, CURRENT_DATE - INTERVAL '49 days', 'outgoing', 2);
+    (
+        55,
+        CURRENT_DATE - INTERVAL '49 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (56, CURRENT_DATE - INTERVAL '49 days', 'outgoing', 2);
+    (
+        56,
+        CURRENT_DATE - INTERVAL '49 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (57, CURRENT_DATE - INTERVAL '49 days', 'outgoing', 2);
+    (
+        57,
+        CURRENT_DATE - INTERVAL '49 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (58, CURRENT_DATE - INTERVAL '48 days', 'outgoing', 1);
+    (
+        58,
+        CURRENT_DATE - INTERVAL '48 days',
+        'outgoing',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (59, CURRENT_DATE - INTERVAL '48 days', 'incoming', 3);
+    (
+        59,
+        CURRENT_DATE - INTERVAL '48 days',
+        'incoming',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (60, CURRENT_DATE - INTERVAL '48 days', 'incoming', 2);
+    (
+        60,
+        CURRENT_DATE - INTERVAL '48 days',
+        'incoming',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (61, CURRENT_DATE - INTERVAL '48 days', 'outgoing', 3);
+    (
+        61,
+        CURRENT_DATE - INTERVAL '48 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (62, CURRENT_DATE - INTERVAL '45 days', 'outgoing', 3);
+    (
+        62,
+        CURRENT_DATE - INTERVAL '45 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (63, CURRENT_DATE - INTERVAL '45 days', 'outgoing', 2);
+    (
+        63,
+        CURRENT_DATE - INTERVAL '45 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (64, CURRENT_DATE - INTERVAL '45 days', 'outgoing', 3);
+    (
+        64,
+        CURRENT_DATE - INTERVAL '45 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (65, CURRENT_DATE - INTERVAL '45 days', 'outgoing', 2);
+    (
+        65,
+        CURRENT_DATE - INTERVAL '45 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (66, CURRENT_DATE - INTERVAL '44 days', 'outgoing', 2);
+    (
+        66,
+        CURRENT_DATE - INTERVAL '44 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (67, CURRENT_DATE - INTERVAL '44 days', 'outgoing', 2);
+    (
+        67,
+        CURRENT_DATE - INTERVAL '44 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (68, CURRENT_DATE - INTERVAL '44 days', 'outgoing', 3);
+    (
+        68,
+        CURRENT_DATE - INTERVAL '44 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (69, CURRENT_DATE - INTERVAL '42 days', 'incoming', 1);
+    (
+        69,
+        CURRENT_DATE - INTERVAL '42 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (70, CURRENT_DATE - INTERVAL '40 days', 'outgoing', 3);
+    (
+        70,
+        CURRENT_DATE - INTERVAL '40 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (71, CURRENT_DATE - INTERVAL '37 days', 'outgoing', 2);
+    (
+        71,
+        CURRENT_DATE - INTERVAL '37 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (72, CURRENT_DATE - INTERVAL '35 days', 'outgoing', 2);
+    (
+        72,
+        CURRENT_DATE - INTERVAL '35 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (73, CURRENT_DATE - INTERVAL '33 days', 'outgoing', 3);
+    (
+        73,
+        CURRENT_DATE - INTERVAL '33 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (74, CURRENT_DATE - INTERVAL '33 days', 'outgoing', 2);
+    (
+        74,
+        CURRENT_DATE - INTERVAL '33 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (75, CURRENT_DATE - INTERVAL '31 days', 'outgoing', 1);
+    (
+        75,
+        CURRENT_DATE - INTERVAL '31 days',
+        'outgoing',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (76, CURRENT_DATE - INTERVAL '31 days', 'incoming', 3);
+    (
+        76,
+        CURRENT_DATE - INTERVAL '31 days',
+        'incoming',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (77, CURRENT_DATE - INTERVAL '31 days', 'incoming', 2);
+    (
+        77,
+        CURRENT_DATE - INTERVAL '31 days',
+        'incoming',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (78, CURRENT_DATE - INTERVAL '28 days', 'incoming', 1);
+    (
+        78,
+        CURRENT_DATE - INTERVAL '28 days',
+        'incoming',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (79, CURRENT_DATE - INTERVAL '28 days', 'outgoing', 2);
+    (
+        79,
+        CURRENT_DATE - INTERVAL '28 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (80, CURRENT_DATE - INTERVAL '27 days', 'outgoing', 2);
+    (
+        80,
+        CURRENT_DATE - INTERVAL '27 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (81, CURRENT_DATE - INTERVAL '26 days', 'outgoing', 2);
+    (
+        81,
+        CURRENT_DATE - INTERVAL '26 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (82, CURRENT_DATE - INTERVAL '26 days', 'outgoing', 3);
+    (
+        82,
+        CURRENT_DATE - INTERVAL '26 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (83, CURRENT_DATE - INTERVAL '26 days', 'outgoing', 2);
+    (
+        83,
+        CURRENT_DATE - INTERVAL '26 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (84, CURRENT_DATE - INTERVAL '23 days', 'outgoing', 2);
+    (
+        84,
+        CURRENT_DATE - INTERVAL '23 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (85, CURRENT_DATE - INTERVAL '21 days', 'incoming', 3);
+    (
+        85,
+        CURRENT_DATE - INTERVAL '21 days',
+        'incoming',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (86, CURRENT_DATE - INTERVAL '21 days', 'outgoing', 1);
+    (
+        86,
+        CURRENT_DATE - INTERVAL '21 days',
+        'outgoing',
+        1
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (87, CURRENT_DATE - INTERVAL '21 days', 'incoming', 2);
+    (
+        87,
+        CURRENT_DATE - INTERVAL '21 days',
+        'incoming',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (88, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 3);
+    (
+        88,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (89, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 3);
+    (
+        89,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (90, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 2);
+    (
+        90,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (91, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 2);
+    (
+        91,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (92, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 2);
+    (
+        92,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (93, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 2);
+    (
+        93,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (94, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 3);
+    (
+        94,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        3
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (95, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 2);
+    (
+        95,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        2
+    );
 
 INSERT INTO
-    stock_move (move_id, created_at, move_type, user_id)
+    stock_move (id, created_at, move_type, user_id)
 VALUES
-    (96, CURRENT_DATE - INTERVAL '19 days', 'outgoing', 3);
+    (
+        96,
+        CURRENT_DATE - INTERVAL '19 days',
+        'outgoing',
+        3
+    );
 
 -- 4. Insert into stock_move_line
 INSERT INTO
@@ -748,7 +1228,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (1, 19, 1, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 10);
+    (
+        1,
+        19,
+        1,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -761,7 +1249,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (1, 20, 1, 19, 'L2024-07', CURRENT_DATE + INTERVAL '95 days', 30);
+    (
+        1,
+        20,
+        1,
+        19,
+        'L2024-07',
+        CURRENT_DATE + INTERVAL '95 days',
+        30
+    );
 
 INSERT INTO
     stock_move_line (
@@ -774,7 +1270,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (1, 21, 1, 19, 'L2024-12', CURRENT_DATE + INTERVAL '256 days', 10);
+    (
+        1,
+        21,
+        1,
+        19,
+        'L2024-12',
+        CURRENT_DATE + INTERVAL '256 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -787,7 +1291,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (1, 22, 1, 24, 'PIK2306', CURRENT_DATE - INTERVAL '72 days', 10);
+    (
+        1,
+        22,
+        1,
+        24,
+        'PIK2306',
+        CURRENT_DATE - INTERVAL '72 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -800,7 +1312,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (1, 23, 1, 24, 'PIK2310', CURRENT_DATE + INTERVAL '50 days', 10);
+    (
+        1,
+        23,
+        1,
+        24,
+        'PIK2310',
+        CURRENT_DATE + INTERVAL '50 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -813,7 +1333,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (1, 24, 1, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 60);
+    (
+        1,
+        24,
+        1,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        60
+    );
 
 INSERT INTO
     stock_move_line (
@@ -826,7 +1354,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (1, 25, 1, 27, 'OP_201235', CURRENT_DATE + INTERVAL '21 days', 20);
+    (
+        1,
+        25,
+        1,
+        27,
+        'OP_201235',
+        CURRENT_DATE + INTERVAL '21 days',
+        20
+    );
 
 INSERT INTO
     stock_move_line (
@@ -839,7 +1375,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (1, 26, 1, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 10);
+    (
+        1,
+        26,
+        1,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -865,7 +1409,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (2, 2, 1, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 10);
+    (
+        2,
+        2,
+        1,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -878,7 +1430,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (2, 3, 1, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 4);
+    (
+        2,
+        3,
+        1,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        4
+    );
 
 INSERT INTO
     stock_move_line (
@@ -891,7 +1451,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (2, 4, 1, 20, 'PK2024_1021', CURRENT_DATE + INTERVAL '156 days', 6);
+    (
+        2,
+        4,
+        1,
+        20,
+        'PK2024_1021',
+        CURRENT_DATE + INTERVAL '156 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -904,7 +1472,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (3, 1, 1, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 10);
+    (
+        3,
+        1,
+        1,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -917,7 +1493,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (3, 2, 1, 28, 'Z2025-01', CURRENT_DATE - INTERVAL '100 days', 6);
+    (
+        3,
+        2,
+        1,
+        28,
+        'Z2025-01',
+        CURRENT_DATE - INTERVAL '100 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -943,7 +1527,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (3, 4, 1, 22, 'COTUFA11', CURRENT_DATE - INTERVAL '12 days', 10);
+    (
+        3,
+        4,
+        1,
+        22,
+        'COTUFA11',
+        CURRENT_DATE - INTERVAL '12 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -956,7 +1548,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (4, 1, 1, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 10);
+    (
+        4,
+        1,
+        1,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -995,7 +1595,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (4, 4, 1, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 10);
+    (
+        4,
+        4,
+        1,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1008,7 +1616,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (4, 5, 1, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 8);
+    (
+        4,
+        5,
+        1,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        8
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1021,7 +1637,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (4, 6, 1, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 5);
+    (
+        4,
+        6,
+        1,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1034,7 +1658,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (5, 1, 3, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 10);
+    (
+        5,
+        1,
+        3,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1073,7 +1705,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (5, 4, 3, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 10);
+    (
+        5,
+        4,
+        3,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1086,7 +1726,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (5, 5, 3, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 8);
+    (
+        5,
+        5,
+        3,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        8
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1099,7 +1747,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (5, 6, 3, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 5);
+    (
+        5,
+        6,
+        3,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1112,7 +1768,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (6, 1, 3, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 1);
+    (
+        6,
+        1,
+        3,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1125,7 +1789,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (6, 2, 3, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 2);
+    (
+        6,
+        2,
+        3,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1138,7 +1810,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (6, 3, 3, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 1);
+    (
+        6,
+        3,
+        3,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1151,7 +1831,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (7, 1, 3, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 2);
+    (
+        7,
+        1,
+        3,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1164,7 +1852,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (7, 2, 3, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 2);
+    (
+        7,
+        2,
+        3,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1177,7 +1873,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (7, 3, 3, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 2);
+    (
+        7,
+        3,
+        3,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1190,7 +1894,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (8, 1, 3, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 1);
+    (
+        8,
+        1,
+        3,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1203,7 +1915,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (8, 2, 3, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 3);
+    (
+        8,
+        2,
+        3,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1216,7 +1936,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (8, 3, 3, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 1);
+    (
+        8,
+        3,
+        3,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1229,7 +1957,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (9, 1, 3, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 1);
+    (
+        9,
+        1,
+        3,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1242,7 +1978,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (9, 2, 3, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 1);
+    (
+        9,
+        2,
+        3,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1255,7 +1999,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (9, 3, 3, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 3);
+    (
+        9,
+        3,
+        3,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1268,7 +2020,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (10, 1, 1, 29, 'XUXE1764_L2', CURRENT_DATE + INTERVAL '126 days', 20);
+    (
+        10,
+        1,
+        1,
+        29,
+        'XUXE1764_L2',
+        CURRENT_DATE + INTERVAL '126 days',
+        20
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1515,7 +2275,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (11, 13, 1, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 5);
+    (
+        11,
+        13,
+        1,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1528,7 +2296,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (11, 14, 1, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 30);
+    (
+        11,
+        14,
+        1,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        30
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1814,7 +2590,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (13, 13, 2, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 5);
+    (
+        13,
+        13,
+        2,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1827,7 +2611,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (13, 14, 2, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 30);
+    (
+        13,
+        14,
+        2,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        30
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1879,7 +2671,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (16, 1, 3, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 1);
+    (
+        16,
+        1,
+        3,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1905,7 +2705,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (16, 3, 3, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 2);
+    (
+        16,
+        3,
+        3,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1931,7 +2739,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (17, 2, 2, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 2);
+    (
+        17,
+        2,
+        2,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1944,7 +2760,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (18, 1, 1, 17, '202502', CURRENT_DATE - INTERVAL '72 days', 10);
+    (
+        18,
+        1,
+        1,
+        17,
+        '202502',
+        CURRENT_DATE - INTERVAL '72 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1957,7 +2781,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (18, 2, 1, 21, 'MAR10_MC_2412_7', CURRENT_DATE + INTERVAL '64 days', 10);
+    (
+        18,
+        2,
+        1,
+        21,
+        'MAR10_MC_2412_7',
+        CURRENT_DATE + INTERVAL '64 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -1996,7 +2828,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (19, 2, 3, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 1);
+    (
+        19,
+        2,
+        3,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2009,7 +2849,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (20, 1, 3, 17, '202501', CURRENT_DATE - INTERVAL '100 days', 1);
+    (
+        20,
+        1,
+        3,
+        17,
+        '202501',
+        CURRENT_DATE - INTERVAL '100 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2061,7 +2909,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (21, 2, 2, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 5);
+    (
+        21,
+        2,
+        2,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2113,7 +2969,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (23, 2, 2, 29, 'XUXE1564_L2', CURRENT_DATE + INTERVAL '20 days', 3);
+    (
+        23,
+        2,
+        2,
+        29,
+        'XUXE1564_L2',
+        CURRENT_DATE + INTERVAL '20 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2126,7 +2990,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (24, 1, 1, 22, 'COTUFA51', CURRENT_DATE + INTERVAL '506 days', 10);
+    (
+        24,
+        1,
+        1,
+        22,
+        'COTUFA51',
+        CURRENT_DATE + INTERVAL '506 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2139,7 +3011,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (24, 2, 1, 20, 'PK2024_1243', CURRENT_DATE + INTERVAL '187 days', 10);
+    (
+        24,
+        2,
+        1,
+        20,
+        'PK2024_1243',
+        CURRENT_DATE + INTERVAL '187 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2178,7 +3058,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (25, 3, 1, 17, '202502', CURRENT_DATE - INTERVAL '72 days', 10);
+    (
+        25,
+        3,
+        1,
+        17,
+        '202502',
+        CURRENT_DATE - INTERVAL '72 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2204,7 +3092,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (25, 5, 1, 19, 'L2024-07', CURRENT_DATE + INTERVAL '95 days', 30);
+    (
+        25,
+        5,
+        1,
+        19,
+        'L2024-07',
+        CURRENT_DATE + INTERVAL '95 days',
+        30
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2217,7 +3113,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (25, 6, 1, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 2);
+    (
+        25,
+        6,
+        1,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2230,7 +3134,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (25, 7, 1, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 4);
+    (
+        25,
+        7,
+        1,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        4
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2243,7 +3155,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (25, 8, 1, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 20);
+    (
+        25,
+        8,
+        1,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        20
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2282,7 +3202,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (25, 11, 1, 20, 'PK2024_1021', CURRENT_DATE + INTERVAL '156 days', 3);
+    (
+        25,
+        11,
+        1,
+        20,
+        'PK2024_1021',
+        CURRENT_DATE + INTERVAL '156 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2295,7 +3223,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (25, 12, 1, 28, 'Z2025-01', CURRENT_DATE - INTERVAL '100 days', 6);
+    (
+        25,
+        12,
+        1,
+        28,
+        'Z2025-01',
+        CURRENT_DATE - INTERVAL '100 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2321,7 +3257,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (25, 14, 1, 22, 'COTUFA11', CURRENT_DATE - INTERVAL '12 days', 10);
+    (
+        25,
+        14,
+        1,
+        22,
+        'COTUFA11',
+        CURRENT_DATE - INTERVAL '12 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2386,7 +3330,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (26, 3, 3, 17, '202502', CURRENT_DATE - INTERVAL '72 days', 5);
+    (
+        26,
+        3,
+        3,
+        17,
+        '202502',
+        CURRENT_DATE - INTERVAL '72 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2412,7 +3364,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (26, 5, 3, 19, 'L2024-07', CURRENT_DATE + INTERVAL '95 days', 20);
+    (
+        26,
+        5,
+        3,
+        19,
+        'L2024-07',
+        CURRENT_DATE + INTERVAL '95 days',
+        20
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2425,7 +3385,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (26, 6, 3, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 2);
+    (
+        26,
+        6,
+        3,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2438,7 +3406,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (26, 7, 3, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 4);
+    (
+        26,
+        7,
+        3,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        4
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2451,7 +3427,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (26, 8, 3, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 20);
+    (
+        26,
+        8,
+        3,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        20
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2503,7 +3487,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (27, 4, 2, 19, 'L2024-07', CURRENT_DATE + INTERVAL '95 days', 10);
+    (
+        27,
+        4,
+        2,
+        19,
+        'L2024-07',
+        CURRENT_DATE + INTERVAL '95 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2516,7 +3508,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (27, 5, 2, 20, 'PK2024_1021', CURRENT_DATE + INTERVAL '156 days', 3);
+    (
+        27,
+        5,
+        2,
+        20,
+        'PK2024_1021',
+        CURRENT_DATE + INTERVAL '156 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2529,7 +3529,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (27, 6, 2, 28, 'Z2025-01', CURRENT_DATE - INTERVAL '100 days', 6);
+    (
+        27,
+        6,
+        2,
+        28,
+        'Z2025-01',
+        CURRENT_DATE - INTERVAL '100 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2555,7 +3563,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (27, 8, 2, 22, 'COTUFA11', CURRENT_DATE - INTERVAL '12 days', 10);
+    (
+        27,
+        8,
+        2,
+        22,
+        'COTUFA11',
+        CURRENT_DATE - INTERVAL '12 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2594,7 +3610,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (27, 11, 2, 17, '202502', CURRENT_DATE - INTERVAL '72 days', 5);
+    (
+        27,
+        11,
+        2,
+        17,
+        '202502',
+        CURRENT_DATE - INTERVAL '72 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2685,7 +3709,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (31, 3, 3, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 2);
+    (
+        31,
+        3,
+        3,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2724,7 +3756,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (33, 1, 3, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 5);
+    (
+        33,
+        1,
+        3,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2737,7 +3777,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (33, 2, 3, 21, 'MAR10_MC_2411_1', CURRENT_DATE + INTERVAL '19 days', 2);
+    (
+        33,
+        2,
+        3,
+        21,
+        'MAR10_MC_2411_1',
+        CURRENT_DATE + INTERVAL '19 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2815,7 +3863,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (35, 2, 3, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 1);
+    (
+        35,
+        2,
+        3,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2828,7 +3884,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (36, 1, 3, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 1);
+    (
+        36,
+        1,
+        3,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2880,7 +3944,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (37, 4, 3, 22, 'COTUFA51', CURRENT_DATE + INTERVAL '506 days', 10);
+    (
+        37,
+        4,
+        3,
+        22,
+        'COTUFA51',
+        CURRENT_DATE + INTERVAL '506 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2906,7 +3978,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (37, 6, 3, 24, 'PIK2306', CURRENT_DATE - INTERVAL '72 days', 10);
+    (
+        37,
+        6,
+        3,
+        24,
+        'PIK2306',
+        CURRENT_DATE - INTERVAL '72 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2919,7 +3999,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (37, 7, 3, 29, 'XUXE1764_L2', CURRENT_DATE + INTERVAL '126 days', 10);
+    (
+        37,
+        7,
+        3,
+        29,
+        'XUXE1764_L2',
+        CURRENT_DATE + INTERVAL '126 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2971,7 +4059,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (38, 4, 1, 22, 'COTUFA51', CURRENT_DATE + INTERVAL '506 days', 10);
+    (
+        38,
+        4,
+        1,
+        22,
+        'COTUFA51',
+        CURRENT_DATE + INTERVAL '506 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -2997,7 +4093,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (38, 6, 1, 24, 'PIK2306', CURRENT_DATE - INTERVAL '72 days', 10);
+    (
+        38,
+        6,
+        1,
+        24,
+        'PIK2306',
+        CURRENT_DATE - INTERVAL '72 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3010,7 +4114,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (38, 7, 1, 29, 'XUXE1764_L2', CURRENT_DATE + INTERVAL '126 days', 10);
+    (
+        38,
+        7,
+        1,
+        29,
+        'XUXE1764_L2',
+        CURRENT_DATE + INTERVAL '126 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3049,7 +4161,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (39, 3, 1, 24, 'PIK2310', CURRENT_DATE + INTERVAL '50 days', 10);
+    (
+        39,
+        3,
+        1,
+        24,
+        'PIK2310',
+        CURRENT_DATE + INTERVAL '50 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3075,7 +4195,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (39, 5, 1, 29, 'XUXE1764_L2', CURRENT_DATE + INTERVAL '126 days', 10);
+    (
+        39,
+        5,
+        1,
+        29,
+        'XUXE1764_L2',
+        CURRENT_DATE + INTERVAL '126 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3088,7 +4216,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (39, 6, 1, 21, 'MAR10_MC_2412_7', CURRENT_DATE + INTERVAL '64 days', 5);
+    (
+        39,
+        6,
+        1,
+        21,
+        'MAR10_MC_2412_7',
+        CURRENT_DATE + INTERVAL '64 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3127,7 +4263,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (40, 3, 2, 24, 'PIK2310', CURRENT_DATE + INTERVAL '50 days', 10);
+    (
+        40,
+        3,
+        2,
+        24,
+        'PIK2310',
+        CURRENT_DATE + INTERVAL '50 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3153,7 +4297,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (40, 5, 2, 29, 'XUXE1764_L2', CURRENT_DATE + INTERVAL '126 days', 10);
+    (
+        40,
+        5,
+        2,
+        29,
+        'XUXE1764_L2',
+        CURRENT_DATE + INTERVAL '126 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3166,7 +4318,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (40, 6, 2, 21, 'MAR10_MC_2412_7', CURRENT_DATE + INTERVAL '64 days', 5);
+    (
+        40,
+        6,
+        2,
+        21,
+        'MAR10_MC_2412_7',
+        CURRENT_DATE + INTERVAL '64 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3231,7 +4391,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (43, 2, 3, 22, 'COTUFA51', CURRENT_DATE + INTERVAL '506 days', 2);
+    (
+        43,
+        2,
+        3,
+        22,
+        'COTUFA51',
+        CURRENT_DATE + INTERVAL '506 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3244,7 +4412,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (43, 3, 3, 29, 'XUXE1764_L2', CURRENT_DATE + INTERVAL '126 days', 2);
+    (
+        43,
+        3,
+        3,
+        29,
+        'XUXE1764_L2',
+        CURRENT_DATE + INTERVAL '126 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3257,7 +4433,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (44, 1, 1, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 5);
+    (
+        44,
+        1,
+        1,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3270,7 +4454,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (44, 2, 1, 28, 'Z2025-03', CURRENT_DATE - INTERVAL '41 days', 5);
+    (
+        44,
+        2,
+        1,
+        28,
+        'Z2025-03',
+        CURRENT_DATE - INTERVAL '41 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3283,7 +4475,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (44, 3, 1, 24, 'PIK2310', CURRENT_DATE + INTERVAL '50 days', 10);
+    (
+        44,
+        3,
+        1,
+        24,
+        'PIK2310',
+        CURRENT_DATE + INTERVAL '50 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3335,7 +4535,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (47, 1, 2, 17, '202502', CURRENT_DATE - INTERVAL '72 days', 1);
+    (
+        47,
+        1,
+        2,
+        17,
+        '202502',
+        CURRENT_DATE - INTERVAL '72 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3361,7 +4569,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (48, 2, 3, 30, 'HPXMAS24', CURRENT_DATE + INTERVAL '19 days', 1);
+    (
+        48,
+        2,
+        3,
+        30,
+        'HPXMAS24',
+        CURRENT_DATE + INTERVAL '19 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3374,7 +4590,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (49, 1, 3, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 1);
+    (
+        49,
+        1,
+        3,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3387,7 +4611,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (50, 1, 3, 22, 'COTUFA51', CURRENT_DATE + INTERVAL '506 days', 2);
+    (
+        50,
+        1,
+        3,
+        22,
+        'COTUFA51',
+        CURRENT_DATE + INTERVAL '506 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3465,7 +4697,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (54, 2, 2, 21, 'MAR10_MC_2412_7', CURRENT_DATE + INTERVAL '64 days', 1);
+    (
+        54,
+        2,
+        2,
+        21,
+        'MAR10_MC_2412_7',
+        CURRENT_DATE + INTERVAL '64 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3491,7 +4731,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (55, 2, 3, 24, 'PIK2306', CURRENT_DATE - INTERVAL '72 days', 4);
+    (
+        55,
+        2,
+        3,
+        24,
+        'PIK2306',
+        CURRENT_DATE - INTERVAL '72 days',
+        4
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3504,7 +4752,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (56, 1, 3, 22, 'COTUFA51', CURRENT_DATE + INTERVAL '506 days', 1);
+    (
+        56,
+        1,
+        3,
+        22,
+        'COTUFA51',
+        CURRENT_DATE + INTERVAL '506 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3543,7 +4799,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (57, 1, 3, 29, 'XUXE1764_L2', CURRENT_DATE + INTERVAL '126 days', 2);
+    (
+        57,
+        1,
+        3,
+        29,
+        'XUXE1764_L2',
+        CURRENT_DATE + INTERVAL '126 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3621,7 +4885,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (58, 6, 1, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 5);
+    (
+        58,
+        6,
+        1,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3660,7 +4932,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (59, 3, 2, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 2);
+    (
+        59,
+        3,
+        2,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3725,7 +5005,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (60, 5, 3, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 3);
+    (
+        60,
+        5,
+        3,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3764,7 +5052,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (62, 1, 2, 28, 'Z2025-01', CURRENT_DATE - INTERVAL '100 days', 1);
+    (
+        62,
+        1,
+        2,
+        28,
+        'Z2025-01',
+        CURRENT_DATE - INTERVAL '100 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3777,7 +5073,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (62, 2, 2, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 1);
+    (
+        62,
+        2,
+        2,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3803,7 +5107,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (63, 2, 3, 24, 'PIK2306', CURRENT_DATE - INTERVAL '72 days', 2);
+    (
+        63,
+        2,
+        3,
+        24,
+        'PIK2306',
+        CURRENT_DATE - INTERVAL '72 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3829,7 +5141,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (65, 1, 3, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 1);
+    (
+        65,
+        1,
+        3,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3855,7 +5175,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (66, 1, 3, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 1);
+    (
+        66,
+        1,
+        3,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3894,7 +5222,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (68, 1, 2, 24, 'PIK2310', CURRENT_DATE + INTERVAL '50 days', 2);
+    (
+        68,
+        1,
+        2,
+        24,
+        'PIK2310',
+        CURRENT_DATE + INTERVAL '50 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3907,7 +5243,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (68, 2, 2, 17, '202502', CURRENT_DATE - INTERVAL '72 days', 1);
+    (
+        68,
+        2,
+        2,
+        17,
+        '202502',
+        CURRENT_DATE - INTERVAL '72 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3920,7 +5264,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (68, 3, 2, 28, 'Z2025-01', CURRENT_DATE - INTERVAL '100 days', 1);
+    (
+        68,
+        3,
+        2,
+        28,
+        'Z2025-01',
+        CURRENT_DATE - INTERVAL '100 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3959,7 +5311,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (69, 3, 1, 17, '202503', CURRENT_DATE - INTERVAL '41 days', 6);
+    (
+        69,
+        3,
+        1,
+        17,
+        '202503',
+        CURRENT_DATE - INTERVAL '41 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -3998,7 +5358,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (69, 6, 1, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 20);
+    (
+        69,
+        6,
+        1,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        20
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4011,7 +5379,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (69, 7, 1, 22, 'COTUFA11', CURRENT_DATE - INTERVAL '12 days', 10);
+    (
+        69,
+        7,
+        1,
+        22,
+        'COTUFA11',
+        CURRENT_DATE - INTERVAL '12 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4024,7 +5400,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (70, 1, 2, 19, 'L2024-07', CURRENT_DATE + INTERVAL '95 days', 3);
+    (
+        70,
+        1,
+        2,
+        19,
+        'L2024-07',
+        CURRENT_DATE + INTERVAL '95 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4050,7 +5434,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (71, 1, 3, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 5);
+    (
+        71,
+        1,
+        3,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4063,7 +5455,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (72, 1, 3, 24, 'PIK2306', CURRENT_DATE - INTERVAL '72 days', 2);
+    (
+        72,
+        1,
+        3,
+        24,
+        'PIK2306',
+        CURRENT_DATE - INTERVAL '72 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4076,7 +5476,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (72, 2, 3, 22, 'COTUFA51', CURRENT_DATE + INTERVAL '506 days', 1);
+    (
+        72,
+        2,
+        3,
+        22,
+        'COTUFA51',
+        CURRENT_DATE + INTERVAL '506 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4102,7 +5510,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (74, 1, 3, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 3);
+    (
+        74,
+        1,
+        3,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4115,7 +5531,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (74, 2, 3, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 1);
+    (
+        74,
+        2,
+        3,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4128,7 +5552,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (75, 1, 1, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 20);
+    (
+        75,
+        1,
+        1,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        20
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4167,7 +5599,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (75, 4, 1, 17, '202503', CURRENT_DATE - INTERVAL '41 days', 6);
+    (
+        75,
+        4,
+        1,
+        17,
+        '202503',
+        CURRENT_DATE - INTERVAL '41 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4180,7 +5620,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (75, 5, 1, 22, 'COTUFA11', CURRENT_DATE - INTERVAL '12 days', 6);
+    (
+        75,
+        5,
+        1,
+        22,
+        'COTUFA11',
+        CURRENT_DATE - INTERVAL '12 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4206,7 +5654,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (75, 7, 1, 28, 'Z2025-03', CURRENT_DATE - INTERVAL '41 days', 5);
+    (
+        75,
+        7,
+        1,
+        28,
+        'Z2025-03',
+        CURRENT_DATE - INTERVAL '41 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4219,7 +5675,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (76, 1, 2, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 10);
+    (
+        76,
+        1,
+        2,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4258,7 +5722,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (76, 4, 2, 17, '202503', CURRENT_DATE - INTERVAL '41 days', 3);
+    (
+        76,
+        4,
+        2,
+        17,
+        '202503',
+        CURRENT_DATE - INTERVAL '41 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4284,7 +5756,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (76, 6, 2, 28, 'Z2025-03', CURRENT_DATE - INTERVAL '41 days', 2);
+    (
+        76,
+        6,
+        2,
+        28,
+        'Z2025-03',
+        CURRENT_DATE - INTERVAL '41 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4297,7 +5777,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (77, 1, 3, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 10);
+    (
+        77,
+        1,
+        3,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4336,7 +5824,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (77, 4, 3, 17, '202503', CURRENT_DATE - INTERVAL '41 days', 3);
+    (
+        77,
+        4,
+        3,
+        17,
+        '202503',
+        CURRENT_DATE - INTERVAL '41 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4349,7 +5845,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (77, 5, 3, 22, 'COTUFA11', CURRENT_DATE - INTERVAL '12 days', 6);
+    (
+        77,
+        5,
+        3,
+        22,
+        'COTUFA11',
+        CURRENT_DATE - INTERVAL '12 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4375,7 +5879,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (77, 7, 3, 28, 'Z2025-03', CURRENT_DATE - INTERVAL '41 days', 3);
+    (
+        77,
+        7,
+        3,
+        28,
+        'Z2025-03',
+        CURRENT_DATE - INTERVAL '41 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4388,7 +5900,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (78, 1, 1, 22, 'COTUFA51', CURRENT_DATE + INTERVAL '506 days', 10);
+    (
+        78,
+        1,
+        1,
+        22,
+        'COTUFA51',
+        CURRENT_DATE + INTERVAL '506 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4401,7 +5921,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (78, 2, 1, 21, 'MAR10_MC_2412_7', CURRENT_DATE + INTERVAL '64 days', 10);
+    (
+        78,
+        2,
+        1,
+        21,
+        'MAR10_MC_2412_7',
+        CURRENT_DATE + INTERVAL '64 days',
+        10
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4414,7 +5942,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (78, 3, 1, 28, 'Z2025-04', CURRENT_DATE - INTERVAL '11 days', 6);
+    (
+        78,
+        3,
+        1,
+        28,
+        'Z2025-04',
+        CURRENT_DATE - INTERVAL '11 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4427,7 +5963,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (78, 4, 1, 17, '202504', CURRENT_DATE - INTERVAL '11 days', 6);
+    (
+        78,
+        4,
+        1,
+        17,
+        '202504',
+        CURRENT_DATE - INTERVAL '11 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4466,7 +6010,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (79, 1, 3, 28, 'Z2025-03', CURRENT_DATE - INTERVAL '41 days', 1);
+    (
+        79,
+        1,
+        3,
+        28,
+        'Z2025-03',
+        CURRENT_DATE - INTERVAL '41 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4583,7 +6135,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (82, 4, 2, 24, 'PIK2310', CURRENT_DATE + INTERVAL '50 days', 2);
+    (
+        82,
+        4,
+        2,
+        24,
+        'PIK2310',
+        CURRENT_DATE + INTERVAL '50 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4661,7 +6221,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (85, 3, 2, 28, 'Z2025-04', CURRENT_DATE - INTERVAL '11 days', 3);
+    (
+        85,
+        3,
+        2,
+        28,
+        'Z2025-04',
+        CURRENT_DATE - INTERVAL '11 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4674,7 +6242,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (86, 1, 1, 27, 'OP_201235', CURRENT_DATE + INTERVAL '21 days', 13);
+    (
+        86,
+        1,
+        1,
+        27,
+        'OP_201235',
+        CURRENT_DATE + INTERVAL '21 days',
+        13
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4713,7 +6289,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (86, 4, 1, 28, 'Z2025-04', CURRENT_DATE - INTERVAL '11 days', 6);
+    (
+        86,
+        4,
+        1,
+        28,
+        'Z2025-04',
+        CURRENT_DATE - INTERVAL '11 days',
+        6
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4726,7 +6310,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (87, 1, 3, 27, 'OP_201235', CURRENT_DATE + INTERVAL '21 days', 13);
+    (
+        87,
+        1,
+        3,
+        27,
+        'OP_201235',
+        CURRENT_DATE + INTERVAL '21 days',
+        13
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4765,7 +6357,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (87, 4, 3, 28, 'Z2025-04', CURRENT_DATE - INTERVAL '11 days', 3);
+    (
+        87,
+        4,
+        3,
+        28,
+        'Z2025-04',
+        CURRENT_DATE - INTERVAL '11 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4804,7 +6404,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (89, 1, 2, 21, 'MAR10_MC_2411_2', CURRENT_DATE + INTERVAL '34 days', 2);
+    (
+        89,
+        1,
+        2,
+        21,
+        'MAR10_MC_2411_2',
+        CURRENT_DATE + INTERVAL '34 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4817,7 +6425,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (90, 1, 3, 29, 'XUXE1764_L2', CURRENT_DATE + INTERVAL '126 days', 2);
+    (
+        90,
+        1,
+        3,
+        29,
+        'XUXE1764_L2',
+        CURRENT_DATE + INTERVAL '126 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4830,7 +6446,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (91, 1, 3, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 1);
+    (
+        91,
+        1,
+        3,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4843,7 +6467,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (91, 2, 3, 28, 'Z2025-03', CURRENT_DATE - INTERVAL '41 days', 1);
+    (
+        91,
+        2,
+        3,
+        28,
+        'Z2025-03',
+        CURRENT_DATE - INTERVAL '41 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4882,7 +6514,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (94, 1, 2, 27, 'OP_201234', CURRENT_DATE + INTERVAL '20 days', 5);
+    (
+        94,
+        1,
+        2,
+        27,
+        'OP_201234',
+        CURRENT_DATE + INTERVAL '20 days',
+        5
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4895,7 +6535,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (94, 2, 2, 24, 'PIK2310', CURRENT_DATE + INTERVAL '50 days', 2);
+    (
+        94,
+        2,
+        2,
+        24,
+        'PIK2310',
+        CURRENT_DATE + INTERVAL '50 days',
+        2
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4908,7 +6556,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (95, 1, 3, 19, 'L2024-07', CURRENT_DATE + INTERVAL '95 days', 3);
+    (
+        95,
+        1,
+        3,
+        19,
+        'L2024-07',
+        CURRENT_DATE + INTERVAL '95 days',
+        3
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4921,7 +6577,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (96, 1, 2, 28, 'Z2025-01', CURRENT_DATE - INTERVAL '100 days', 1);
+    (
+        96,
+        1,
+        2,
+        28,
+        'Z2025-01',
+        CURRENT_DATE - INTERVAL '100 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4934,7 +6598,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (96, 2, 2, 28, 'Z2025-02', CURRENT_DATE - INTERVAL '72 days', 1);
+    (
+        96,
+        2,
+        2,
+        28,
+        'Z2025-02',
+        CURRENT_DATE - INTERVAL '72 days',
+        1
+    );
 
 INSERT INTO
     stock_move_line (
@@ -4947,7 +6619,15 @@ INSERT INTO
         quantity
     )
 VALUES
-    (96, 3, 2, 28, 'Z2025-03', CURRENT_DATE - INTERVAL '41 days', 1);
+    (
+        96,
+        3,
+        2,
+        28,
+        'Z2025-03',
+        CURRENT_DATE - INTERVAL '41 days',
+        1
+    );
 
 -- Adjust ID sequences to avoid duplicate key errors on inserts
 SELECT
@@ -4996,10 +6676,10 @@ SELECT
 
 SELECT
     setval (
-        'stock_move_move_id_seq',
+        'stock_move_id_seq',
         (
             SELECT
-                MAX(move_id)
+                MAX(id)
             FROM
                 stock_move
         )

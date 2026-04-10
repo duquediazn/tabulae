@@ -14,7 +14,7 @@ CREATE TABLE "user" (
 -- WAREHOUSES
 CREATE TABLE warehouse (
     id SERIAL PRIMARY KEY,
-    description VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE NOT NULL
 );
 
@@ -37,7 +37,7 @@ CREATE TABLE product (
 
 -- STOCK MOVES
 CREATE TABLE stock_move (
-    move_id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     move_type VARCHAR(10) CHECK (move_type IN ('incoming', 'outgoing')),
     user_id INT NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE stock_move_line (
     expiration_date DATE,
     quantity INT NOT NULL CHECK (quantity > 0),
     PRIMARY KEY (move_id, line_id),  
-    FOREIGN KEY (move_id) REFERENCES stock_move(move_id),
+    FOREIGN KEY (move_id) REFERENCES stock_move(id),
     FOREIGN KEY (warehouse_id) REFERENCES warehouse(id),
     FOREIGN KEY (product_id) REFERENCES product(id)
 );
@@ -80,7 +80,7 @@ BEGIN
     -- Retrieve the move type and user who created the stock move
     SELECT move_type, user_id INTO move_type_value, move_user 
     FROM stock_move 
-    WHERE move_id = NEW.move_id;
+    WHERE id = NEW.id;
 
     -- If lot is not specified, assign 'NO_LOT'
     processed_lot := COALESCE(NEW.lot, 'NO_LOT'); -- Replace NULL with 'NO_LOT'

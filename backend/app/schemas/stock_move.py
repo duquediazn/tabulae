@@ -23,7 +23,7 @@ class StockMoveCreate(StockMoveBase):
 class StockMoveResponse(StockMoveBase):
     """Schema for returning movement data."""
 
-    move_id: int
+    id: int
     user_id: int
     created_at: datetime
     user_name: str

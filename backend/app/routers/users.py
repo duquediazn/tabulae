@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -6,15 +8,14 @@ from app.models.stock_move import StockMove
 from app.models.user import User
 from app.dependencies import get_current_user
 from app.schemas.user import (
-    BulkStatusUpdate,
     PaginatedUserResponse,
-    UserCreate,
+    UserAdminCreate,
     UserResponse,
     UserUpdate,
 )
+from app.schemas.common import BulkStatusUpdate, BulkStatusUpdateResponse
 from app.utils.authentication import hash_password
 from app.dependencies import require_admin
-from app.utils.validation import is_admin_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -25,8 +26,8 @@ def get_users(
     current_user: User = Depends(require_admin),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
-    search: str = Query(None),
-    is_active: bool = Query(None),
+    search: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
 ):
     """Lists all users (admin access only)."""
     try:
@@ -58,9 +59,9 @@ def get_users(
     return {"data": users, "total": total_records, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=UserResponse, status_code=201)
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
-    user_data: UserCreate,
+    user_data: UserAdminCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
@@ -77,13 +78,7 @@ def create_user(
         )
 
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email is already registered.")
-
-    # Validate role
-    if user_data.role.lower() not in ["user", "admin"]:
-        raise HTTPException(
-            status_code=400, detail="Invalid role. Must be 'user' or 'admin'."
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already registered.")
 
     # Create user
     new_user = User(
@@ -139,7 +134,7 @@ def get_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    if not is_admin_user(current_user) and current_user.id != id:
+    if current_user.role.strip().lower() != "admin" and current_user.id != id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this user",
@@ -148,11 +143,11 @@ def get_user(
     return user
 
 
-@router.put("/bulk-status")
+@router.put("/bulk-status", response_model=BulkStatusUpdateResponse)
 def bulk_update_user_status(
     data: BulkStatusUpdate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Allows an admin to activate or deactivate multiple users at once."""
     try:
@@ -165,7 +160,7 @@ def bulk_update_user_status(
 
             # Optional rule:
             # Do not allow the current admin to deactivate themselves
-            if data.is_active is False and user.id == admin.id:
+            if data.is_active is False and user.id == current_user.id:
                 continue
 
             user.is_active = data.is_active
@@ -177,7 +172,7 @@ def bulk_update_user_status(
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error updating users",
         )
 
@@ -212,7 +207,7 @@ def update_user(
         )
 
     # Check if the current user is an admin
-    is_admin = is_admin_user(current_user)
+    is_admin = current_user.role.strip().lower() == "admin"
 
     # Permission control: only admin or the user themself can edit
     if not is_admin and user.id != current_user.id:
@@ -222,10 +217,10 @@ def update_user(
         )
 
     # Apply changes (a regular user CANNOT change role or is_active)
-    if user_update.name:
+    if user_update.name is not None:
         user.name = user_update.name
 
-    if user_update.email:
+    if user_update.email is not None:
         # Check if the new email is already used by another user
         try:
             existing_user = db.exec(
@@ -244,7 +239,7 @@ def update_user(
             )
         user.email = user_update.email
 
-    if user_update.role:
+    if user_update.role is not None:
         if not is_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -265,7 +260,7 @@ def update_user(
             )
         user.is_active = user_update.is_active
 
-    if user_update.password:
+    if user_update.password is not None:
         user.password = hash_password(user_update.password)
 
     try:
