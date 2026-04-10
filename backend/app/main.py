@@ -8,11 +8,16 @@ from app.routers import (
     users,
     stock,
     warehouses,
+    stock_moves,
+    websocket
 )
-from fastapi.middleware.cors import CORSMiddleware  # CORS
-from app.routers.websocket import router as websocket_router
+from fastapi.middleware.cors import CORSMiddleware  
 from app.routers import stock_moves
+from dotenv import load_dotenv  # To load environment variables from a .env file (local development)
+from app.utils.getenv import get_required_env  
 
+# Load environment variables from a .env file
+load_dotenv()
 
 # Create the database and tables when the app starts
 @asynccontextmanager
@@ -21,22 +26,25 @@ async def lifespan(app: FastAPI):
     yield  # This is where connections or other resources can be closed
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="Tabulae API",
+    version=get_required_env("API_VERSION", fallback="1.0.0"),
+    description="Inventory management API",
+    lifespan=lifespan,
+)
 
 
 # Allowed origins for CORS – Vite dev server and production frontend
-origins = [
-    "http://localhost:5173",  # Vite dev server (development mode)
-    "http://localhost:8080",  # Production frontend (adjust as needed)
-]
+ALLOWED_ORIGINS = get_required_env("ALLOWED_ORIGINS", fallback="http://localhost:5173,http://localhost:8080").split(",")
+origins = [origin.strip()for origin in ALLOWED_ORIGINS]
 
 # Secure CORS configuration for cookies
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,  # Allow cookies (e.g., refresh_token)
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Include routers
@@ -49,7 +57,7 @@ app.include_router(stock.router)
 app.include_router(product_categories.router)
 
 # WebSocket
-app.include_router(websocket_router)
+app.include_router(websocket.router)
 
 
 @app.get("/")

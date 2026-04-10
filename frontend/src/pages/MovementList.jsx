@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import API_URL from "../api/config";
 import Pagination from "../components/Pagination";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getStockMovements } from "../api/stock_moves";
 import { getUsers } from "../api/users";
 import ExportCSVButton from "../components/ExportCSVButton";
@@ -16,6 +16,7 @@ import FilterContainer from "../components/ContainerFilters";
 export default function MovementList() {
   const { accessToken, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [movements, setMovements] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +64,7 @@ export default function MovementList() {
     offset,
     limit,
     accessToken,
+    location.state?.refreshAt,
   ]);
 
   useEffect(() => {
@@ -218,8 +220,8 @@ export default function MovementList() {
                 </tr>
               ) : (
                 movements.map((mov) => (
-                  <tr key={mov.move_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2">{mov.move_id}</td>
+                  <tr key={mov.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2">{mov.id}</td>
                     <td className="px-4 py-2 capitalize">{mov.move_type}</td>
                     <td className="px-4 py-2">{mov.user_name}</td>
                     <td className="px-4 py-2">
@@ -229,7 +231,7 @@ export default function MovementList() {
                     <td className="px-4 py-2">
                       <button
                         role="button"
-                        onClick={() => navigate(`/stock-movements/${mov.move_id}`)}
+                        onClick={() => navigate(`/stock-movements/${mov.id}`)}
                         className="text-indigo-600 hover:underline text-sm"
                       >
                         View

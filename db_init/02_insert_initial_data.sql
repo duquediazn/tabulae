@@ -26,7 +26,7 @@ VALUES
 
 -- Warehouses
 INSERT INTO
-    warehouse (description, is_active)
+    warehouse (name, is_active)
 VALUES
     ('Main Warehouse', TRUE),
     ('North Store', TRUE),

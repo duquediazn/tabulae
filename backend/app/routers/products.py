@@ -8,7 +8,7 @@ from app.models.database import get_db
 from app.models.product import Product
 from app.models.stock import Stock
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.dependencies import get_current_user
 from app.schemas.product import (
     BulkStatusUpdateRequest,
     PaginatedProductResponse,
@@ -16,7 +16,6 @@ from app.schemas.product import (
     ProductResponse,
     ProductUpdate,
 )
-from app.utils.validation import is_admin_user
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -51,12 +50,12 @@ def get_products(
         if category_id:
             statement = statement.where(Product.category_id == int(category_id))
 
-        # Filter by active state (admin only)
-        if is_admin_user(current_user) and is_active is not None:
-            statement = statement.where(Product.is_active == is_active)
-        elif not is_admin_user(current_user):
-            # Regular users only see active products
+        # Filter by active state (only admin can see inactive products)
+        user_is_admin = current_user.role.strip().lower() == "admin"
+        if not user_is_admin:
             statement = statement.where(Product.is_active == True)
+        elif is_active is not None:
+            statement = statement.where(Product.is_active == is_active)
 
         # Paginated and ordered query
         products_raw = db.exec(
@@ -74,9 +73,8 @@ def get_products(
             detail="Database connection error",
         )
 
-    # Format response
     products = [
-        {**product.__dict__, "category_name": category_name}
+        {**product.model_dump(), "category_name": category_name}
         for product, category_name in products_raw
     ]
 
@@ -112,11 +110,11 @@ def get_product(
         )
 
     if not result:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
     product, category_name = result
 
-    if not is_admin_user(current_user) and not product.is_active:
+    if current_user.role.strip().lower() != "admin" and not product.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this product",
@@ -131,7 +129,7 @@ def get_product(
 def create_product(
     product_data: ProductCreate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),  # Verifies if the user is admin
+    current_user: User = Depends(require_admin),  
 ):
     """Creates a new product (admin only)."""
 
@@ -168,6 +166,8 @@ def create_product(
 
     try:
         db.add(new_product)
+        db.commit()
+        db.refresh(new_product)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -181,17 +181,14 @@ def create_product(
             detail="Internal error while creating the product.",
         )
 
-    db.commit()
-    db.refresh(new_product)
-
     return {**new_product.model_dump(), "category_name": category.name}
 
 
-@router.put("/bulk-status", status_code=200)
+@router.put("/bulk-status", status_code=status.HTTP_200_OK)
 def bulk_update_product_status(
     data: BulkStatusUpdateRequest,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     try:
         rows = db.exec( 
@@ -202,7 +199,7 @@ def bulk_update_product_status(
             .join(Stock, Stock.product_id == Product.id, isouter=True)
             .where(Product.id.in_(data.ids))
             .group_by(Product.id)
-        ).all() # [(Product(...), stock_total), (Product(...), stock_total), ...]
+        ).all()
 
         updated_products = []
 
@@ -217,11 +214,11 @@ def bulk_update_product_status(
             db.add(product)
             updated_products.append(product)
 
+        db.commit()
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(500, detail="Error while updating products")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error while updating products")
 
-    db.commit()
     return {
         "message": f"{len(updated_products)} products updated",
         "skipped": len(data.ids) - len(updated_products),
@@ -268,7 +265,7 @@ def update_product(
         # Load the category from the database
         category = db.get(ProductCategory, category_id)
         if not category:
-            raise HTTPException(404, detail="The specified category does not exist.")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The specified category does not exist.")
 
 
         # If the active state is being updated, validate if the product can be deactivated
@@ -295,17 +292,8 @@ def update_product(
             detail="Database connection error",
         )         
 
-    # Apply changes only if provided
-    if product_update.sku is not None:
-        product.sku = product_update.sku
-    if product_update.short_name is not None:
-        product.short_name = product_update.short_name
-    if product_update.description is not None:
-        product.description = product_update.description
-    if product_update.category_id is not None:
-        product.category_id = category_id
-    if product_update.is_active is not None:
-        product.is_active = product_update.is_active
+    # sqlmodel_update will only update the fields that are set in the product_update object
+    product.sqlmodel_update(product_update.model_dump(exclude_unset=True)) 
 
     try:
         # Save changes to the database
@@ -362,9 +350,9 @@ def delete_product(
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="This product has associated movements and cannot be deleted.")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This product has associated movements and cannot be deleted.")
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=500, detail="Database connection error")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Database connection error")
 
     return {**product.model_dump(), "category_name": category.name}

@@ -455,7 +455,7 @@ def test_admin_cannot_deactivate_product_with_stock(client, session):
     session.commit()
     
     # Create warehouse required by FK
-    session.add(Warehouse(id=555, description="WH555"))
+    session.add(Warehouse(id=555, name="WH555"))
     session.commit()
 
     # fake_prod has stock
@@ -528,7 +528,7 @@ def test_admin_cannot_deactivate_product_with_stock(client, session):
     session.commit()
 
     # Create warehouse required by FK
-    session.add(Warehouse(id=1, description="WH1"))
+    session.add(Warehouse(id=1, name="WH1"))
     session.commit()
 
     # Only p1 has stock
@@ -600,7 +600,7 @@ def test_admin_cannot_delete_product_with_movements(client, session):
 
     # Prepare category, warehouse and product
     session.add(ProductCategory(id=1, name="Locked"))
-    session.add(Warehouse(id=1, description="Main"))
+    session.add(Warehouse(id=1, name="Main"))
     session.commit()
 
     product = Product(id=1, sku="LOCKDEL", short_name="Locked", category_id=1)
@@ -614,7 +614,7 @@ def test_admin_cannot_delete_product_with_movements(client, session):
     session.refresh(move)
 
     line = StockMoveLine(
-        move_id=move.move_id,
+        move_id=move.id,
         line_id=1,
         product_id=1,
         warehouse_id=1,

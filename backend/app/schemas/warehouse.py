@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class WarehouseBase(BaseModel):
     """Base schema with common fields for a warehouse."""
 
-    description: str = Field(..., max_length=255, description="Warehouse description")
+    name: str = Field(..., max_length=255, description="Warehouse name")
     is_active: Optional[bool] = Field(
         default=True,
         description="Indicates whether the warehouse is active (True) or inactive (False)",
@@ -14,7 +14,7 @@ class WarehouseBase(BaseModel):
 
 class WarehouseCreate(WarehouseBase):
     """Schema for creating warehouses.
-    - Includes `description` (required).
+    - Includes `name` (required).
     - `is_active` is optional and defaults to `True`.
     """
 
@@ -23,12 +23,12 @@ class WarehouseCreate(WarehouseBase):
 
 class WarehouseUpdate(BaseModel):
     """Schema for partially updating a warehouse.
-    - Allows updating the `description` and `is_active` status.
+    - Allows updating the `name` and `is_active` status.
     - No field is required; only sent fields will be updated.
     """
 
-    description: Optional[str] = Field(
-        None, max_length=255, description="New description for the warehouse"
+    name: Optional[str] = Field(
+        None, max_length=255, description="New name for the warehouse"
     )
     is_active: Optional[bool] = Field(
         None, description="New status for the warehouse (True or False)"
@@ -52,8 +52,3 @@ class PaginatedWarehouseResponse(BaseModel):
     offset: int
 
     model_config = {"from_attributes": True}
-
-
-class BulkStatusUpdate(BaseModel):
-    ids: List[int]
-    is_active: bool

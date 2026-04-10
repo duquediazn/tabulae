@@ -190,7 +190,7 @@ This uses docker-compose.yml and starts:
 
 Once running:
 
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:8080
 - Backend (API): http://localhost:8000
 - API Docs: http://localhost:8000/docs
 
@@ -268,6 +268,8 @@ This file includes essential configuration such as:
 - Runtime environment mode (`development` / `production`)
 - PostgreSQL credentials
 - JWT secret and token durations
+- Allowed CORS origins (`ALLOWED_ORIGINS`)
+- API version string (`API_VERSION`)
 - pgAdmin login
 - API URL for the frontend (injected during build or runtime)
 
@@ -300,7 +302,7 @@ pytest
 
 ### Test structure
 
-Tests are located in the `backend/tests/` directory and organized by feature:
+Tests are located in the `backend/app/tests/` directory and organized by feature:
 
 - `test_users.py`: user creation, roles, permissions
 - `test_auth.py`: login, tokens, password verification
@@ -347,7 +349,7 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
 - Stable versions are tagged on `main` using annotated Git tags.
 - Each version represents a stable milestone of the application.
 
-Current version: `v1.0.0`
+Current version: `v1.3.1`
 
 > 🏷️ See [docs/VERSIONS.md](./docs/VERSIONS.md) for version history and changelog.
 

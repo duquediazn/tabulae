@@ -66,7 +66,7 @@ export default function MovementDetail() {
       <Breadcrumb />
       <div className="p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
-          Movement Detail #{movement.move_id}
+          Movement Detail #{movement.id}
         </h1>
         <button
           role="button"
@@ -81,14 +81,14 @@ export default function MovementDetail() {
         <div className="mb-6 text-sm text-gray-800">
           <p>
             <strong>Type:</strong>{" "}
-            <span className="capitalize">{movement.tipo}</span>
+            <span className="capitalize">{movement.move_type}</span>
           </p>
           <p>
             <strong>User:</strong> {movement.user_name}
           </p>
           <p>
             <strong>Date:</strong>{" "}
-            {new Date(movement.fecha).toLocaleDateString()}
+            {new Date(movement.created_at).toLocaleDateString()}
           </p>
           <p>
             <strong>Number of lines:</strong> {movement.lines.length}
@@ -116,8 +116,8 @@ export default function MovementDetail() {
                   <td className="px-4 py-2">{line.warehouse_name}</td>
                   <td className="px-4 py-2">{line.lot}</td>
                   <td className="px-4 py-2">
-                    {line.fecha_cad
-                      ? new Date(line.fecha_cad).toLocaleDateString()
+                    {line.expiration_date
+                      ? new Date(line.expiration_date).toLocaleDateString()
                       : "—"}
                   </td>
                   <td className="px-4 py-2">{line.quantity}</td>

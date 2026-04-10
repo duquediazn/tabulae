@@ -10,14 +10,14 @@ export default function NewWarehouse() {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
 
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState("");
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = () => {
     const newErrors = {};
-    if (!description.trim()) {
-      newErrors.description = "Description is required";
+    if (!name.trim()) {
+      newErrors.name = "Name is required";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -29,7 +29,7 @@ export default function NewWarehouse() {
     setIsSubmitting(true);
 
     try {
-      await createWarehouse({ description }, accessToken);
+      await createWarehouse({ name: name }, accessToken);
       alert("Warehouse successfully created");
       navigate("/warehouses/list");
     } catch (error) {
@@ -54,21 +54,21 @@ export default function NewWarehouse() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
-                htmlFor="description"
+                htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Description
+                Name
               </label>
               <input
-                id="description"
+                id="name"
                 type="text"
                 maxLength={255}
                 required
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full h-[36px] bg-white rounded border border-gray-300 px-3 py-1 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
-              <ErrorMessage message={errors.description} />
+              <ErrorMessage message={errors.name} />
             </div>
 
             <div className="flex gap-3">

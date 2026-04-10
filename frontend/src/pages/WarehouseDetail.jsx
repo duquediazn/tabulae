@@ -67,7 +67,7 @@ export default function WarehouseDetail() {
               <strong>ID:</strong> {warehouse.id}
             </p>
             <p>
-              <strong>Description:</strong> {warehouse.description}
+              <strong>Name:</strong> {warehouse.name}
             </p>
             <p>
               <strong>Status:</strong> {warehouse.is_active ? "Active" : "Inactive"}

@@ -1,4 +1,4 @@
-from sqlmodel import Column, SQLModel, Field, String
+from sqlmodel import SQLModel, Field
 
 class User(SQLModel, table=True):
     __tablename__ = "user"

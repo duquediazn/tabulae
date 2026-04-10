@@ -5,7 +5,7 @@ import os
 # Connect to the existing database
 DATABASE_URL = get_required_env("DATABASE_URL")
 
-echo = os.getenv("ENVIRONMENT", "development") != "production"
+echo = get_required_env("ENVIRONMENT", fallback="development") != "production"
 engine = create_engine(DATABASE_URL, echo=echo)
 
 

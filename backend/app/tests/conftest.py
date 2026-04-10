@@ -37,6 +37,7 @@ import pytest
 from sqlmodel import SQLModel, create_engine, Session, delete
 from app.models.database import get_db
 from app.models.user import User
+from app.models.revoked_token import RevokedToken
 from app.models.stock_move import StockMove
 from app.models.stock_move_line import StockMoveLine
 from app.models.warehouse import Warehouse
@@ -76,6 +77,7 @@ def session():
         session.exec(delete(User))
         session.exec(delete(Warehouse))
         session.exec(delete(ProductCategory))
+        session.exec(delete(RevokedToken))
         session.commit()
         yield session
 
@@ -95,8 +97,24 @@ def client(session):
 
     from fastapi.testclient import TestClient
 
-    client = TestClient(app)
-
-    yield client
+    with TestClient(app) as client:
+        yield client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def base_data(session):
+    """Provides a default category, active warehouse, and active product for tests."""
+    from types import SimpleNamespace
+
+    category = ProductCategory(name="BaseCat")
+    session.add(category)
+    session.commit()
+
+    warehouse = Warehouse(name="Base WH", is_active=True)
+    product = Product(sku="BASESKU", short_name="Base Product", category_id=category.id, is_active=True)
+    session.add_all([warehouse, product])
+    session.commit()
+
+    return SimpleNamespace(category=category, warehouse=warehouse, product=product)

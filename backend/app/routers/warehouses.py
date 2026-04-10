@@ -8,15 +8,14 @@ from app.models.stock_move_line import StockMoveLine
 from app.models.stock import Stock
 from app.models.warehouse import Warehouse
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.dependencies import get_current_user
 from app.schemas.warehouse import (
     PaginatedWarehouseResponse,
     WarehouseCreate,
     WarehouseUpdate,
-    WarehouseResponse,
-    BulkStatusUpdate,
+    WarehouseResponse
 )
-from app.utils.validation import is_admin_user
+from app.schemas.common import BulkStatusUpdate, BulkStatusUpdateResponse
 
 router = APIRouter(prefix="/warehouses", tags=["Warehouses"])
 
@@ -37,14 +36,14 @@ def get_warehouses(
         if search:
             search_like = f"%{search.lower()}%"
             statement = statement.where(
-                func.lower(Warehouse.description).ilike(search_like)
+                func.lower(Warehouse.name).ilike(search_like)
             )
 
         if is_active is not None:
             statement = statement.where(Warehouse.is_active == is_active)
 
         paginated = (
-            statement.order_by(Warehouse.description).limit(limit).offset(offset)
+            statement.order_by(Warehouse.name).limit(limit).offset(offset)
         )
         warehouses = db.exec(paginated).all()
 
@@ -65,11 +64,11 @@ def get_warehouses(
     }
 
 
-@router.put("/bulk-active", status_code=200)
+@router.put("/bulk-active", status_code=status.HTTP_200_OK, response_model=BulkStatusUpdateResponse)
 def bulk_update_is_active_warehouses(
     data: BulkStatusUpdate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     try:
         warehouses = db.exec(select(Warehouse).where(Warehouse.id.in_(data.ids))).all()
@@ -97,11 +96,11 @@ def bulk_update_is_active_warehouses(
             db.add(warehouse)
             updated.append(warehouse)
 
+        db.commit()
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(500, detail="Error updating warehouses")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating warehouses")
 
-    db.commit()
     return {
         "message": f"{len(updated)} warehouses updated",
         "skipped": len(data.ids) - len(updated),
@@ -129,7 +128,7 @@ def get_warehouse(
             detail="Warehouse not found.",
         )
 
-    if not is_admin_user(current_user) and not warehouse.is_active:
+    if current_user.role.strip().lower() != "admin" and not warehouse.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This warehouse is inactive.",
@@ -142,13 +141,15 @@ def get_warehouse(
 def create_warehouse(
     warehouse_data: WarehouseCreate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),  # Only admins can create
+    current_user: User = Depends(require_admin), 
 ):
     """Creates a new warehouse. Only administrators are allowed."""
     new_warehouse = Warehouse(**warehouse_data.model_dump())
 
     try:
         db.add(new_warehouse)
+        db.commit()
+        db.refresh(new_warehouse)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -161,8 +162,6 @@ def create_warehouse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while registering the warehouse.",
         )
-    db.commit()
-    db.refresh(new_warehouse)
     return new_warehouse
 
 
@@ -171,7 +170,7 @@ def update_warehouse(
     id: int,
     warehouse_update: WarehouseUpdate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),  # Only admins can modify
+    current_user: User = Depends(require_admin), 
 ):
     """Edit the description or is_active status of a warehouse. Admins only."""
     try:
@@ -202,13 +201,15 @@ def update_warehouse(
             )
 
     # Update only provided fields
-    if warehouse_update.description:
-        warehouse.description = warehouse_update.description
+    if warehouse_update.name is not None:
+        warehouse.name = warehouse_update.name
     if warehouse_update.is_active is not None:
         warehouse.is_active = warehouse_update.is_active
 
     try:
         db.add(warehouse)
+        db.commit()
+        db.refresh(warehouse)
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -221,8 +222,6 @@ def update_warehouse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while updating the warehouse.",
         )
-    db.commit()
-    db.refresh(warehouse)
     return warehouse
 
 
@@ -230,7 +229,7 @@ def update_warehouse(
 def deactivate_warehouse(
     id: int,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """
     Deletes a warehouse only if it has no associated movements.
@@ -259,8 +258,8 @@ def deactivate_warehouse(
 
         if stock:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Warehouse {id} is not empty and therefore cannot be deactivated.",
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Warehouse {id} is not empty and therefore cannot be deleted.",
             )
 
         movement_exists = db.exec(
@@ -271,7 +270,7 @@ def deactivate_warehouse(
 
         if movement_exists:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_409_CONFLICT,
                 detail="Cannot delete this warehouse because it has registered movements."
             )
             

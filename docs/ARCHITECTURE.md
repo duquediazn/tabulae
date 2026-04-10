@@ -74,18 +74,19 @@ The backend is a **FastAPI 0.121** application located in `backend/app/`. It fol
 ```
 backend/app/
 ├── main.py              # App entry point: lifespan, CORS, router registration
-├── dependencies.py      # Shared FastAPI Depends (require_admin)
+├── dependencies.py      # Shared FastAPI Depends (get_current_user, require_admin)
 ├── models/              # SQLModel ORM table definitions
 │   └── database.py      # Engine creation, get_db() session dependency
 ├── schemas/             # Pydantic request/response schemas
 ├── routers/             # Route handlers (one file per resource)
+├── services/            # Business logic extracted from routers
 └── utils/
     ├── authentication.py  # JWT creation/decoding, bcrypt hashing
     ├── getenv.py          # Required env var loader
     └── validation.py      # Shared validation helpers
 ```
 
-Data flows strictly downward: **routers → dependencies / schemas → models**. Routers never import from other routers, except `auth.py` which exposes `get_current_user` as a reusable dependency.
+Data flows strictly downward: **routers → dependencies / schemas → models**. Routers never import from other routers.
 
 ### Routers
 
@@ -127,7 +128,7 @@ Authorization is enforced through two FastAPI dependencies:
 
 Role checks are never inlined inside route functions; they are always delegated to these dependencies.
 
-**Token revocation:** every JWT includes a `jti` (JWT ID) claim — a UUID generated at creation time. On logout, the `jti` of the access token is stored in the `revoked_tokens` table alongside its expiration time. `get_current_user` rejects any token whose `jti` appears in this table, making logout effectively immediate regardless of token lifetime.
+**Token revocation:** every JWT includes a `jti` (JWT ID) claim — a UUID generated at creation time. On logout, the `jti` of both the access and refresh tokens is stored in the `revoked_tokens` table alongside their expiration times. `get_current_user` rejects any token whose `jti` appears in this table, making logout effectively immediate regardless of token lifetime.
 
 ### WebSocket
 
@@ -136,6 +137,14 @@ A single WebSocket endpoint is registered at `/ws/stock-moves`. It uses a `Conne
 **Authentication flow:** connections are authenticated via a first-message pattern. The client connects and immediately sends the access token as the first text message. The server validates the token (signature, expiry, and `is_active` status) before adding the connection to the broadcast list. Connections that fail validation are closed with code `1008` (Policy Violation). This avoids exposing the token as a URL query parameter, which would appear in server logs.
 
 When a stock movement is created via the REST API, the `stock_moves` router broadcasts a notification through this manager, so connected clients can update their UI without polling.
+
+> **Production limitation — single-process only.** `ConnectionManager` stores active connections in a plain Python list inside the process that owns it. The production Docker Compose configuration runs Gunicorn with multiple worker processes. Each worker has its own independent `ConnectionManager` instance: a broadcast triggered by Worker 1 (handling a stock movement POST) will never reach clients connected to Worker 2 or 3. As a result, real-time notifications are unreliable under multi-worker deployments.
+>
+> Acceptable workarounds for a future production setup:
+> - **Sticky sessions** — configure the load balancer (e.g., Nginx `ip_hash`) so each client always routes to the same worker. Simple but does not survive worker restarts.
+> - **Redis Pub/Sub** — each worker subscribes to a shared Redis channel; any worker publishing a message reaches all connected clients regardless of which worker they are attached to. This is the standard scalable solution.
+>
+> The current single-worker development and demo setup is not affected.
 
 ---
 
@@ -148,11 +157,11 @@ Seven tables make up the schema. The diagram below shows the foreign key relatio
 | Table               | Primary key                           | Key columns                                         |
 | ------------------- | ------------------------------------- | --------------------------------------------------- |
 | `user`              | `id`                                  | `email`, `role` (`admin`/`user`), `is_active`       |
-| `warehouse`         | `id`                                  | `description`, `is_active`                          |
+| `warehouse`         | `id`                                  | `name`, `is_active`                                 |
 | `product_category`  | `id`                                  | `name` (unique)                                     |
 | `product`           | `id`                                  | `sku` (unique), `category_id` FK, `is_active`       |
 | `stock`             | (`warehouse_id`, `product_id`, `lot`) | `quantity`, `expiration_date`                       |
-| `stock_move`        | `move_id`                             | `move_type` (`IN`/`OUT`), `user_id` FK, `created_at`|
+| `stock_move`        | `id`                                  | `move_type` (`IN`/`OUT`), `user_id` FK, `created_at`|
 | `stock_move_line`   | (`move_id`, `line_id`)                | `warehouse_id`, `product_id`, `lot`, `quantity`     |
 | `revoked_tokens`    | `jti`                                 | `expires_at` — used to invalidate tokens on logout  |
 

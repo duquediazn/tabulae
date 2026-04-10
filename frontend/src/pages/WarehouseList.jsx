@@ -116,7 +116,7 @@ export default function WarehouseList() {
         >
           <SearchInput
             label="Search"
-            placeholder="Search by description..."
+            placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -206,7 +206,7 @@ export default function WarehouseList() {
                     />
                   </th>
                   <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">Description</th>
+                  <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Actions</th>
                 </tr>
@@ -222,7 +222,7 @@ export default function WarehouseList() {
                       />
                     </td>
                     <td className="px-4 py-2">{w.id}</td>
-                    <td className="px-4 py-2">{w.description}</td>
+                    <td className="px-4 py-2">{w.name}</td>
                     <td className="px-4 py-2">
                       {w.is_active ? (
                         <span className="text-green-600 font-medium">
@@ -245,10 +245,6 @@ export default function WarehouseList() {
                       <button
                         role="button"
                         onClick={() => {
-                          console.log(
-                            "Navigating to stock of warehouse:",
-                            w
-                          );
                           navigate(`/stock/warehouse/${w.id}`);
                         }}
                         className="text-indigo-600 hover:underline"

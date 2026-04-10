@@ -24,7 +24,7 @@ class StockMoveLineBase(BaseModel):
 class StockMoveLineCreate(StockMoveLineBase):
     """Schema for creating a movement line."""
 
-    pass  # `id_mov` and `id_linea` are auto-generated
+    pass  # `move_id` and `line_id` are auto-generated
 
 
 class StockMoveLineResponse(StockMoveLineBase):

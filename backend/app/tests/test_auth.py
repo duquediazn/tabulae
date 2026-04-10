@@ -10,21 +10,22 @@ TESTED ENDPOINTS:
 [x] POST   /auth/logout
 """
 
+import jwt
+
 import pytest
-from app.models.user import User
-from app.utils.authentication import hash_password
-from sqlmodel import select
 from app.tests.utils import (
     create_user_in_db,
     get_auth_headers,
     get_token_for_user,
 )
 
-register_data = {
-    "name": "Test User",
-    "email": "testuser@example.com",
-    "password": "testpass123",
-}
+@pytest.fixture()
+def register_data():
+    return {
+        "name": "Test User",
+        "email": "testuser@example.com",
+        "password": "testpass123",
+    }
 
 
 @pytest.fixture()
@@ -45,24 +46,16 @@ def active_user(session):
 
 
 # POST   /auth/register
-def test_register_user_success(client, session):
+def test_register_user_success(client, register_data):
     response = client.post("/auth/register", json=register_data)
     assert response.status_code == 201
     assert response.json()["email"] == register_data["email"]
 
-    # Activate user for future login tests
-    user = session.exec(
-        select(User).where(User.email == register_data["email"])
-    ).first()
-    user.is_active = True
-    session.add(user)
-    session.commit()
 
-
-def test_register_user_duplicate(client):
+def test_register_user_duplicate(client, register_data):
     client.post("/auth/register", json=register_data)  # create user
     response = client.post("/auth/register", json=register_data)  # duplicate
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def test_register_missing_password(client):
@@ -105,17 +98,19 @@ def test_register_short_name(client):
     assert response.status_code == 422
 
 
-def test_register_invalid_role(client):
+def test_register_role_is_ignored(client):
+    """Even if a role is sent, it is ignored and the user is always created as 'user'."""
     response = client.post(
         "/auth/register",
         json={
             "name": "Wrong Role",
             "email": "new4@example.com",
             "password": "validpass123",
-            "role": "superadmin",
+            "role": "admin",
         },
     )
-    assert response.status_code == 422
+    assert response.status_code == 201
+    assert response.json()["role"] == "user"
 
 
 # POST   /auth/login
@@ -129,11 +124,11 @@ def test_login_user_not_found(client):
         "/auth/login",
         data={"username": "nonexistent@example.com", "password": "whateverpass"},
     )
-    assert response.status_code == 404
-    assert response.json()["detail"] == "User not found."
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid credentials."
 
 
-def test_login_wrong_password(client, session):
+def test_login_wrong_password(client, session, register_data):
     user = create_user_in_db(
         session,
         register_data["name"],
@@ -189,10 +184,7 @@ def test_profile_no_token(client):
 
 
 def test_profile_invalid_token(client):
-    # Fake but well-formed JWT
-    fake_token = (
-        "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9." "eyJzdWIiOiAiZmFrZSJ9.invalidsig"
-    )
+    fake_token = jwt.encode({"sub": "fake"}, "invalidsecret", algorithm="HS256")  
     headers = {"Authorization": f"Bearer {fake_token}"}
     response = client.get("/auth/profile", headers=headers)
     assert response.status_code == 401
@@ -256,6 +248,26 @@ def test_refresh_token_invalid_token(client):
     response = client.post("/auth/refresh", cookies=cookies)
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid token"
+
+
+def test_refresh_fails_with_access_token(client, active_user):
+    """An access token must not be accepted as a refresh token."""
+    access_token = get_token_for_user(client, active_user.email, "testpass123")
+    response = client.post("/auth/refresh", cookies={"refresh_token": access_token})
+    assert response.status_code == 401
+
+
+def test_profile_fails_with_refresh_token(client, active_user):
+    """A refresh token must not be accepted as a bearer access token."""
+    login_response = client.post(
+        "/auth/login",
+        data={"username": active_user.email, "password": "testpass123"},
+    )
+    assert login_response.status_code == 200
+    refresh_token_value = login_response.cookies.get("refresh_token")
+    headers = {"Authorization": f"Bearer {refresh_token_value}"}
+    response = client.get("/auth/profile", headers=headers)
+    assert response.status_code == 401
 
 
 def test_refresh_token_deleted_user(client, session):
@@ -405,6 +417,26 @@ def test_user_token_is_revoked_after_logout(client, active_user):
     response = client.get("/auth/profile", headers=headers)
     assert response.status_code == 401
     assert "revoked" in response.json()["detail"].lower()
+
+def test_refresh_token_is_revoked_after_logout(client, active_user):
+    """Ensure the refresh token is also revoked on logout and cannot be used to get a new access token."""
+    login_response = client.post(
+        "/auth/login",
+        data={"username": active_user.email, "password": "testpass123"},
+    )
+    assert login_response.status_code == 200
+    cookies = login_response.cookies
+    token = login_response.json()["access_token"]
+    headers = get_auth_headers(token)
+
+    client.post("/auth/logout", headers=headers, cookies=cookies)
+
+    refresh_response = client.post("/auth/refresh", cookies=cookies)
+    assert refresh_response.status_code == 401
+
+def test_user_token_is_revoked_after_logout(client, active_user):
+    token = get_token_for_user(client, active_user.email, "testpass123")
+    headers = get_auth_headers(token)
 
 def test_user_cannot_logout_without_token(client):
     response = client.post("/auth/logout")

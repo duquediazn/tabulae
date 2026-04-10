@@ -1,6 +1,7 @@
 import datetime
 from typing import Optional
 from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, Integer, CheckConstraint
 
 class Stock(SQLModel, table=True):
     """SQLModel to represent stock levels in warehouses."""
@@ -26,5 +27,5 @@ class Stock(SQLModel, table=True):
         default=None, description="Expiration date (if applicable)"
     )
     quantity: int = Field(
-        nullable=False, ge=0, description="Quantity in stock (minimum 0)"
+       sa_column=Column(Integer, CheckConstraint("quantity >= 0"), nullable=False), description="Quantity in stock (minimum 0)"
     )
