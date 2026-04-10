@@ -8,12 +8,12 @@ from app.models.stock_move import StockMove
 from app.models.user import User
 from app.dependencies import get_current_user
 from app.schemas.user import (
-    BulkStatusUpdate,
     PaginatedUserResponse,
     UserAdminCreate,
     UserResponse,
     UserUpdate,
 )
+from app.schemas.common import BulkStatusUpdate, BulkStatusUpdateResponse
 from app.utils.authentication import hash_password
 from app.dependencies import require_admin
 
@@ -80,12 +80,6 @@ def create_user(
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already registered.")
 
-    # Validate role
-    if user_data.role.lower() not in ["user", "admin"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role. Must be 'user' or 'admin'."
-        )
-
     # Create user
     new_user = User(
         name=user_data.name,
@@ -149,7 +143,7 @@ def get_user(
     return user
 
 
-@router.put("/bulk-status")
+@router.put("/bulk-status", response_model=BulkStatusUpdateResponse)
 def bulk_update_user_status(
     data: BulkStatusUpdate,
     db: Session = Depends(get_db),
@@ -223,10 +217,10 @@ def update_user(
         )
 
     # Apply changes (a regular user CANNOT change role or is_active)
-    if user_update.name:
+    if user_update.name is not None:
         user.name = user_update.name
 
-    if user_update.email:
+    if user_update.email is not None:
         # Check if the new email is already used by another user
         try:
             existing_user = db.exec(
@@ -245,7 +239,7 @@ def update_user(
             )
         user.email = user_update.email
 
-    if user_update.role:
+    if user_update.role is not None:
         if not is_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -266,7 +260,7 @@ def update_user(
             )
         user.is_active = user_update.is_active
 
-    if user_update.password:
+    if user_update.password is not None:
         user.password = hash_password(user_update.password)
 
     try:

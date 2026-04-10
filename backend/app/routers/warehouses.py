@@ -13,9 +13,9 @@ from app.schemas.warehouse import (
     PaginatedWarehouseResponse,
     WarehouseCreate,
     WarehouseUpdate,
-    WarehouseResponse,
-    BulkStatusUpdate,
+    WarehouseResponse
 )
+from app.schemas.common import BulkStatusUpdate, BulkStatusUpdateResponse
 
 router = APIRouter(prefix="/warehouses", tags=["Warehouses"])
 
@@ -64,7 +64,7 @@ def get_warehouses(
     }
 
 
-@router.put("/bulk-active", status_code=status.HTTP_200_OK)
+@router.put("/bulk-active", status_code=status.HTTP_200_OK, response_model=BulkStatusUpdateResponse)
 def bulk_update_is_active_warehouses(
     data: BulkStatusUpdate,
     db: Session = Depends(get_db),

@@ -89,8 +89,3 @@ class PaginatedUserResponse(BaseModel):
     offset: int
 
     model_config = {"from_attributes": True}
-
-
-class BulkStatusUpdate(BaseModel):
-    ids: List[int]
-    is_active: bool
