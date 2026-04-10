@@ -172,9 +172,8 @@ export default function Navbar() {
           {/* Notifications and user menu */}
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
             <button
-              role="button"
-              className="relative"
               type="button"
+              className="relative"
               onClick={() => {
                 setShowDropdown((prev) => !prev);
                 setActiveNotification(false);
@@ -201,7 +200,7 @@ export default function Navbar() {
                         <li
                           key={idx}
                           className="flex justify-between items-center cursor-pointer hover:bg-gray-100 p-1 rounded"
-                          onClick={() => navigate("/stock-movements/list")}
+                          onClick={() => navigate("/stock-movements/list", { state: { refreshAt: Date.now() } })}
                         >
                           <span>• {message}</span>
                           <span
