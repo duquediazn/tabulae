@@ -434,6 +434,9 @@ def test_refresh_token_is_revoked_after_logout(client, active_user):
     refresh_response = client.post("/auth/refresh", cookies=cookies)
     assert refresh_response.status_code == 401
 
+def test_user_token_is_revoked_after_logout(client, active_user):
+    token = get_token_for_user(client, active_user.email, "testpass123")
+    headers = get_auth_headers(token)
 
 def test_user_cannot_logout_without_token(client):
     response = client.post("/auth/logout")
