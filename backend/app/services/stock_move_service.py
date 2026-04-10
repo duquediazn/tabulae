@@ -105,7 +105,7 @@ def create_stock_movement(
         created_lines: list[StockMoveLine] = []
         for i, line_data in enumerate(movement_data.lines, 1):
             new_line = StockMoveLine(
-                move_id=new_movement.move_id,
+                move_id=new_movement.id,
                 line_id=i,
                 warehouse_id=line_data.warehouse_id,
                 product_id=line_data.product_id,

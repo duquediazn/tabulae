@@ -25,6 +25,8 @@ from dateutil.relativedelta import relativedelta
 
 from app.models.product import Product
 from app.models.stock import Stock
+from app.models.stock_move import StockMove
+from app.models.stock_move_line import StockMoveLine
 from app.models.warehouse import Warehouse
 from app.models.product_category import ProductCategory
 from app.tests.utils import (
@@ -48,7 +50,7 @@ def test_admin_can_list_all_stock(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=1, description="Central WH", is_active=True)
+    warehouse = Warehouse(id=1, name="Central WH", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -79,7 +81,7 @@ def test_stock_total_is_full_count_not_capped_by_limit(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(description="PagWH", is_active=True)
+    warehouse = Warehouse(name="PagWH", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -110,7 +112,7 @@ def test_admin_can_list_stock_by_warehouse(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=2, description="WH2", is_active=True)
+    warehouse = Warehouse(id=2, name="WH2", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -137,7 +139,7 @@ def test_stock_by_warehouse_returns_empty_for_no_stock(client, session):
     headers, _ = get_admin_headers(client, session)
 
     # Create a warehouse without stock
-    warehouse = Warehouse(id=3, description="Empty WH", is_active=True)
+    warehouse = Warehouse(id=3, name="Empty WH", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -161,7 +163,7 @@ def test_admin_can_get_warehouse_pie_chart_data(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=4, description="Pie WH", is_active=True)
+    warehouse = Warehouse(id=4, name="Pie WH", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -202,8 +204,8 @@ def test_admin_can_get_stock_summary_by_warehouse(client, session):
     session.add(category)
     session.commit()
 
-    wh1 = Warehouse(id=5, description="WH A", is_active=True)
-    wh2 = Warehouse(id=6, description="WH B", is_active=True)
+    wh1 = Warehouse(id=5, name="WH A", is_active=True)
+    wh2 = Warehouse(id=6, name="WH B", is_active=True)
     session.add_all([wh1, wh2])
     session.commit()
 
@@ -247,8 +249,8 @@ def test_admin_can_get_stock_by_product(client, session):
     session.add(product)
     session.commit()
 
-    wh1 = Warehouse(id=7, description="WH7", is_active=True)
-    wh2 = Warehouse(id=8, description="WH8", is_active=True)
+    wh1 = Warehouse(id=7, name="WH7", is_active=True)
+    wh2 = Warehouse(id=8, name="WH8", is_active=True)
     session.add_all([wh1, wh2])
     session.commit()
 
@@ -280,7 +282,7 @@ def test_admin_can_get_stock_by_category(client, session):
     session.add_all([cat1, cat2])
     session.commit()
 
-    wh = Warehouse(id=9, description="WH9", is_active=True)
+    wh = Warehouse(id=9, name="WH9", is_active=True)
     session.add(wh)
     session.commit()
 
@@ -320,7 +322,7 @@ def test_admin_can_get_stock_by_category_detail(client, session):
     session.add(cat)
     session.commit()
 
-    wh = Warehouse(id=10, description="WH10", is_active=True)
+    wh = Warehouse(id=10, name="WH10", is_active=True)
     session.add(wh)
     session.commit()
 
@@ -384,7 +386,7 @@ def test_admin_can_get_expired_products(client, session):
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=201, description="WH Expired", is_active=True)
+    warehouse = Warehouse(id=201, name="WH Expired", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -426,7 +428,7 @@ def test_admin_can_get_expiring_soon_products(client, session):
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=202, description="WH Soon", is_active=True)
+    warehouse = Warehouse(id=202, name="WH Soon", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -468,7 +470,7 @@ def test_admin_can_get_no_expiration_products(client, session):
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=203, description="WH NoExp", is_active=True)
+    warehouse = Warehouse(id=203, name="WH NoExp", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -508,7 +510,7 @@ def test_admin_can_get_products_by_date_range(client, session):
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=204, description="WH Range", is_active=True)
+    warehouse = Warehouse(id=204, name="WH Range", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -577,7 +579,7 @@ def test_admin_can_get_semaphore_stock_summary(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=12, description="WH Sem", is_active=True)
+    warehouse = Warehouse(id=12, name="WH Sem", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -623,7 +625,7 @@ def test_admin_can_get_stock_by_product_and_warehouse(client, session):
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=14, description="WH Combo", is_active=True)
+    warehouse = Warehouse(id=14, name="WH Combo", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -651,7 +653,7 @@ def test_admin_can_get_available_lots_for_product_and_warehouse(client, session)
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=15, description="WH Lots", is_active=True)
+    warehouse = Warehouse(id=15, name="WH Lots", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -706,7 +708,7 @@ def test_available_lots_returns_empty_when_no_quantity(client, session):
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=16, description="WH Zero", is_active=True)
+    warehouse = Warehouse(id=16, name="WH Zero", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -743,21 +745,18 @@ def test_admin_can_get_full_stock_history(client, session):
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=17, description="WH Hist", is_active=True)
+    warehouse = Warehouse(id=17, name="WH Hist", is_active=True)
     session.add(warehouse)
     session.commit()
 
-    # Create incoming movement
-    from app.models.stock_move import StockMove
-    from app.models.stock_move_line import StockMoveLine
-
+    # Create a stock movement
     move = StockMove(move_type="incoming", user_id=admin.id)
     session.add(move)
     session.commit()
     session.refresh(move)
 
     line = StockMoveLine(
-        move_id=move.move_id,
+        move_id=move.id,
         line_id=1,
         warehouse_id=17,
         product_id=21,
@@ -792,7 +791,7 @@ def test_admin_can_get_stock_history_by_product(client, session):
     session.add(product)
     session.commit()
 
-    warehouse = Warehouse(id=18, description="WH HistProd", is_active=True)
+    warehouse = Warehouse(id=18, name="WH HistProd", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -805,7 +804,7 @@ def test_admin_can_get_stock_history_by_product(client, session):
     session.refresh(move)
 
     line = StockMoveLine(
-        move_id=move.move_id,
+        move_id=move.id,
         line_id=1,
         warehouse_id=18,
         product_id=22,
@@ -842,7 +841,7 @@ def test_admin_can_get_stock_history_by_warehouse(client, session):
     session.commit()
 
     # Setup: warehouse
-    warehouse = Warehouse(id=18, description="WH HistProd", is_active=True)
+    warehouse = Warehouse(id=18, name="WH HistProd", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -856,7 +855,7 @@ def test_admin_can_get_stock_history_by_warehouse(client, session):
     session.refresh(move)
 
     line = StockMoveLine(
-        move_id=move.move_id,
+        move_id=move.id,
         line_id=1,
         warehouse_id=18,
         product_id=22,
@@ -895,7 +894,7 @@ def test_admin_can_get_stock_history_by_product_and_warehouse(client, session):
     session.commit()
 
     # Setup: warehouse
-    warehouse = Warehouse(id=19, description="WH ComboHist", is_active=True)
+    warehouse = Warehouse(id=19, name="WH ComboHist", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -909,7 +908,7 @@ def test_admin_can_get_stock_history_by_product_and_warehouse(client, session):
     session.refresh(move)
 
     line = StockMoveLine(
-        move_id=move.move_id,
+        move_id=move.id,
         line_id=1,
         warehouse_id=19,
         product_id=23,

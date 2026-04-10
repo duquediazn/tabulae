@@ -272,7 +272,7 @@ def test_admin_can_delete_user_without_movements(client, session):
 def test_admin_cannot_delete_user_with_movements(client, session):
     """Ensure admin cannot delete a user who has stock movements"""
     session.add(ProductCategory(id=1, name="Test Category"))
-    session.add(Warehouse(id=1, description="WH1"))
+    session.add(Warehouse(id=1, name="WH1"))
     session.commit()
     session.add(Product(id=1, sku="SKU001", short_name="TestProd", description="Test", category_id=1))
     session.commit()
@@ -285,7 +285,7 @@ def test_admin_cannot_delete_user_with_movements(client, session):
     session.add(move)
     session.commit()
     session.refresh(move)
-    session.add(StockMoveLine(move_id=move.move_id, line_id=1, warehouse_id=1, product_id=1, lot="NO_LOT", expiration_date=None, quantity=1))
+    session.add(StockMoveLine(move_id=move.id, line_id=1, warehouse_id=1, product_id=1, lot="NO_LOT", expiration_date=None, quantity=1))
     session.commit()
 
     response = client.delete(f"/users/{user.id}", headers=headers)

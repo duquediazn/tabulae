@@ -36,14 +36,14 @@ def get_warehouses(
         if search:
             search_like = f"%{search.lower()}%"
             statement = statement.where(
-                func.lower(Warehouse.description).ilike(search_like)
+                func.lower(Warehouse.name).ilike(search_like)
             )
 
         if is_active is not None:
             statement = statement.where(Warehouse.is_active == is_active)
 
         paginated = (
-            statement.order_by(Warehouse.description).limit(limit).offset(offset)
+            statement.order_by(Warehouse.name).limit(limit).offset(offset)
         )
         warehouses = db.exec(paginated).all()
 
@@ -201,8 +201,8 @@ def update_warehouse(
             )
 
     # Update only provided fields
-    if warehouse_update.description:
-        warehouse.description = warehouse_update.description
+    if warehouse_update.name:
+        warehouse.name = warehouse_update.name
     if warehouse_update.is_active is not None:
         warehouse.is_active = warehouse_update.is_active
 

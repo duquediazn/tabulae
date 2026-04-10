@@ -30,7 +30,7 @@ def test_admin_can_create_warehouse(client, session):
     """Ensure an admin can create a new warehouse successfully"""
     headers, _ = get_admin_headers(client, session)
 
-    new_warehouse = {"description": "Central Depot", "is_active": True}
+    new_warehouse = {"name": "Central Depot", "is_active": True}
 
     response = client.post("/warehouses/", json=new_warehouse, headers=headers)
 
@@ -38,7 +38,7 @@ def test_admin_can_create_warehouse(client, session):
     assert response.headers["content-type"].startswith("application/json")
     
     data = response.json()
-    assert data["description"] == new_warehouse["description"]
+    assert data["name"] == new_warehouse["name"]
     assert data["is_active"] is True
     assert "id" in data
 
@@ -49,7 +49,7 @@ def test_user_cannot_create_warehouse(client, session):
     token = get_token_for_user(client, user.email, "pass")
     headers = get_auth_headers(token)
 
-    warehouse_data = {"description": "Unauthorized Warehouse"}
+    warehouse_data = {"name": "Unauthorized Warehouse"}
 
     response = client.post("/warehouses/", json=warehouse_data, headers=headers)
 
@@ -57,22 +57,22 @@ def test_user_cannot_create_warehouse(client, session):
     assert "permission" in response.json()["detail"].lower()
 
 
-def test_admin_cannot_create_warehouse_with_missing_description(client, session):
-    """Ensure warehouse creation fails if 'description' is missing"""
+def test_admin_cannot_create_warehouse_with_missing_name(client, session):
+    """Ensure warehouse creation fails if 'name' is missing"""
     headers, _ = get_admin_headers(client, session)
 
     response = client.post("/warehouses/", json={}, headers=headers)
 
     assert response.status_code == 422
-    assert any(err["loc"][-1] == "description" for err in response.json()["detail"])
+    assert any(err["loc"][-1] == "name" for err in response.json()["detail"])
 
 
-def test_admin_cannot_create_warehouse_with_long_description(client, session):
-    """Ensure warehouse description cannot exceed 255 characters"""
+def test_admin_cannot_create_warehouse_with_long_name(client, session):
+    """Ensure warehouse name cannot exceed 255 characters"""
     headers, _ = get_admin_headers(client, session)
 
-    long_description = "X" * 256
-    payload = {"description": long_description}
+    long_name = "X" * 256
+    payload = {"name": long_name}
 
     response = client.post("/warehouses/", json=payload, headers=headers)
 
@@ -87,8 +87,8 @@ def test_admin_can_list_all_warehouses(client, session):
     headers, _ = get_admin_headers(client, session)
 
     session.add_all([
-        Warehouse(description="WH A", is_active=True),
-        Warehouse(description="WH B", is_active=False),
+        Warehouse(name="WH A", is_active=True),
+        Warehouse(name="WH B", is_active=False),
     ])
     session.commit()
 
@@ -106,8 +106,8 @@ def test_user_can_filter_only_active_warehouses(client, session):
     headers = get_auth_headers(token)
 
     session.add_all([
-        Warehouse(description="WH Visible", is_active=True),
-        Warehouse(description="WH Hidden", is_active=False),
+        Warehouse(name="WH Visible", is_active=True),
+        Warehouse(name="WH Hidden", is_active=False),
     ])
     session.commit()
 
@@ -115,7 +115,7 @@ def test_user_can_filter_only_active_warehouses(client, session):
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
-    assert data["data"][0]["description"] == "WH Visible"
+    assert data["data"][0]["name"] == "WH Visible"
 
 
 def test_warehouse_list_pagination_works(client, session):
@@ -123,7 +123,7 @@ def test_warehouse_list_pagination_works(client, session):
     headers, _ = get_admin_headers(client, session)
 
     for i in range(5):
-        session.add(Warehouse(description=f"WH {i}"))
+        session.add(Warehouse(name=f"WH {i}"))
     session.commit()
 
     response = client.get("/warehouses/?limit=2&offset=1", headers=headers)
@@ -139,9 +139,9 @@ def test_warehouse_list_filter_by_search_and_is_active(client, session):
     headers, _ = get_admin_headers(client, session)
 
     session.add_all([
-        Warehouse(description="Main Warehouse", is_active=True),
-        Warehouse(description="Backup WH", is_active=False),
-        Warehouse(description="MAIN Depot", is_active=True),
+        Warehouse(name="Main Warehouse", is_active=True),
+        Warehouse(name="Backup WH", is_active=False),
+        Warehouse(name="MAIN Depot", is_active=True),
     ])
     session.commit()
 
@@ -163,13 +163,13 @@ def test_admin_can_view_any_warehouse(client, session):
     """Ensure admin can view any warehouse (active or not)"""
     headers, _ = get_admin_headers(client, session)
 
-    warehouse = Warehouse(description="Hidden WH", is_active=False)
+    warehouse = Warehouse(name="Hidden WH", is_active=False)
     session.add(warehouse)
     session.commit()
 
     response = client.get(f"/warehouses/{warehouse.id}", headers=headers)
     assert response.status_code == 200
-    assert response.json()["description"] == warehouse.description
+    assert response.json()["name"] == warehouse.name
 
 def test_user_can_view_active_warehouse(client, session):
     """Ensure regular user can view active warehouse"""
@@ -177,13 +177,13 @@ def test_user_can_view_active_warehouse(client, session):
     token = get_token_for_user(client, user.email, "pass")
     headers = get_auth_headers(token)
 
-    warehouse = Warehouse(description="Public WH", is_active=True)
+    warehouse = Warehouse(name="Public WH", is_active=True)
     session.add(warehouse)
     session.commit()
 
     response = client.get(f"/warehouses/{warehouse.id}", headers=headers)
     assert response.status_code == 200
-    assert response.json()["description"] == warehouse.description
+    assert response.json()["name"] == warehouse.name
 
 def test_user_cannot_view_inactive_warehouse(client, session):
     """Ensure regular user cannot view an inactive warehouse"""
@@ -191,7 +191,7 @@ def test_user_cannot_view_inactive_warehouse(client, session):
     token = get_token_for_user(client, user.email, "pass")
     headers = get_auth_headers(token)
 
-    warehouse = Warehouse(description="Hidden WH", is_active=False)
+    warehouse = Warehouse(name="Hidden WH", is_active=False)
     session.add(warehouse)
     session.commit()
 
@@ -209,26 +209,26 @@ def test_get_nonexistent_warehouse_returns_404(client, session):
 
 # [X] PUT    /warehouses/{id}
 
-def test_admin_can_update_warehouse_description(client, session):
-    """Ensure admin can update the description of a warehouse"""
+def test_admin_can_update_warehouse_name(client, session):
+    """Ensure admin can update the name of a warehouse"""
     headers, _ = get_admin_headers(client, session)
-    warehouse = Warehouse(description="Old Description", is_active=True)
+    warehouse = Warehouse(name="Old name", is_active=True)
     session.add(warehouse)
     session.commit()
 
-    update = {"description": "Updated Description"}
+    update = {"name": "Updated Name"}
 
     response = client.put(f"/warehouses/{warehouse.id}", json=update, headers=headers)
 
     assert response.status_code == 200
     data = response.json()
-    assert data["description"] == update["description"]
+    assert data["name"] == update["name"]
     assert data["is_active"] is True
 
 def test_admin_can_deactivate_warehouse_without_stock(client, session):
     """Ensure admin can deactivate a warehouse if it has no stock"""
     headers, _ = get_admin_headers(client, session)
-    warehouse = Warehouse(description="Empty WH", is_active=True)
+    warehouse = Warehouse(name="Empty WH", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -251,7 +251,7 @@ def test_admin_cannot_deactivate_warehouse_with_stock(client, session):
     session.commit()
 
     # Crear almacén
-    warehouse = Warehouse(id=1, description="With Stock", is_active=True)
+    warehouse = Warehouse(id=1, name="With Stock", is_active=True)
     session.add(warehouse)
     session.commit()
 
@@ -270,7 +270,7 @@ def test_admin_cannot_deactivate_warehouse_with_stock(client, session):
 def test_update_nonexistent_warehouse_returns_404(client, session):
     """Ensure updating a non-existent warehouse returns 404"""
     headers, _ = get_admin_headers(client, session)
-    response = client.put("/warehouses/9999", json={"description": "X"}, headers=headers)
+    response = client.put("/warehouses/9999", json={"name": "X"}, headers=headers)
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 
@@ -280,23 +280,23 @@ def test_user_cannot_update_warehouse(client, session):
     token = get_token_for_user(client, user.email, "pass")
     headers = get_auth_headers(token)
 
-    warehouse = Warehouse(description="Editable", is_active=True)
+    warehouse = Warehouse(name="Editable", is_active=True)
     session.add(warehouse)
     session.commit()
 
-    response = client.put(f"/warehouses/{warehouse.id}", json={"description": "Hacked"}, headers=headers)
+    response = client.put(f"/warehouses/{warehouse.id}", json={"name": "Hacked"}, headers=headers)
     assert response.status_code == 403
 
-def test_admin_cannot_update_warehouse_with_long_description(client, session):
-    """Ensure description longer than 255 chars triggers validation error"""
+def test_admin_cannot_update_warehouse_with_long_name(client, session):
+    """Ensure name longer than 255 chars triggers validation error"""
     headers, _ = get_admin_headers(client, session)
 
-    warehouse = Warehouse(description="Short", is_active=True)
+    warehouse = Warehouse(name="Short", is_active=True)
     session.add(warehouse)
     session.commit()
 
     long_text = "X" * 256
-    response = client.put(f"/warehouses/{warehouse.id}", json={"description": long_text}, headers=headers)
+    response = client.put(f"/warehouses/{warehouse.id}", json={"name": long_text}, headers=headers)
 
     assert response.status_code == 422
     assert any("at most 255 characters" in err["msg"] for err in response.json()["detail"])
@@ -308,8 +308,8 @@ def test_admin_can_bulk_deactivate_warehouses_without_stock(client, session):
     """Ensure admin can deactivate multiple warehouses if they have no stock"""
     headers, _ = get_admin_headers(client, session)
 
-    w1 = Warehouse(description="WH1", is_active=True)
-    w2 = Warehouse(description="WH2", is_active=True)
+    w1 = Warehouse(name="WH1", is_active=True)
+    w2 = Warehouse(name="WH2", is_active=True)
     session.add_all([w1, w2])
     session.commit()
 
@@ -341,8 +341,8 @@ def test_admin_cannot_bulk_deactivate_warehouse_with_stock(client, session):
     session.commit()
 
     # WH1 con stock, WH2 sin stock
-    wh1 = Warehouse(description="With Stock", is_active=True)
-    wh2 = Warehouse(description="Empty", is_active=True)
+    wh1 = Warehouse(name="With Stock", is_active=True)
+    wh2 = Warehouse(name="Empty", is_active=True)
     session.add_all([wh1, wh2])
     session.commit()
 
@@ -369,7 +369,7 @@ def test_user_cannot_bulk_update_warehouses(client, session):
     token = get_token_for_user(client, user.email, "pass")
     headers = get_auth_headers(token)
 
-    wh = Warehouse(description="Blocked", is_active=True)
+    wh = Warehouse(name="Blocked", is_active=True)
     session.add(wh)
     session.commit()
 
@@ -387,7 +387,7 @@ def test_admin_can_delete_warehouse_without_movements(client, session):
     """Ensure admin can delete a warehouse without stock movements"""
     headers, _ = get_admin_headers(client, session)
 
-    wh = Warehouse(description="To Delete", is_active=False)
+    wh = Warehouse(name="To Delete", is_active=False)
     session.add(wh)
     session.commit()
 
@@ -407,7 +407,7 @@ def test_admin_cannot_delete_warehouse_with_movements(client, session):
     session.add(Product(id=1, sku="SKUDEL", short_name="Prod", category_id=1))
     session.commit()
 
-    wh = Warehouse(id=1, description="With Movement", is_active=False)
+    wh = Warehouse(id=1, name="With Movement", is_active=False)
     session.add(wh)
     session.commit()
 
@@ -417,7 +417,7 @@ def test_admin_cannot_delete_warehouse_with_movements(client, session):
     session.refresh(move)
 
     line = StockMoveLine(
-        move_id=move.move_id,
+        move_id=move.id,
         line_id=1,
         warehouse_id=wh.id,
         product_id=1,
@@ -445,7 +445,7 @@ def test_user_cannot_delete_warehouse(client, session):
     token = get_token_for_user(client, user.email, "pass")
     headers = get_auth_headers(token)
 
-    wh = Warehouse(description="Protected", is_active=True)
+    wh = Warehouse(name="Protected", is_active=True)
     session.add(wh)
     session.commit()
 

@@ -62,7 +62,7 @@ def test_register_user_success(client, session):
 def test_register_user_duplicate(client):
     client.post("/auth/register", json=register_data)  # create user
     response = client.post("/auth/register", json=register_data)  # duplicate
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def test_register_missing_password(client):

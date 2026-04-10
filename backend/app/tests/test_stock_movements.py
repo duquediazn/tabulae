@@ -4,8 +4,8 @@ This test module covers all endpoints in the /stock-movements router.
 TESTED ENDPOINTS:
 [X] POST   /stock-movements/
 [X] GET    /stock-movements/
-[X] GET    /stock-movements/{move_id}
-[X] GET    /stock-movements/{move_id}/lines
+[X] GET    /stock-movements/{id}
+[X] GET    /stock-movements/{id}/lines
 [X] GET    /stock-movements/summary/move-type
 [X] GET    /stock-movements/last-year
 """
@@ -38,7 +38,7 @@ def test_admin_can_create_movement_with_lines(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=1, description="Main Warehouse", is_active=True)
+    warehouse = Warehouse(id=1, name="Main Warehouse", is_active=True)
     session.add(warehouse)
 
     product1 = Product(
@@ -99,7 +99,7 @@ def test_user_can_create_movement(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=10, description="User WH", is_active=True)
+    warehouse = Warehouse(id=10, name="User WH", is_active=True)
     session.add(warehouse)
 
     product = Product(
@@ -146,7 +146,7 @@ def test_movement_is_always_created_for_authenticated_user(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=20, description="WH", is_active=True)
+    warehouse = Warehouse(id=20, name="WH", is_active=True)
     product = Product(id=20, sku="SKU-X", short_name="X", category_id=category.id, is_active=True)
     session.add_all([warehouse, product])
     session.commit()
@@ -190,7 +190,7 @@ def test_movement_rejects_expired_lot_in_incoming(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=30, description="WH Exp", is_active=True)
+    warehouse = Warehouse(id=30, name="WH Exp", is_active=True)
     product = Product(
         id=30,
         sku="EXP123",
@@ -229,7 +229,7 @@ def test_movement_rejects_inactive_warehouse(client, session):
     session.commit()
 
     # Inactive warehouse
-    warehouse = Warehouse(id=40, description="Disabled WH", is_active=False)
+    warehouse = Warehouse(id=40, name="Disabled WH", is_active=False)
     session.add(warehouse)
 
     # Inactive product
@@ -259,7 +259,7 @@ def test_movement_rejects_inactive_product(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=50, description="WH50", is_active=True)
+    warehouse = Warehouse(id=50, name="WH50", is_active=True)
     session.add(warehouse)
 
     # Inactive product
@@ -294,7 +294,7 @@ def test_movement_rejects_more_than_100_lines(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=60, description="WH60", is_active=True)
+    warehouse = Warehouse(id=60, name="WH60", is_active=True)
     product = Product(
         id=60,
         sku="SKU60",
@@ -334,7 +334,7 @@ def test_admin_can_list_all_movements(client, session):
     category = ProductCategory(name="CatGET")
     session.add(category)
     session.commit()
-    warehouse = Warehouse(id=70, description="WH70", is_active=True)
+    warehouse = Warehouse(id=70, name="WH70", is_active=True)
     product = Product(
         id=70,
         sku="SKU70",
@@ -351,7 +351,7 @@ def test_admin_can_list_all_movements(client, session):
     session.refresh(move)
 
     line = StockMoveLine(
-        move_id=move.move_id,
+        move_id=move.id,
         line_id=1,
         warehouse_id=warehouse.id,
         product_id=product.id,
@@ -365,7 +365,7 @@ def test_admin_can_list_all_movements(client, session):
     data = response.json()
     assert data["total"] >= 1
     assert isinstance(data["data"], list)
-    assert any(m["move_id"] == move.move_id for m in data["data"])
+    assert any(m["id"] == move.id for m in data["data"])
 
 
 def test_user_can_only_see_own_movements(client, session):
@@ -382,7 +382,7 @@ def test_user_can_only_see_own_movements(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=80, description="WH80", is_active=True)
+    warehouse = Warehouse(id=80, name="WH80", is_active=True)
     product = Product(
         id=80, sku="SKU80", short_name="Own", category_id=category.id, is_active=True
     )
@@ -396,7 +396,7 @@ def test_user_can_only_see_own_movements(client, session):
     session.refresh(move1)
 
     line1 = StockMoveLine(
-        move_id=move1.move_id,
+        move_id=move1.id,
         line_id=1,
         warehouse_id=warehouse.id,
         product_id=product.id,
@@ -411,7 +411,7 @@ def test_user_can_only_see_own_movements(client, session):
     session.refresh(move2)
 
     line2 = StockMoveLine(
-        move_id=move2.move_id,
+        move_id=move2.id,
         line_id=1,
         warehouse_id=warehouse.id,
         product_id=product.id,
@@ -443,7 +443,7 @@ def test_admin_can_filter_movements_by_search(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=90, description="WH90", is_active=True)
+    warehouse = Warehouse(id=90, name="WH90", is_active=True)
     product = Product(
         id=90,
         sku="SKU90",
@@ -461,7 +461,7 @@ def test_admin_can_filter_movements_by_search(client, session):
     session.refresh(move)
 
     line = StockMoveLine(
-        move_id=move.move_id,
+        move_id=move.id,
         line_id=1,
         warehouse_id=warehouse.id,
         product_id=product.id,
@@ -487,7 +487,7 @@ def test_admin_can_filter_movements_by_move_type(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=100, description="WH100", is_active=True)
+    warehouse = Warehouse(id=100, name="WH100", is_active=True)
     product = Product(
         id=100,
         sku="SKU100",
@@ -507,14 +507,14 @@ def test_admin_can_filter_movements_by_move_type(client, session):
     session.add_all(
         [
             StockMoveLine(
-                move_id=move_in.move_id,
+                move_id=move_in.id,
                 line_id=1,
                 warehouse_id=warehouse.id,
                 product_id=product.id,
                 quantity=1,
             ),
             StockMoveLine(
-                move_id=move_out.move_id,
+                move_id=move_out.id,
                 line_id=1,
                 warehouse_id=warehouse.id,
                 product_id=product.id,
@@ -544,7 +544,7 @@ def test_admin_can_filter_movements_by_date_range(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=110, description="WH110", is_active=True)
+    warehouse = Warehouse(id=110, name="WH110", is_active=True)
     product = Product(
         id=110,
         sku="SKU110",
@@ -572,14 +572,14 @@ def test_admin_can_filter_movements_by_date_range(client, session):
     session.add_all(
         [
             StockMoveLine(
-                move_id=move_recent.move_id,
+                move_id=move_recent.id,
                 line_id=1,
                 warehouse_id=warehouse.id,
                 product_id=product.id,
                 quantity=1,
             ),
             StockMoveLine(
-                move_id=move_old.move_id,
+                move_id=move_old.id,
                 line_id=1,
                 warehouse_id=warehouse.id,
                 product_id=product.id,
@@ -616,7 +616,7 @@ def test_admin_can_filter_movements_by_user_id(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=120, description="WH120", is_active=True)
+    warehouse = Warehouse(id=120, name="WH120", is_active=True)
     product = Product(
         id=120,
         sku="SKU120",
@@ -636,14 +636,14 @@ def test_admin_can_filter_movements_by_user_id(client, session):
     session.add_all(
         [
             StockMoveLine(
-                move_id=move_admin.move_id,
+                move_id=move_admin.id,
                 line_id=1,
                 warehouse_id=warehouse.id,
                 product_id=product.id,
                 quantity=1,
             ),
             StockMoveLine(
-                move_id=move_user.move_id,
+                move_id=move_user.id,
                 line_id=1,
                 warehouse_id=warehouse.id,
                 product_id=product.id,
@@ -662,7 +662,7 @@ def test_admin_can_filter_movements_by_user_id(client, session):
     assert all(m["user_id"] == user.id for m in data["data"])
 
 
-# [X] GET    /stock-movements/{move_id}
+# [X] GET    /stock-movements/{id}
 
 
 def test_admin_can_view_any_movement_details(client, session):
@@ -674,7 +674,7 @@ def test_admin_can_view_any_movement_details(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=130, description="WH130", is_active=True)
+    warehouse = Warehouse(id=130, name="WH130", is_active=True)
     product = Product(
         id=130,
         sku="SKU130",
@@ -693,7 +693,7 @@ def test_admin_can_view_any_movement_details(client, session):
 
     session.add(
         StockMoveLine(
-            move_id=move.move_id,
+            move_id=move.id,
             line_id=1,
             warehouse_id=warehouse.id,
             product_id=product.id,
@@ -703,10 +703,10 @@ def test_admin_can_view_any_movement_details(client, session):
     session.commit()
 
     # Request detail
-    response = client.get(f"/stock-movements/{move.move_id}", headers=headers)
+    response = client.get(f"/stock-movements/{move.id}", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["move_id"] == move.move_id
+    assert data["id"] == move.id
     assert data["user_id"] == admin.id
     assert data["user_name"] == admin.name
     assert len(data["lines"]) == 1
@@ -740,7 +740,7 @@ def test_user_cannot_view_other_user_movement(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=140, description="WH140", is_active=True)
+    warehouse = Warehouse(id=140, name="WH140", is_active=True)
     product = Product(
         id=140, sku="SKU140", short_name="Prod", category_id=category.id, is_active=True
     )
@@ -755,7 +755,7 @@ def test_user_cannot_view_other_user_movement(client, session):
 
     session.add(
         StockMoveLine(
-            move_id=move.move_id,
+            move_id=move.id,
             line_id=1,
             warehouse_id=warehouse.id,
             product_id=product.id,
@@ -765,7 +765,7 @@ def test_user_cannot_view_other_user_movement(client, session):
     session.commit()
 
     # User1 tries to access user2’s movement
-    response = client.get(f"/stock-movements/{move.move_id}", headers=headers)
+    response = client.get(f"/stock-movements/{move.id}", headers=headers)
     assert response.status_code == 403
     assert "permission" in response.json()["detail"].lower()
 
@@ -783,7 +783,7 @@ def test_user_can_view_own_movement(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=150, description="WH150", is_active=True)
+    warehouse = Warehouse(id=150, name="WH150", is_active=True)
     product = Product(
         id=150,
         sku="SKU150",
@@ -802,7 +802,7 @@ def test_user_can_view_own_movement(client, session):
 
     session.add(
         StockMoveLine(
-            move_id=move.move_id,
+            move_id=move.id,
             line_id=1,
             warehouse_id=warehouse.id,
             product_id=product.id,
@@ -812,17 +812,17 @@ def test_user_can_view_own_movement(client, session):
     session.commit()
 
     # User requests own movement
-    response = client.get(f"/stock-movements/{move.move_id}", headers=headers)
+    response = client.get(f"/stock-movements/{move.id}", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["move_id"] == move.move_id
+    assert data["id"] == move.id
     assert data["user_id"] == user.id
     assert data["user_name"] == user.name
     assert len(data["lines"]) == 1
     assert data["lines"][0]["quantity"] == 2
 
 
-# [X] GET    /stock-movements/{move_id}/lines
+# [X] GET    /stock-movements/{id}/lines
 
 
 def test_admin_can_view_movement_lines_with_names(client, session):
@@ -834,7 +834,7 @@ def test_admin_can_view_movement_lines_with_names(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=160, description="WH160", is_active=True)
+    warehouse = Warehouse(id=160, name="WH160", is_active=True)
     product = Product(
         id=160,
         sku="SKU160",
@@ -852,7 +852,7 @@ def test_admin_can_view_movement_lines_with_names(client, session):
 
     session.add(
         StockMoveLine(
-            move_id=move.move_id,
+            move_id=move.id,
             line_id=1,
             warehouse_id=warehouse.id,
             product_id=product.id,
@@ -861,13 +861,13 @@ def test_admin_can_view_movement_lines_with_names(client, session):
     )
     session.commit()
 
-    response = client.get(f"/stock-movements/{move.move_id}/lines", headers=headers)
+    response = client.get(f"/stock-movements/{move.id}/lines", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
     line = data["data"][0]
     assert line["product_name"] == product.short_name
-    assert line["warehouse_name"] == warehouse.description
+    assert line["warehouse_name"] == warehouse.name
 
 
 def test_user_can_view_own_movement_lines(client, session):
@@ -883,7 +883,7 @@ def test_user_can_view_own_movement_lines(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=170, description="WH170", is_active=True)
+    warehouse = Warehouse(id=170, name="WH170", is_active=True)
     product = Product(
         id=170,
         sku="SKU170",
@@ -901,7 +901,7 @@ def test_user_can_view_own_movement_lines(client, session):
 
     session.add(
         StockMoveLine(
-            move_id=move.move_id,
+            move_id=move.id,
             line_id=1,
             warehouse_id=warehouse.id,
             product_id=product.id,
@@ -910,7 +910,7 @@ def test_user_can_view_own_movement_lines(client, session):
     )
     session.commit()
 
-    response = client.get(f"/stock-movements/{move.move_id}/lines", headers=headers)
+    response = client.get(f"/stock-movements/{move.id}/lines", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
@@ -939,7 +939,7 @@ def test_user_cannot_view_lines_of_other_user_movement(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=180, description="WH180", is_active=True)
+    warehouse = Warehouse(id=180, name="WH180", is_active=True)
     product = Product(
         id=180,
         sku="SKU180",
@@ -957,7 +957,7 @@ def test_user_cannot_view_lines_of_other_user_movement(client, session):
 
     session.add(
         StockMoveLine(
-            move_id=move.move_id,
+            move_id=move.id,
             line_id=1,
             warehouse_id=warehouse.id,
             product_id=product.id,
@@ -966,7 +966,7 @@ def test_user_cannot_view_lines_of_other_user_movement(client, session):
     )
     session.commit()
 
-    response = client.get(f"/stock-movements/{move.move_id}/lines", headers=headers)
+    response = client.get(f"/stock-movements/{move.id}/lines", headers=headers)
     assert response.status_code == 403
     assert "permission" in response.json()["detail"].lower()
 

@@ -2,7 +2,7 @@ from datetime import timedelta, datetime, timezone
 import os
 from fastapi import Request, Response
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from app.dependencies import get_current_user, oauth2
 from app.utils.getenv import get_required_env
@@ -32,21 +32,6 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 )
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """Registers a new user with encrypted password."""
-    try:
-        statement = select(User).where(User.email == user_data.email)
-        existing_user = db.exec(statement).first()
-    except SQLAlchemyError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error.",
-        )
-
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email is already registered.",
-        )
-
     # Create user
     new_user = User(
         name=user_data.name,
@@ -63,8 +48,8 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Database integrity error.",
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email is already registered.",
         )
     except SQLAlchemyError:
         db.rollback()
