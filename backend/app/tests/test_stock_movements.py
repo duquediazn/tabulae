@@ -28,29 +28,15 @@ from app.tests.utils import (
 
 
 # [X] POST   /stock-movements/
-def test_admin_can_create_movement_with_lines(client, session):
+def test_admin_can_create_movement_with_lines(client, session, base_data):
     """Ensure admin can create a stock movement with multiple lines"""
-    # Create admin user and get headers
     headers, admin = get_admin_headers(client, session)
 
-    # Setup: create category, warehouse and products
-    category = ProductCategory(name="TestCat")
-    session.add(category)
+    warehouse, product1 = base_data.warehouse, base_data.product
+    product2 = Product(sku="SKU2", short_name="Prod2", category_id=base_data.category.id, is_active=True)
+    session.add(product2)
     session.commit()
 
-    warehouse = Warehouse(name="Main Warehouse", is_active=True)
-    session.add(warehouse)
-
-    product1 = Product(
-        sku="SKU1", short_name="Prod1", category_id=category.id, is_active=True
-    )
-    product2 = Product(
-        sku="SKU2", short_name="Prod2", category_id=category.id, is_active=True
-    )
-    session.add_all([product1, product2])
-    session.commit()
-
-    # Define movement payload
     movement_payload = {
         "move_type": "incoming",
         "lines": [
@@ -85,33 +71,16 @@ def test_admin_can_create_movement_with_lines(client, session):
     assert data["lines"][1]["product_id"] == product2.id
 
 
-def test_user_can_create_movement(client, session):
+def test_user_can_create_movement(client, session, base_data):
     """Ensure regular user can create a movement for themselves"""
-    # Create user and get headers
     user = create_user_in_db(
         session, "User", "user@example.com", "testpass", role="user", is_active=True
     )
     token = get_token_for_user(client, user.email, "testpass")
     headers = get_auth_headers(token)
 
-    # Setup: category, warehouse, product
-    category = ProductCategory(name="UserCat")
-    session.add(category)
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
-    warehouse = Warehouse(name="User WH", is_active=True)
-    session.add(warehouse)
-
-    product = Product(
-        sku="U001",
-        short_name="UserProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add(product)
-    session.commit()
-
-    # Valid payload
     payload = {
         "move_type": "outgoing",
         "lines": [
@@ -135,20 +104,13 @@ def test_user_can_create_movement(client, session):
     assert data["lines"][0]["quantity"] == 3
 
 
-def test_movement_is_always_created_for_authenticated_user(client, session):
+def test_movement_is_always_created_for_authenticated_user(client, session, base_data):
     """Ensure movement is always assigned to the authenticated user"""
     user1 = create_user_in_db(session, "User1", "u1@example.com", "pass1", is_active=True)
     token = get_token_for_user(client, user1.email, "pass1")
     headers = get_auth_headers(token)
 
-    category = ProductCategory(name="AuthCat")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH", is_active=True)
-    product = Product(sku="SKU-X", short_name="X", category_id=category.id, is_active=True)
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     payload = {
         "move_type": "incoming",
@@ -180,24 +142,11 @@ def test_movement_requires_at_least_one_line(client, session):
 
 
 
-def test_movement_rejects_expired_lot_in_incoming(client, session):
+def test_movement_rejects_expired_lot_in_incoming(client, session, base_data):
     """Ensure incoming movement with expired expiration date is rejected"""
     headers, admin = get_admin_headers(client, session)
 
-    # Setup: category, active warehouse, active product
-    category = ProductCategory(name="ExpCat")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH Exp", is_active=True)
-    product = Product(
-        sku="EXP123",
-        short_name="Expired",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     expired_date = date.today() - timedelta(days=1)
 
@@ -218,24 +167,15 @@ def test_movement_rejects_expired_lot_in_incoming(client, session):
     assert "expired" in response.json()["detail"].lower()
 
 
-def test_movement_rejects_inactive_warehouse(client, session):
+def test_movement_rejects_inactive_warehouse(client, session, base_data):
     """Ensure movement creation fails if warehouse is inactive"""
     headers, admin = get_admin_headers(client, session)
 
-    category = ProductCategory(name="InactiveWH")
-    session.add(category)
-    session.commit()
-
-    # Inactive warehouse
     warehouse = Warehouse(name="Disabled WH", is_active=False)
     session.add(warehouse)
-
-    # Inactive product
-    product = Product(
-        sku="WH001", short_name="WHProd", category_id=category.id, is_active=True
-    )
-    session.add(product)
     session.commit()
+
+    product = base_data.product
 
     payload = {
         "move_type": "incoming",
@@ -249,24 +189,12 @@ def test_movement_rejects_inactive_warehouse(client, session):
     assert "warehouses are inactive" in response.json()["detail"].lower()
 
 
-def test_movement_rejects_inactive_product(client, session):
+def test_movement_rejects_inactive_product(client, session, base_data):
     """Ensure movement creation fails if product is inactive"""
     headers, admin = get_admin_headers(client, session)
 
-    category = ProductCategory(name="InactiveProd")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH50", is_active=True)
-    session.add(warehouse)
-
-    # Inactive product
-    product = Product(
-        sku="PRD50",
-        short_name="Inactive",
-        category_id=category.id,
-        is_active=False,
-    )
+    warehouse = base_data.warehouse
+    product = Product(sku="PRD50", short_name="Inactive", category_id=base_data.category.id, is_active=False)
     session.add(product)
     session.commit()
 
@@ -282,24 +210,11 @@ def test_movement_rejects_inactive_product(client, session):
     assert "products are inactive" in response.json()["detail"].lower()
 
 
-def test_movement_rejects_more_than_100_lines(client, session):
+def test_movement_rejects_more_than_100_lines(client, session, base_data):
     """Ensure movement creation fails if more than 100 lines are provided"""
     headers, admin = get_admin_headers(client, session)
 
-    # Setup: category, warehouse and product (reused in all of the lines)
-    category = ProductCategory(name="LimitCat")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH60", is_active=True)
-    product = Product(
-        sku="SKU60",
-        short_name="LimitProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create 101 valid lines
     lines = [
@@ -322,23 +237,11 @@ def test_movement_rejects_more_than_100_lines(client, session):
 
 
 # [X] GET    /stock-movements/
-def test_admin_can_list_all_movements(client, session):
+def test_admin_can_list_all_movements(client, session, base_data):
     """Ensure admin can retrieve all stock movements"""
     headers, admin = get_admin_headers(client, session)
 
-    # Setup
-    category = ProductCategory(name="CatGET")
-    session.add(category)
-    session.commit()
-    warehouse = Warehouse(name="WH70", is_active=True)
-    product = Product(
-        sku="SKU70",
-        short_name="GETPROD",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([category, warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     move = StockMove(move_type="incoming", user_id=admin.id)
     session.add(move)
@@ -363,26 +266,15 @@ def test_admin_can_list_all_movements(client, session):
     assert any(m["id"] == move.id for m in data["data"])
 
 
-def test_user_can_only_see_own_movements(client, session):
+def test_user_can_only_see_own_movements(client, session, base_data):
     """Ensure a regular user only sees their own movements"""
-    # Create user1 and user2
     user1 = create_user_in_db(session, "User1", "u1@email.com", "pass1", is_active=True)
     user2 = create_user_in_db(session, "User2", "u2@email.com", "pass2", is_active=True)
 
     token = get_token_for_user(client, user1.email, "pass1")
     headers = get_auth_headers(token)
 
-    # Common setup
-    category = ProductCategory(name="Restrict")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH80", is_active=True)
-    product = Product(
-        sku="SKU80", short_name="Own", category_id=category.id, is_active=True
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create user1 stock movement
     move1 = StockMove(move_type="incoming", user_id=user1.id)
@@ -424,29 +316,15 @@ def test_user_can_only_see_own_movements(client, session):
     assert all(m["user_id"] == user1.id for m in data["data"])
 
 
-def test_admin_can_filter_movements_by_search(client, session):
+def test_admin_can_filter_movements_by_search(client, session, base_data):
     """Ensure admin can filter movements by user name (case-insensitive)"""
     headers, admin = get_admin_headers(client, session)
 
-    # Create other user with searchable name
     user = create_user_in_db(
         session, "Paquito", "paquito@example.com", "pass", is_active=True
     )
 
-    # Common setup
-    category = ProductCategory(name="SearchCat")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH90", is_active=True)
-    product = Product(
-        sku="SKU90",
-        short_name="ProdSearch",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create a new movement with that user
     move = StockMove(move_type="incoming", user_id=user.id)
@@ -472,24 +350,11 @@ def test_admin_can_filter_movements_by_search(client, session):
     assert any("paquito" in m["user_name"].lower() for m in data["data"])
 
 
-def test_admin_can_filter_movements_by_move_type(client, session):
+def test_admin_can_filter_movements_by_move_type(client, session, base_data):
     """Ensure admin can filter movements by move_type"""
     headers, admin = get_admin_headers(client, session)
 
-    # Setup
-    category = ProductCategory(name="MoveTypeCat")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH100", is_active=True)
-    product = Product(
-        sku="SKU100",
-        short_name="Prod100",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create different types of movement
     move_in = StockMove(move_type="incoming", user_id=admin.id)
@@ -528,24 +393,11 @@ def test_admin_can_filter_movements_by_move_type(client, session):
     assert all(m["move_type"] == "outgoing" for m in response_out.json()["data"])
 
 
-def test_admin_can_filter_movements_by_date_range(client, session):
+def test_admin_can_filter_movements_by_date_range(client, session, base_data):
     """Ensure admin can filter movements using date_from and date_to"""
     headers, admin = get_admin_headers(client, session)
 
-    # Setup: category, warehouse, product
-    category = ProductCategory(name="Datecat")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH110", is_active=True)
-    product = Product(
-        sku="SKU110",
-        short_name="DateProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create movements with different dates
     today = datetime.now(timezone.utc)
@@ -594,29 +446,15 @@ def test_admin_can_filter_movements_by_date_range(client, session):
     )
 
 
-def test_admin_can_filter_movements_by_user_id(client, session):
+def test_admin_can_filter_movements_by_user_id(client, session, base_data):
     """Ensure admin can filter movements by specific user ID"""
     headers, admin = get_admin_headers(client, session)
 
-    # Create a second user
     user = create_user_in_db(
         session, "TargetUser", "target@example.com", "pass", is_active=True
     )
 
-    # Setup: Category, Warehouse, Product
-    category = ProductCategory(name="Filtered")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH120", is_active=True)
-    product = Product(
-        sku="SKU120",
-        short_name="UserProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create movements for both users
     move_admin = StockMove(move_type="incoming", user_id=admin.id)
@@ -656,24 +494,11 @@ def test_admin_can_filter_movements_by_user_id(client, session):
 # [X] GET    /stock-movements/{id}
 
 
-def test_admin_can_view_any_movement_details(client, session):
+def test_admin_can_view_any_movement_details(client, session, base_data):
     """Ensure admin can retrieve the full details of any movement"""
     headers, admin = get_admin_headers(client, session)
 
-    # Setup: Category, Warehouse, Product
-    category = ProductCategory(name="Detail")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH130", is_active=True)
-    product = Product(
-        sku="SKU130",
-        short_name="DetailProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create movement with lines
     move = StockMove(move_type="incoming", user_id=admin.id)
@@ -712,9 +537,8 @@ def test_get_nonexistent_movement_returns_404(client, session):
     assert "not found" in response.json()["detail"].lower()
 
 
-def test_user_cannot_view_other_user_movement(client, session):
+def test_user_cannot_view_other_user_movement(client, session, base_data):
     """Ensure a user cannot view movement belonging to another user"""
-    # Create two users
     user1 = create_user_in_db(
         session, "UserOne", "u1@email.com", "pass1", is_active=True
     )
@@ -725,17 +549,7 @@ def test_user_cannot_view_other_user_movement(client, session):
     token = get_token_for_user(client, user1.email, "pass1")
     headers = get_auth_headers(token)
 
-    # Setup
-    category = ProductCategory(name="Private")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH140", is_active=True)
-    product = Product(
-        sku="SKU140", short_name="Prod", category_id=category.id, is_active=True
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create movement for user2
     move = StockMove(move_type="incoming", user_id=user2.id)
@@ -760,7 +574,7 @@ def test_user_cannot_view_other_user_movement(client, session):
     assert "permission" in response.json()["detail"].lower()
 
 
-def test_user_can_view_own_movement(client, session):
+def test_user_can_view_own_movement(client, session, base_data):
     """Ensure a user can view details of their own movement"""
     user = create_user_in_db(
         session, "RegularUser", "me@example.com", "pass", is_active=True
@@ -768,20 +582,7 @@ def test_user_can_view_own_movement(client, session):
     token = get_token_for_user(client, user.email, "pass")
     headers = get_auth_headers(token)
 
-    # Setup
-    category = ProductCategory(name="Personal")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH150", is_active=True)
-    product = Product(
-        sku="SKU150",
-        short_name="MyProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     # Create movement for this user
     move = StockMove(move_type="outgoing", user_id=user.id)
@@ -814,24 +615,11 @@ def test_user_can_view_own_movement(client, session):
 # [X] GET    /stock-movements/{id}/lines
 
 
-def test_admin_can_view_movement_lines_with_names(client, session):
+def test_admin_can_view_movement_lines_with_names(client, session, base_data):
     """Ensure admin can view lines of a movement with product and warehouse names"""
     headers, admin = get_admin_headers(client, session)
 
-    # Setup
-    category = ProductCategory(name="Named")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH160", is_active=True)
-    product = Product(
-        sku="SKU160",
-        short_name="NamedProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     move = StockMove(move_type="incoming", user_id=admin.id)
     session.add(move)
@@ -858,7 +646,7 @@ def test_admin_can_view_movement_lines_with_names(client, session):
     assert line["warehouse_name"] == warehouse.name
 
 
-def test_user_can_view_own_movement_lines(client, session):
+def test_user_can_view_own_movement_lines(client, session, base_data):
     """Ensure a regular user can view lines of their own movement"""
     user = create_user_in_db(
         session, "LineUser", "line@example.com", "pass", is_active=True
@@ -866,20 +654,7 @@ def test_user_can_view_own_movement_lines(client, session):
     token = get_token_for_user(client, user.email, "pass")
     headers = get_auth_headers(token)
 
-    # Setup
-    category = ProductCategory(name="Owner")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH170", is_active=True)
-    product = Product(
-        sku="SKU170",
-        short_name="OwnProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     move = StockMove(move_type="outgoing", user_id=user.id)
     session.add(move)
@@ -913,7 +688,7 @@ def test_get_lines_of_nonexistent_movement_returns_404(client, session):
     assert "not found" in response.json()["detail"].lower()
 
 
-def test_user_cannot_view_lines_of_other_user_movement(client, session):
+def test_user_cannot_view_lines_of_other_user_movement(client, session, base_data):
     """Ensure a user cannot view lines of a movement that is not theirs"""
     user1 = create_user_in_db(session, "U1", "u1@example.com", "pass1", is_active=True)
     user2 = create_user_in_db(session, "U2", "u2@example.com", "pass2", is_active=True)
@@ -921,20 +696,7 @@ def test_user_cannot_view_lines_of_other_user_movement(client, session):
     token = get_token_for_user(client, user1.email, "pass1")
     headers = get_auth_headers(token)
 
-    # Setup
-    category = ProductCategory(name="Restricted")
-    session.add(category)
-    session.commit()
-
-    warehouse = Warehouse(name="WH180", is_active=True)
-    product = Product(
-        sku="SKU180",
-        short_name="SecretProd",
-        category_id=category.id,
-        is_active=True,
-    )
-    session.add_all([warehouse, product])
-    session.commit()
+    warehouse, product = base_data.warehouse, base_data.product
 
     move = StockMove(move_type="incoming", user_id=user2.id)
     session.add(move)

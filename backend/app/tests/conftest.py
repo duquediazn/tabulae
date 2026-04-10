@@ -101,3 +101,20 @@ def client(session):
         yield client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def base_data(session):
+    """Provides a default category, active warehouse, and active product for tests."""
+    from types import SimpleNamespace
+
+    category = ProductCategory(name="BaseCat")
+    session.add(category)
+    session.commit()
+
+    warehouse = Warehouse(name="Base WH", is_active=True)
+    product = Product(sku="BASESKU", short_name="Base Product", category_id=category.id, is_active=True)
+    session.add_all([warehouse, product])
+    session.commit()
+
+    return SimpleNamespace(category=category, warehouse=warehouse, product=product)

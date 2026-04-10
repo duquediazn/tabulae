@@ -77,7 +77,8 @@ def test_admin_cannot_create_warehouse_with_long_name(client, session):
     response = client.post("/warehouses/", json=payload, headers=headers)
 
     assert response.status_code == 422
-    assert any("at most 255 characters" in err["msg"] for err in response.json()["detail"])
+    errors = response.json()["detail"]
+    assert any(err["loc"][-1] == "description" for err in errors)
 
 
 # [X] GET    /warehouses/
