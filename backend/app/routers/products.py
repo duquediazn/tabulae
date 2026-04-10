@@ -292,17 +292,8 @@ def update_product(
             detail="Database connection error",
         )         
 
-    # Apply changes only if provided
-    if product_update.sku is not None:
-        product.sku = product_update.sku
-    if product_update.short_name is not None:
-        product.short_name = product_update.short_name
-    if product_update.description is not None:
-        product.description = product_update.description
-    if product_update.category_id is not None:
-        product.category_id = category_id
-    if product_update.is_active is not None:
-        product.is_active = product_update.is_active
+    # sqlmodel_update will only update the fields that are set in the product_update object
+    product.sqlmodel_update(product_update.model_dump(exclude_unset=True)) 
 
     try:
         # Save changes to the database
