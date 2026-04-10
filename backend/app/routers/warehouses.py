@@ -16,7 +16,6 @@ from app.schemas.warehouse import (
     WarehouseResponse,
     BulkStatusUpdate,
 )
-from app.utils.validation import is_admin_user
 
 router = APIRouter(prefix="/warehouses", tags=["Warehouses"])
 
@@ -129,7 +128,7 @@ def get_warehouse(
             detail="Warehouse not found.",
         )
 
-    if not is_admin_user(current_user) and not warehouse.is_active:
+    if current_user.role.strip().lower() != "admin" and not warehouse.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This warehouse is inactive.",

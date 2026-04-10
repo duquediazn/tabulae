@@ -13,8 +13,11 @@ from app.routers import (
 )
 from fastapi.middleware.cors import CORSMiddleware  
 from app.routers import stock_moves
+from dotenv import load_dotenv  # To load environment variables from a .env file (local development)
 from app.utils.getenv import get_required_env  
 
+# Load environment variables from a .env file
+load_dotenv()
 
 # Create the database and tables when the app starts
 @asynccontextmanager

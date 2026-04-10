@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from app.dependencies import get_current_user, oauth2
+from app.utils.getenv import get_required_env
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
@@ -21,7 +22,7 @@ from app.utils.authentication import (
     decode_access_token,
 )
 
-is_production = os.getenv("ENVIRONMENT") == "production"
+is_production = get_required_env("ENVIRONMENT", fallback="development") == "production"
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

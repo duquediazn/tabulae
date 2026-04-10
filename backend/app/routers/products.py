@@ -16,7 +16,6 @@ from app.schemas.product import (
     ProductResponse,
     ProductUpdate,
 )
-from app.utils.validation import is_admin_user
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -52,9 +51,9 @@ def get_products(
             statement = statement.where(Product.category_id == int(category_id))
 
         # Filter by active state (admin only)
-        if is_admin_user(current_user) and is_active is not None:
+        if current_user.role.strip().lower() == "admin" and is_active is not None:
             statement = statement.where(Product.is_active == is_active)
-        elif not is_admin_user(current_user):
+        elif current_user.role.strip().lower() != "admin":
             # Regular users only see active products
             statement = statement.where(Product.is_active == True)
 
@@ -74,7 +73,6 @@ def get_products(
             detail="Database connection error",
         )
 
-    # Format response
     products = [
         {**product.model_dump(), "category_name": category_name}
         for product, category_name in products_raw
@@ -116,7 +114,7 @@ def get_product(
 
     product, category_name = result
 
-    if not is_admin_user(current_user) and not product.is_active:
+    if current_user.role.strip().lower() != "admin" and not product.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this product",
@@ -131,7 +129,7 @@ def get_product(
 def create_product(
     product_data: ProductCreate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),  # Verifies if the user is admin
+    admin: User = Depends(require_admin),  
 ):
     """Creates a new product (admin only)."""
 
@@ -201,7 +199,7 @@ def bulk_update_product_status(
             .join(Stock, Stock.product_id == Product.id, isouter=True)
             .where(Product.id.in_(data.ids))
             .group_by(Product.id)
-        ).all() # [(Product(...), stock_total), (Product(...), stock_total), ...]
+        ).all()
 
         updated_products = []
 

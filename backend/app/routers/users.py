@@ -14,7 +14,6 @@ from app.schemas.user import (
 )
 from app.utils.authentication import hash_password
 from app.dependencies import require_admin
-from app.utils.validation import is_admin_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -139,7 +138,7 @@ def get_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    if not is_admin_user(current_user) and current_user.id != id:
+    if current_user.role.strip().lower() != "admin" and current_user.id != id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this user",
@@ -212,7 +211,7 @@ def update_user(
         )
 
     # Check if the current user is an admin
-    is_admin = is_admin_user(current_user)
+    is_admin = current_user.role.strip().lower() == "admin"
 
     # Permission control: only admin or the user themself can edit
     if not is_admin and user.id != current_user.id:

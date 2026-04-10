@@ -24,7 +24,6 @@ from app.schemas.stock_move_line import (
     StockMoveLineResponse,
     PaginatedStockMoveLineWithNamesResponse,
 )
-from app.utils.validation import is_admin_user
 from app.routers.websocket import manager
 from app.services.stock_move_service import create_stock_movement
 import anyio
@@ -68,10 +67,10 @@ def get_movements(
             dt_to = datetime.combine(date_to, time.max, tzinfo=timezone.utc)
             statement = statement.where(StockMove.created_at <= dt_to)
 
-        if user_id and is_admin_user(current_user):
+        if user_id and current_user.role.strip().lower() == "admin":
             statement = statement.where(StockMove.user_id == user_id)
 
-        if not is_admin_user(current_user):
+        if current_user.role.strip().lower() != "admin":
             statement = statement.where(StockMove.user_id == current_user.id)
 
         results = db.exec(
@@ -151,7 +150,7 @@ def get_movements_last_year(
             .order_by(func.date_trunc("month", StockMove.created_at))
         )
 
-        if not is_admin_user(current_user):
+        if current_user.role.strip().lower() != "admin":
             statement = statement.where(StockMove.user_id == current_user.id)
 
         results = db.exec(statement).all()
@@ -203,7 +202,7 @@ def get_movement(
     movement, user_name = result
 
     # If not admin and the movement does not belong to the authenticated user, deny access
-    if not is_admin_user(current_user) and movement.user_id != current_user.id:
+    if current_user.role.strip().lower() != "admin" and movement.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this movement.",
@@ -290,7 +289,7 @@ def get_movement_lines(
             detail="Movement not found",
         )
 
-    if not is_admin_user(current_user) and movement.user_id != current_user.id:
+    if current_user.role.strip().lower() != "admin" and movement.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to view this movement",
@@ -346,13 +345,13 @@ def get_movement_lines(
 @router.get("/summary/move-type", response_model=List[StockMoveSummary])
 def count_movements_by_move_type(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """Counts the number of stock movements grouped by move type (incoming, outgoing)."""
     try:
         statement = select(StockMove.move_type, func.count()).select_from(StockMove)
 
-        if not is_admin_user(current_user):
+        if current_user.role.strip().lower() != "admin":
             statement = statement.where(StockMove.user_id == current_user.id)
 
         statement = statement.group_by(StockMove.move_type)
