@@ -717,7 +717,7 @@ def get_stock_by_product_category(
         results = db.exec(statement).all()
     except SQLAlchemyError:
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving stock by category",
         )
 
@@ -757,7 +757,7 @@ def get_stock_by_category_detail(
         results = db.exec(statement).all()
     except SQLAlchemyError:
         raise HTTPException(
-            500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving stock data for products in the selected category.",
         )
 
