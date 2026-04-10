@@ -38,14 +38,14 @@ def test_admin_can_create_movement_with_lines(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=1, name="Main Warehouse", is_active=True)
+    warehouse = Warehouse(name="Main Warehouse", is_active=True)
     session.add(warehouse)
 
     product1 = Product(
-        id=1, sku="SKU1", short_name="Prod1", category_id=category.id, is_active=True
+        sku="SKU1", short_name="Prod1", category_id=category.id, is_active=True
     )
     product2 = Product(
-        id=2, sku="SKU2", short_name="Prod2", category_id=category.id, is_active=True
+        sku="SKU2", short_name="Prod2", category_id=category.id, is_active=True
     )
     session.add_all([product1, product2])
     session.commit()
@@ -99,11 +99,10 @@ def test_user_can_create_movement(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=10, name="User WH", is_active=True)
+    warehouse = Warehouse(name="User WH", is_active=True)
     session.add(warehouse)
 
     product = Product(
-        id=10,
         sku="U001",
         short_name="UserProd",
         category_id=category.id,
@@ -146,8 +145,8 @@ def test_movement_is_always_created_for_authenticated_user(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=20, name="WH", is_active=True)
-    product = Product(id=20, sku="SKU-X", short_name="X", category_id=category.id, is_active=True)
+    warehouse = Warehouse(name="WH", is_active=True)
+    product = Product(sku="SKU-X", short_name="X", category_id=category.id, is_active=True)
     session.add_all([warehouse, product])
     session.commit()
 
@@ -190,9 +189,8 @@ def test_movement_rejects_expired_lot_in_incoming(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=30, name="WH Exp", is_active=True)
+    warehouse = Warehouse(name="WH Exp", is_active=True)
     product = Product(
-        id=30,
         sku="EXP123",
         short_name="Expired",
         category_id=category.id,
@@ -229,12 +227,12 @@ def test_movement_rejects_inactive_warehouse(client, session):
     session.commit()
 
     # Inactive warehouse
-    warehouse = Warehouse(id=40, name="Disabled WH", is_active=False)
+    warehouse = Warehouse(name="Disabled WH", is_active=False)
     session.add(warehouse)
 
     # Inactive product
     product = Product(
-        id=40, sku="WH001", short_name="WHProd", category_id=category.id, is_active=True
+        sku="WH001", short_name="WHProd", category_id=category.id, is_active=True
     )
     session.add(product)
     session.commit()
@@ -259,12 +257,11 @@ def test_movement_rejects_inactive_product(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=50, name="WH50", is_active=True)
+    warehouse = Warehouse(name="WH50", is_active=True)
     session.add(warehouse)
 
     # Inactive product
     product = Product(
-        id=50,
         sku="PRD50",
         short_name="Inactive",
         category_id=category.id,
@@ -294,9 +291,8 @@ def test_movement_rejects_more_than_100_lines(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=60, name="WH60", is_active=True)
+    warehouse = Warehouse(name="WH60", is_active=True)
     product = Product(
-        id=60,
         sku="SKU60",
         short_name="LimitProd",
         category_id=category.id,
@@ -334,9 +330,8 @@ def test_admin_can_list_all_movements(client, session):
     category = ProductCategory(name="CatGET")
     session.add(category)
     session.commit()
-    warehouse = Warehouse(id=70, name="WH70", is_active=True)
+    warehouse = Warehouse(name="WH70", is_active=True)
     product = Product(
-        id=70,
         sku="SKU70",
         short_name="GETPROD",
         category_id=category.id,
@@ -382,9 +377,9 @@ def test_user_can_only_see_own_movements(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=80, name="WH80", is_active=True)
+    warehouse = Warehouse(name="WH80", is_active=True)
     product = Product(
-        id=80, sku="SKU80", short_name="Own", category_id=category.id, is_active=True
+        sku="SKU80", short_name="Own", category_id=category.id, is_active=True
     )
     session.add_all([warehouse, product])
     session.commit()
@@ -443,9 +438,8 @@ def test_admin_can_filter_movements_by_search(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=90, name="WH90", is_active=True)
+    warehouse = Warehouse(name="WH90", is_active=True)
     product = Product(
-        id=90,
         sku="SKU90",
         short_name="ProdSearch",
         category_id=category.id,
@@ -487,9 +481,8 @@ def test_admin_can_filter_movements_by_move_type(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=100, name="WH100", is_active=True)
+    warehouse = Warehouse(name="WH100", is_active=True)
     product = Product(
-        id=100,
         sku="SKU100",
         short_name="Prod100",
         category_id=category.id,
@@ -544,9 +537,8 @@ def test_admin_can_filter_movements_by_date_range(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=110, name="WH110", is_active=True)
+    warehouse = Warehouse(name="WH110", is_active=True)
     product = Product(
-        id=110,
         sku="SKU110",
         short_name="DateProd",
         category_id=category.id,
@@ -616,9 +608,8 @@ def test_admin_can_filter_movements_by_user_id(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=120, name="WH120", is_active=True)
+    warehouse = Warehouse(name="WH120", is_active=True)
     product = Product(
-        id=120,
         sku="SKU120",
         short_name="UserProd",
         category_id=category.id,
@@ -674,9 +665,8 @@ def test_admin_can_view_any_movement_details(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=130, name="WH130", is_active=True)
+    warehouse = Warehouse(name="WH130", is_active=True)
     product = Product(
-        id=130,
         sku="SKU130",
         short_name="DetailProd",
         category_id=category.id,
@@ -740,9 +730,9 @@ def test_user_cannot_view_other_user_movement(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=140, name="WH140", is_active=True)
+    warehouse = Warehouse(name="WH140", is_active=True)
     product = Product(
-        id=140, sku="SKU140", short_name="Prod", category_id=category.id, is_active=True
+        sku="SKU140", short_name="Prod", category_id=category.id, is_active=True
     )
     session.add_all([warehouse, product])
     session.commit()
@@ -783,9 +773,8 @@ def test_user_can_view_own_movement(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=150, name="WH150", is_active=True)
+    warehouse = Warehouse(name="WH150", is_active=True)
     product = Product(
-        id=150,
         sku="SKU150",
         short_name="MyProd",
         category_id=category.id,
@@ -834,9 +823,8 @@ def test_admin_can_view_movement_lines_with_names(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=160, name="WH160", is_active=True)
+    warehouse = Warehouse(name="WH160", is_active=True)
     product = Product(
-        id=160,
         sku="SKU160",
         short_name="NamedProd",
         category_id=category.id,
@@ -883,9 +871,8 @@ def test_user_can_view_own_movement_lines(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=170, name="WH170", is_active=True)
+    warehouse = Warehouse(name="WH170", is_active=True)
     product = Product(
-        id=170,
         sku="SKU170",
         short_name="OwnProd",
         category_id=category.id,
@@ -939,9 +926,8 @@ def test_user_cannot_view_lines_of_other_user_movement(client, session):
     session.add(category)
     session.commit()
 
-    warehouse = Warehouse(id=180, name="WH180", is_active=True)
+    warehouse = Warehouse(name="WH180", is_active=True)
     product = Product(
-        id=180,
         sku="SKU180",
         short_name="SecretProd",
         category_id=category.id,

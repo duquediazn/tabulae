@@ -10,6 +10,8 @@ TESTED ENDPOINTS:
 [x] POST   /auth/logout
 """
 
+import jwt
+
 import pytest
 from app.tests.utils import (
     create_user_in_db,
@@ -182,10 +184,7 @@ def test_profile_no_token(client):
 
 
 def test_profile_invalid_token(client):
-    # Fake but well-formed JWT
-    fake_token = (
-        "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9." "eyJzdWIiOiAiZmFrZSJ9.invalidsig"
-    )
+    fake_token = jwt.encode({"sub": "fake"}, "invalidsecret", algorithm="HS256")  
     headers = {"Authorization": f"Bearer {fake_token}"}
     response = client.get("/auth/profile", headers=headers)
     assert response.status_code == 401
