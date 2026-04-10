@@ -110,7 +110,7 @@ def get_product(
         )
 
     if not result:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
     product, category_name = result
 
@@ -184,7 +184,7 @@ def create_product(
     return {**new_product.model_dump(), "category_name": category.name}
 
 
-@router.put("/bulk-status", status_code=200)
+@router.put("/bulk-status", status_code=status.HTTP_200_OK)
 def bulk_update_product_status(
     data: BulkStatusUpdateRequest,
     db: Session = Depends(get_db),
@@ -217,7 +217,7 @@ def bulk_update_product_status(
         db.commit()
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(500, detail="Error while updating products")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error while updating products")
 
     return {
         "message": f"{len(updated_products)} products updated",
@@ -265,7 +265,7 @@ def update_product(
         # Load the category from the database
         category = db.get(ProductCategory, category_id)
         if not category:
-            raise HTTPException(404, detail="The specified category does not exist.")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The specified category does not exist.")
 
 
         # If the active state is being updated, validate if the product can be deactivated
@@ -350,9 +350,9 @@ def delete_product(
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="This product has associated movements and cannot be deleted.")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This product has associated movements and cannot be deleted.")
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=500, detail="Database connection error")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Database connection error")
 
     return {**product.model_dump(), "category_name": category.name}

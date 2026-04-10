@@ -64,7 +64,7 @@ def get_warehouses(
     }
 
 
-@router.put("/bulk-active", status_code=200)
+@router.put("/bulk-active", status_code=status.HTTP_200_OK)
 def bulk_update_is_active_warehouses(
     data: BulkStatusUpdate,
     db: Session = Depends(get_db),

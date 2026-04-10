@@ -57,7 +57,7 @@ def get_users(
     return {"data": users, "total": total_records, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=UserResponse, status_code=201)
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
     user_data: UserAdminCreate,
     db: Session = Depends(get_db),
