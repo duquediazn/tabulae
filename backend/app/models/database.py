@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, create_engine, Session
 from app.utils.getenv import get_required_env
+import os
 
 # Connect to the existing database
 DATABASE_URL = get_required_env("DATABASE_URL")
