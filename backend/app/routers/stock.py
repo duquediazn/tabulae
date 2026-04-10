@@ -258,7 +258,7 @@ def get_stock_by_expiration(
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid preset: {preset}"
+                detail="Invalid preset. Valid values: expired, expiring_soon, no_expiration"
             )
 
     else:

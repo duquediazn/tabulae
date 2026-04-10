@@ -201,7 +201,7 @@ def update_warehouse(
             )
 
     # Update only provided fields
-    if warehouse_update.name:
+    if warehouse_update.name is not None:
         warehouse.name = warehouse_update.name
     if warehouse_update.is_active is not None:
         warehouse.is_active = warehouse_update.is_active
