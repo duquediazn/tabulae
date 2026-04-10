@@ -23,8 +23,6 @@ from app.utils.authentication import (
     decode_access_token,
 )
 
-is_production = get_required_env("ENVIRONMENT", fallback="development") == "production"
-
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 ### USER REGISTRATION ###
@@ -99,6 +97,8 @@ def login(
     refresh_token = create_refresh_token(
         {"sub": str(user.id)}, expires_delta=timedelta(days=REFRESH_TOKEN_DURATION)
     )
+    
+    is_production = get_required_env("ENVIRONMENT", fallback="development") == "production"
 
     # Cookie settings explanation:
     #
@@ -219,7 +219,9 @@ def logout(
     db: Session = Depends(get_db),
 ):
     """Deletes the refresh token cookie and revokes the access and refresh tokens when the user logs out."""
-
+   
+    is_production = get_required_env("ENVIRONMENT", fallback="development") == "production"
+    
     response.delete_cookie(
         key="refresh_token",
         path="/auth/", 

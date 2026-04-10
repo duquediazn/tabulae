@@ -50,12 +50,12 @@ def get_products(
         if category_id:
             statement = statement.where(Product.category_id == int(category_id))
 
-        # Filter by active state (admin only)
-        if current_user.role.strip().lower() == "admin" and is_active is not None:
-            statement = statement.where(Product.is_active == is_active)
-        elif current_user.role.strip().lower() != "admin":
-            # Regular users only see active products
+        # Filter by active state (only admin can see inactive products)
+        user_is_admin = current_user.role.strip().lower() == "admin"
+        if not user_is_admin:
             statement = statement.where(Product.is_active == True)
+        elif is_active is not None:
+            statement = statement.where(Product.is_active == is_active)
 
         # Paginated and ordered query
         products_raw = db.exec(

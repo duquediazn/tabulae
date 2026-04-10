@@ -105,17 +105,19 @@ def test_register_short_name(client):
     assert response.status_code == 422
 
 
-def test_register_invalid_role(client):
+def test_register_role_is_ignored(client):
+    """Even if a role is sent, it is ignored and the user is always created as 'user'."""
     response = client.post(
         "/auth/register",
         json={
             "name": "Wrong Role",
             "email": "new4@example.com",
             "password": "validpass123",
-            "role": "superadmin",
+            "role": "admin",
         },
     )
-    assert response.status_code == 422
+    assert response.status_code == 201
+    assert response.json()["role"] == "user"
 
 
 # POST   /auth/login
