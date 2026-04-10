@@ -218,8 +218,8 @@ export default function MovementList() {
                 </tr>
               ) : (
                 movements.map((mov) => (
-                  <tr key={mov.move_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2">{mov.move_id}</td>
+                  <tr key={mov.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2">{mov.id}</td>
                     <td className="px-4 py-2 capitalize">{mov.move_type}</td>
                     <td className="px-4 py-2">{mov.user_name}</td>
                     <td className="px-4 py-2">
@@ -229,7 +229,7 @@ export default function MovementList() {
                     <td className="px-4 py-2">
                       <button
                         role="button"
-                        onClick={() => navigate(`/stock-movements/${mov.move_id}`)}
+                        onClick={() => navigate(`/stock-movements/${mov.id}`)}
                         className="text-indigo-600 hover:underline text-sm"
                       >
                         View

@@ -83,7 +83,7 @@ export async function exportFilteredMovementsCSV({
     queryParams,
     filename: "stock-movements.csv",
     mapFn: (m) => ({
-      ID: m.move_id,
+      ID: m.id,
       Type: m.move_type,
       User: m.user_name,
       Date: new Date(m.created_at).toLocaleDateString(),
@@ -151,7 +151,7 @@ export async function exportFilteredWarehousesCSV({
     filename: "warehouses.csv",
     mapFn: (a) => ({
       ID: a.id,
-      Description: a.description,
+      Name: a.name,
       Status: a.is_active ? "Active" : "Inactive",
     }),
   });
