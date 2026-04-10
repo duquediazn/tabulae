@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
 from app.models.user import User
 from app.models.revoked_token import RevokedToken
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserSelfRegister, UserResponse
 from app.utils.authentication import (
     ACCESS_TOKEN_DURATION,
     REFRESH_TOKEN_DURATION,
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post(
     "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
 )
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
+def register(user_data: UserSelfRegister, db: Session = Depends(get_db)):
     """Registers a new user with encrypted password."""
     # Create user
     new_user = User(

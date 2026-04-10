@@ -13,12 +13,22 @@ class UserBase(BaseModel):
     email: EmailStr = Field(..., max_length=100, description="Valid email address")
 
 
-class UserCreate(UserBase):
+class UserSelfRegister(UserBase):
     """
-    Schema for registering users.
-    - `password`: Minimum of 8 characters required.
+    Schema for public user self-registration.
+    - `role` and `is_active` are not exposed: they are hardcoded server-side.
+    """
+
+    password: str = Field(
+        ..., min_length=8, max_length=255, description="Secure password (min. 8 chars)"
+    )
+
+
+class UserAdminCreate(UserBase):
+    """
+    Schema for admin-created users.
     - `role`: Defaults to 'user'; only accepts valid roles.
-    - `is_active`: Defaults to False; must be activated by an admin.
+    - `is_active`: Defaults to False; must be explicitly set by the admin.
     """
 
     password: str = Field(

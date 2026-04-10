@@ -8,7 +8,7 @@ from app.dependencies import get_current_user
 from app.schemas.user import (
     BulkStatusUpdate,
     PaginatedUserResponse,
-    UserCreate,
+    UserAdminCreate,
     UserResponse,
     UserUpdate,
 )
@@ -59,7 +59,7 @@ def get_users(
 
 @router.post("/", response_model=UserResponse, status_code=201)
 def create_user(
-    user_data: UserCreate,
+    user_data: UserAdminCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
