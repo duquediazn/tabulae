@@ -151,7 +151,7 @@ def get_user(
 def bulk_update_user_status(
     data: BulkStatusUpdate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Allows an admin to activate or deactivate multiple users at once."""
     try:
@@ -164,7 +164,7 @@ def bulk_update_user_status(
 
             # Optional rule:
             # Do not allow the current admin to deactivate themselves
-            if data.is_active is False and user.id == admin.id:
+            if data.is_active is False and user.id == current_user.id:
                 continue
 
             user.is_active = data.is_active

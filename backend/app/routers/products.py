@@ -129,7 +129,7 @@ def get_product(
 def create_product(
     product_data: ProductCreate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),  
+    current_user: User = Depends(require_admin),  
 ):
     """Creates a new product (admin only)."""
 
@@ -188,7 +188,7 @@ def create_product(
 def bulk_update_product_status(
     data: BulkStatusUpdateRequest,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     try:
         rows = db.exec( 

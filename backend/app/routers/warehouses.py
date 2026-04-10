@@ -68,7 +68,7 @@ def get_warehouses(
 def bulk_update_is_active_warehouses(
     data: BulkStatusUpdate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     try:
         warehouses = db.exec(select(Warehouse).where(Warehouse.id.in_(data.ids))).all()
@@ -141,7 +141,7 @@ def get_warehouse(
 def create_warehouse(
     warehouse_data: WarehouseCreate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin), 
+    current_user: User = Depends(require_admin), 
 ):
     """Creates a new warehouse. Only administrators are allowed."""
     new_warehouse = Warehouse(**warehouse_data.model_dump())
@@ -170,7 +170,7 @@ def update_warehouse(
     id: int,
     warehouse_update: WarehouseUpdate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin), 
+    current_user: User = Depends(require_admin), 
 ):
     """Edit the description or is_active status of a warehouse. Admins only."""
     try:
@@ -229,7 +229,7 @@ def update_warehouse(
 def deactivate_warehouse(
     id: int,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """
     Deletes a warehouse only if it has no associated movements.
