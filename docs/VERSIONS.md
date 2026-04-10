@@ -4,6 +4,27 @@ This file lists the tagged versions of the project and their key milestones.
 
 ---
 
+## v1.3.1 – April 2026
+
+- Hardened authentication security: enforced token type validation (`expected_type`) 
+  to prevent token confusion attacks; strengthened token decode and dependency checks
+- Fixed critical SQL trigger bug: `update_stock()` was referencing `NEW.id` instead 
+  of `NEW.move_id`, causing all stock move insertions to fail
+- Fixed frontend field name sync after model renames: `Warehouse.description → name`,
+  `StockMove.move_id → id` across all pages, forms and CSV export
+- Fixed: notification click now forces data refresh in the movements list even when 
+  already on that page (navigate state pattern)
+- Extracted stock move business logic into `stock_move_service.py` (service layer)
+- Fixed pagination offset bug in stock expiration endpoint
+- Standardized HTTP status codes and error messages across all routers
+- Renamed ambiguous schema identifiers: `UserCreate → UserSelfRegister / UserAdminCreate`,
+  `admin` dependency param → `current_user`
+- Moved `BulkStatusUpdate` schemas to `common.py`; removed `is_admin_user` helper
+- CORS origins and API version now configurable via environment variables
+- Expanded test coverage: auth token type checks, stock endpoints, WebSocket edge cases
+
+---
+
 ## v1.3.0 – April 2026
 
 - Secured WebSocket endpoint: authentication via first-message pattern — client sends access token as first message after connecting; invalid or expired tokens are rejected with close code `1008`
