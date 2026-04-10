@@ -74,11 +74,12 @@ The backend is a **FastAPI 0.121** application located in `backend/app/`. It fol
 ```
 backend/app/
 ├── main.py              # App entry point: lifespan, CORS, router registration
-├── dependencies.py      # Shared FastAPI Depends (require_admin)
+├── dependencies.py      # Shared FastAPI Depends (get_current_user, require_admin)
 ├── models/              # SQLModel ORM table definitions
 │   └── database.py      # Engine creation, get_db() session dependency
 ├── schemas/             # Pydantic request/response schemas
 ├── routers/             # Route handlers (one file per resource)
+├── services/            # Business logic extracted from routers
 └── utils/
     ├── authentication.py  # JWT creation/decoding, bcrypt hashing
     ├── getenv.py          # Required env var loader
@@ -156,11 +157,11 @@ Seven tables make up the schema. The diagram below shows the foreign key relatio
 | Table               | Primary key                           | Key columns                                         |
 | ------------------- | ------------------------------------- | --------------------------------------------------- |
 | `user`              | `id`                                  | `email`, `role` (`admin`/`user`), `is_active`       |
-| `warehouse`         | `id`                                  | `description`, `is_active`                          |
+| `warehouse`         | `id`                                  | `name`, `is_active`                                 |
 | `product_category`  | `id`                                  | `name` (unique)                                     |
 | `product`           | `id`                                  | `sku` (unique), `category_id` FK, `is_active`       |
 | `stock`             | (`warehouse_id`, `product_id`, `lot`) | `quantity`, `expiration_date`                       |
-| `stock_move`        | `move_id`                             | `move_type` (`IN`/`OUT`), `user_id` FK, `created_at`|
+| `stock_move`        | `id`                                  | `move_type` (`IN`/`OUT`), `user_id` FK, `created_at`|
 | `stock_move_line`   | (`move_id`, `line_id`)                | `warehouse_id`, `product_id`, `lot`, `quantity`     |
 | `revoked_tokens`    | `jti`                                 | `expires_at` — used to invalidate tokens on logout  |
 
