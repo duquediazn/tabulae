@@ -78,7 +78,7 @@ def test_admin_cannot_create_warehouse_with_long_name(client, session):
 
     assert response.status_code == 422
     errors = response.json()["detail"]
-    assert any(err["loc"][-1] == "description" for err in errors)
+    assert any(err["loc"][-1] == "name" for err in errors)
 
 
 # [X] GET    /warehouses/
