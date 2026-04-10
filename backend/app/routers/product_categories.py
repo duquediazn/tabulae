@@ -1,6 +1,7 @@
 from app.utils.validation import normalize_category
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.dependencies import get_current_user
+from app.models.user import User
 from sqlmodel import Session, select, func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from typing import Optional
@@ -33,7 +34,7 @@ def list_categories(
         total = db.exec(select(func.count()).select_from(statement.subquery())).first()
         categories = db.exec(statement.limit(limit).offset(offset)).all()
     except SQLAlchemyError:
-        raise HTTPException(500, detail="Error retrieving product categories")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error retrieving product categories")
     return {"data": categories, "total": total, "limit": limit, "offset": offset}
 
 
@@ -41,7 +42,7 @@ def list_categories(
 def create_category(
     data: ProductCategoryCreate,
     db: Session = Depends(get_db),
-    admin=Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Creates a category (only admins)."""
     category = ProductCategory(name=normalize_category(data.name))
@@ -51,10 +52,10 @@ def create_category(
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(400, detail="A category with that name already exists")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A category with that name already exists")
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(500, detail="Internal error while creating category")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal error while creating category")
 
     return category
 
@@ -64,15 +65,15 @@ def update_category(
     id: int,
     data: ProductCategoryUpdate,
     db: Session = Depends(get_db),
-    admin=Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Updates a category (only admins)."""
     try:
         category = db.get(ProductCategory, id)
     except SQLAlchemyError:
-        raise HTTPException(500, detail="Error updating category")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating category")
     if not category:
-        raise HTTPException(404, detail="Category not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
     if data.name:
         category.name = normalize_category(data.name)
@@ -83,10 +84,10 @@ def update_category(
         db.refresh(category)
     except IntegrityError:
         db.rollback()
-        raise HTTPException(400, detail="Another category with that name already exists")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Another category with that name already exists")
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(500, detail="Error updating category")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating category")
 
     return category
 
@@ -95,21 +96,21 @@ def update_category(
 def delete_category(
     id: int,
     db: Session = Depends(get_db),
-    admin=Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Deletes a category with no associated products (only admins)."""
     try:
         category = db.get(ProductCategory, id)
     except SQLAlchemyError:
-        raise HTTPException(500, detail="Error deleting category")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error deleting category")
     if not category:
-        raise HTTPException(404, detail="Category not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
     # Check for associated products
     products = db.exec(select(Product).where(Product.category_id == id)).first()
     if products:
         raise HTTPException(
-            400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="This category cannot be deleted because it has associated products",
         )
 
@@ -118,6 +119,6 @@ def delete_category(
         db.commit()
     except SQLAlchemyError:
         db.rollback()
-        raise HTTPException(500, detail="Error deleting category")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error deleting category")
 
     return category
