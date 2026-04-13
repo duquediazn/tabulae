@@ -5,59 +5,40 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 ---
 
 ## Automations
-## Automations
 
 - [ ] **GitHub Actions**
-- [ ] **GitHub Actions**
 
-  - Set up GitHub Actions for CI (tests, linting, build).
-  - Consider a basic deployment pipeline for a staging environment.
+  - [ ] Set up GitHub Actions for CI (tests, linting, build).
+  - [ ] Consider a basic deployment pipeline for a staging environment.
 
----
 ---
 
 ## Testing
 - [ ] **Frontend Testing** 
-## Testing
-- [ ] **Frontend Testing** 
-  - Add **unit tests for the frontend** (Jest + React Testing Library).
-  - Explore E2E testing (Playwright or Cypress).
+  - [ ] Add **unit tests for the frontend** (Jest + React Testing Library).
+  - [ ] Explore E2E testing (Playwright or Cypress).
     
 - [x] **Backend Testing**
   - [x] WebSocket endpoint coverage added (`test_websocket.py`): valid token, invalid token, inactive user.
   - [ ] Review and extend coverage for remaining critical endpoints.
     
-- [x] **Backend Testing**
-  - [x] WebSocket endpoint coverage added (`test_websocket.py`): valid token, invalid token, inactive user.
-  - [ ] Review and extend coverage for remaining critical endpoints.
-
----
-
-## Performance
 ---
 
 ## Performance
 
 - [ ] **Performance improvements**
-  - Use async SQLAlchemy sessions where possible.
-  - Optimize rendering and API usage in frontend.
+  - [ ] Use async SQLAlchemy sessions where possible.
+  - [ ] Optimize rendering and API usage in frontend.
 
 ---
 
 ## Security & resilience
 
 - [x] **WebSocket hardening** 
-- [x] **WebSocket hardening** 
 
   - [x] Validate token via first-message pattern (token sent as first WebSocket message after connection, not exposed in URL or server logs).
   - [ ] Handle reconnection policies and expiration correctly.
-  - [x] Validate token via first-message pattern (token sent as first WebSocket message after connection, not exposed in URL or server logs).
-  - [ ] Handle reconnection policies and expiration correctly.
 
-- [x] **Stronger authentication** 
-  - [x] Forced token expiration after logout: `jti` claim added to all tokens; `revoked_tokens` blocklist table invalidates tokens on logout.
-  - [ ] Detect multiple active sessions per user.
-  - [ ] Add account recovery via email.
 - [x] **Stronger authentication** 
   - [x] Forced token expiration after logout: `jti` claim added to all tokens; `revoked_tokens` blocklist table invalidates tokens on logout.
   - [ ] Detect multiple active sessions per user.
@@ -69,19 +50,20 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 
 - [ ] **Frontend improvements**
 
-  - Refactor components, folder structure, and improve reusability.
-  - Use advanced React patterns where beneficial.
-  - Rework pagination system: replace basic "previous/next" navigation with a more intuitive page index (e.g. 1, 2, 3...).
+  - [ ] Refactor components, folder structure, and improve reusability.
+  - [ ] Use advanced React patterns where beneficial.
+  - [ ] Add a show/hide password toggle button in the login form.
+  - [ ] Rework pagination system: replace basic "previous/next" navigation with a more intuitive page index (e.g. 1, 2, 3...).
 
 - [ ] **Accessibility & design**
 
-  - Improve contrast, keyboard navigation, and ARIA compliance.
-  - Refine responsive behavior and layout consistency.
+  - [ ] Improve contrast, keyboard navigation, and ARIA compliance.
+  - [ ] Refine responsive behavior and layout consistency.
 
 - [ ] **404 page**
 
-  - Create a custom component for unknown routes.
-  - Add fallback route in `AppRouter`.
+  - [ ] Create a custom component for unknown routes.
+  - [ ] Add fallback route in `AppRouter`.
 
 ---
 
@@ -122,9 +104,7 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 --- 
 
 ## Documentation Enhancements
-## Documentation Enhancements
 
-- [x] Create `docs/architecture.md` with:
 - [x] Create `docs/architecture.md` with:
   - System overview diagram (frontend, backend, DB, Nginx)
   - Flow of requests (e.g., login, WebSocket, stock updates)
