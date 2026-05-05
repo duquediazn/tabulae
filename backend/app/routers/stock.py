@@ -4,8 +4,9 @@ from dateutil.relativedelta import relativedelta
 from app.models.product_category import ProductCategory
 from app.models.warehouse import Warehouse
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session, case, func, select
+from sqlmodel import func, select
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.models.stock_move import StockMove
 from app.models.stock_move_line import StockMoveLine
@@ -59,8 +60,8 @@ def _row_to_stock_history(item) -> StockHistory:
 
 
 @router.get("/", response_model=PaginatedStockResponse)
-def get_all_stock(
-    db: Session = Depends(get_db),
+async def get_all_stock(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -82,10 +83,12 @@ def get_all_stock(
             .join(Product, Product.id == Stock.product_id)
             .order_by(Stock.warehouse_id, Stock.product_id, Stock.lot)
         )
-        stock = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        stock = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -102,9 +105,9 @@ def get_all_stock(
 
 
 @router.get("/warehouse/{warehouse_id}", response_model=PaginatedStockResponse)
-def get_stock_by_warehouse(
+async def get_stock_by_warehouse(
     warehouse_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -127,10 +130,12 @@ def get_stock_by_warehouse(
             .where(Stock.warehouse_id == warehouse_id)
             .order_by(Stock.warehouse_id, Stock.product_id, Stock.lot)
         )
-        stock = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        stock = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -148,9 +153,9 @@ def get_stock_by_warehouse(
 @router.get(
     "/warehouse/{warehouse_id}/detail", response_model=List[StockByWarehousePieChart]
 )
-def get_stock_by_warehouse_pie_chart(
+async def get_stock_by_warehouse_pie_chart(
     warehouse_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Total stock quantity per product in a specific warehouse."""
@@ -165,7 +170,8 @@ def get_stock_by_warehouse_pie_chart(
             .where(Stock.warehouse_id == warehouse_id)
             .group_by(Stock.product_id, Product.short_name)
         )
-        stock = db.exec(statement).all()
+        result = await db.execute(statement)
+        stock = result.all()
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -187,7 +193,7 @@ def get_stock_by_warehouse_pie_chart(
     "/product/expiration",
     response_model=PaginatedStockResponse,
 )
-def get_stock_by_expiration(
+async def get_stock_by_expiration(
     preset: str | None = Query(
         None,
         description="Preset filter: expired, expiring_soon, no_expiration"
@@ -200,7 +206,7 @@ def get_stock_by_expiration(
         None, 
         description="End of expiration window (exclusive)"
     ),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -286,10 +292,12 @@ def get_stock_by_expiration(
             .where(*filters)
         )
 
-        stock = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        stock = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -309,9 +317,9 @@ def get_stock_by_expiration(
     "/product/{product_id}",
     response_model=PaginatedStockSummary,
 )
-def get_stock_by_product(
+async def get_stock_by_product(
     product_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -331,10 +339,12 @@ def get_stock_by_product(
             .group_by(Stock.product_id, Stock.warehouse_id, Warehouse.name)
         )
 
-        stock_summary = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        stock_summary = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -362,10 +372,10 @@ def get_stock_by_product(
     "/warehouse/{warehouse_id}/product/{product_id}",
     response_model=PaginatedStockResponse,
 )
-def get_stock_by_warehouse_and_product(
+async def get_stock_by_warehouse_and_product(
     warehouse_id: int,
     product_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -391,10 +401,12 @@ def get_stock_by_warehouse_and_product(
                 Stock.product_id == product_id,
             )
         )
-        stock = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        stock = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -411,8 +423,8 @@ def get_stock_by_warehouse_and_product(
 
 
 @router.get("/history", response_model=PaginatedStockHistory)
-def get_stock_history(
-    db: Session = Depends(get_db),
+async def get_stock_history(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -436,10 +448,12 @@ def get_stock_history(
             .join(Product, Product.id == StockMoveLine.product_id)
             .order_by(StockMove.created_at.desc())
         )
-        history = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        history = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -456,9 +470,9 @@ def get_stock_history(
 
 
 @router.get("/product/{product_id}/history", response_model=PaginatedStockHistory)
-def get_product_stock_history(
+async def get_product_stock_history(
     product_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -483,10 +497,12 @@ def get_product_stock_history(
             .where(Product.id == product_id)
             .order_by(StockMove.created_at.desc(), StockMoveLine.lot)
         )
-        history = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        history = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -503,9 +519,9 @@ def get_product_stock_history(
 
 
 @router.get("/warehouse/{warehouse_id}/history", response_model=PaginatedStockHistory)
-def get_warehouse_stock_history(
+async def get_warehouse_stock_history(
     warehouse_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -530,10 +546,12 @@ def get_warehouse_stock_history(
             .where(StockMoveLine.warehouse_id == warehouse_id)
             .order_by(StockMove.created_at.desc(), StockMoveLine.lot)
         )
-        history = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        history = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -553,10 +571,10 @@ def get_warehouse_stock_history(
     "/warehouse/{warehouse_id}/product/{product_id}/history",
     response_model=PaginatedStockHistory,
 )
-def get_warehouse_and_product_stock_history(
+async def get_warehouse_and_product_stock_history(
     product_id: int,
     warehouse_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -584,10 +602,12 @@ def get_warehouse_and_product_stock_history(
             )
             .order_by(StockMove.created_at.desc(), StockMoveLine.lot)
         )
-        history = db.exec(statement.limit(limit).offset(offset)).all()
-        total_records = db.exec(
+        result = await db.execute(statement.limit(limit).offset(offset))
+        history = result.all()
+        total_records_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_records_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -604,8 +624,8 @@ def get_warehouse_and_product_stock_history(
 
 
 @router.get("/semaphore", response_model=StockSemaphore)
-def get_stock_status_semaphore(
-    db: Session = Depends(get_db),
+async def get_stock_status_semaphore(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Returns stock status segmented by expiration (traffic light) — total units."""
@@ -616,34 +636,35 @@ def get_stock_status_semaphore(
         in_6_months = today + relativedelta(months=6)
 
         expired = (
-            db.exec(
+            await db.execute(
                 select(func.sum(Stock.quantity)).where(
                     Stock.expiration_date != None,
                     Stock.expiration_date <= in_1_month,
                 )
-            ).first()
-            or 0
+            )
         )
+        expired = expired.scalars().first() or 0
 
         expiring_soon = (
-            db.exec(
+            await db.execute(
                 select(func.sum(Stock.quantity)).where(
                     Stock.expiration_date > in_1_month,
                     Stock.expiration_date <= in_6_months,
                 )
-            ).first()
-            or 0
+            )
         )
 
+        expiring_soon = expiring_soon.scalars().first() or 0
+
         no_expiration = (
-            db.exec(
+            await db.execute(
                 select(func.sum(Stock.quantity)).where(
                     (Stock.expiration_date == None)
                     | (Stock.expiration_date > in_6_months)
                 )
-            ).first()
-            or 0
+            )
         )
+        no_expiration = no_expiration.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -659,8 +680,8 @@ def get_stock_status_semaphore(
 
 
 @router.get("/warehouses/detail", response_model=List[StockByWarehouse])
-def get_warehouse_stock_detail(
-    db: Session = Depends(get_db),
+async def get_warehouse_stock_detail(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Returns the total stock quantity of all products, grouped by warehouse."""
@@ -674,7 +695,8 @@ def get_warehouse_stock_detail(
             .join(Warehouse, Warehouse.id == Stock.warehouse_id)
             .group_by(Stock.warehouse_id, Warehouse.id)
         )
-        data = db.exec(statement).all()
+        result = await db.execute(statement)
+        data = result.all()
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -695,8 +717,8 @@ def get_warehouse_stock_detail(
 
 
 @router.get("/product-categories", response_model=List[StockByCategory])
-def get_stock_by_product_category(
-    db: Session = Depends(get_db),
+async def get_stock_by_product_category(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -714,7 +736,8 @@ def get_stock_by_product_category(
             .group_by(ProductCategory.id, ProductCategory.name)
             .order_by(ProductCategory.name)
         )
-        results = db.exec(statement).all()
+        result = await db.execute(statement)
+        results = result.all()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -734,9 +757,9 @@ def get_stock_by_product_category(
 @router.get(
     "/category/{category_id}/products", response_model=List[StockByProductInCategory]
 )
-def get_stock_by_category_detail(
+async def get_stock_by_category_detail(
     category_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -754,7 +777,8 @@ def get_stock_by_category_detail(
             .group_by(Product.id, Product.short_name)
             .order_by(Product.short_name)
         )
-        results = db.exec(statement).all()
+        result = await db.execute(statement)
+        results = result.all()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -772,10 +796,10 @@ def get_stock_by_category_detail(
 
 
 @router.get("/available-lots", response_model=list[AvailableLotResponse])
-def get_available_lots(
+async def get_available_lots(
     product: int = Query(..., gt=0),
     warehouse: int = Query(..., gt=0),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -797,7 +821,8 @@ def get_available_lots(
             .order_by(Stock.expiration_date)
         )
 
-        results = db.exec(statement).all()
+        result = await db.execute(statement)
+        results = result.all()
 
         return [
             AvailableLotResponse(

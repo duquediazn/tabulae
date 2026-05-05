@@ -1,6 +1,7 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session, func, select
+from sqlmodel import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.dependencies import require_admin
 from app.models.database import get_db
@@ -21,8 +22,8 @@ router = APIRouter(prefix="/warehouses", tags=["Warehouses"])
 
 
 @router.get("/", response_model=PaginatedWarehouseResponse)
-def get_warehouses(
-    db: Session = Depends(get_db),
+async def get_warehouses(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -45,11 +46,12 @@ def get_warehouses(
         paginated = (
             statement.order_by(Warehouse.name).limit(limit).offset(offset)
         )
-        warehouses = db.exec(paginated).all()
-
-        total_records = (
-            db.exec(select(func.count()).select_from(statement.subquery())).first() or 0
+        warehouses_result = await db.execute(paginated)
+        warehouses = warehouses_result.scalars().all()
+        total_result = await db.execute(
+            select(func.count()).select_from(statement.subquery())
         )
+        total_records = total_result.scalars().first() or 0
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -65,13 +67,14 @@ def get_warehouses(
 
 
 @router.put("/bulk-active", status_code=status.HTTP_200_OK, response_model=BulkStatusUpdateResponse)
-def bulk_update_is_active_warehouses(
+async def bulk_update_is_active_warehouses(
     data: BulkStatusUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
     try:
-        warehouses = db.exec(select(Warehouse).where(Warehouse.id.in_(data.ids))).all()
+        wh_result = await db.execute(select(Warehouse).where(Warehouse.id.in_(data.ids)))
+        warehouses = wh_result.scalars().all()
 
         updated = []
 
@@ -80,14 +83,12 @@ def bulk_update_is_active_warehouses(
                 continue
 
             if data.is_active is False:
-                stock_total = (
-                    db.exec(
-                        select(func.sum(Stock.quantity)).where(
-                            Stock.warehouse_id == warehouse.id
-                        )
-                    ).first()
-                    or 0
+                stock_result = await db.execute(
+                    select(func.sum(Stock.quantity)).where(
+                        Stock.warehouse_id == warehouse.id
+                    )
                 )
+                stock_total = stock_result.scalars().first() or 0
 
                 if stock_total > 0:
                     continue  # The warehouse still has products inside
@@ -96,9 +97,9 @@ def bulk_update_is_active_warehouses(
             db.add(warehouse)
             updated.append(warehouse)
 
-        db.commit()
+        await db.commit()
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating warehouses")
 
     return {
@@ -108,14 +109,14 @@ def bulk_update_is_active_warehouses(
 
 
 @router.get("/{id}", response_model=WarehouseResponse)
-def get_warehouse(
+async def get_warehouse(
     id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Retrieves a specific warehouse by its ID. Admins can view inactive warehouses."""
     try:
-        warehouse = db.get(Warehouse, id)
+        warehouse = await db.get(Warehouse, id)
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -138,9 +139,9 @@ def get_warehouse(
 
 
 @router.post("/", response_model=WarehouseResponse, status_code=status.HTTP_201_CREATED)
-def create_warehouse(
+async def create_warehouse(
     warehouse_data: WarehouseCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin), 
 ):
     """Creates a new warehouse. Only administrators are allowed."""
@@ -148,16 +149,16 @@ def create_warehouse(
 
     try:
         db.add(new_warehouse)
-        db.commit()
-        db.refresh(new_warehouse)
+        await db.commit()
+        await db.refresh(new_warehouse)
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Integrity error in the database.",
         )
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while registering the warehouse.",
@@ -166,15 +167,15 @@ def create_warehouse(
 
 
 @router.put("/{id}", response_model=WarehouseResponse)
-def update_warehouse(
+async def update_warehouse(
     id: int,
     warehouse_update: WarehouseUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin), 
 ):
     """Edit the description or is_active status of a warehouse. Admins only."""
     try:
-        warehouse = db.get(Warehouse, id)
+        warehouse = await db.get(Warehouse, id)
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -188,7 +189,8 @@ def update_warehouse(
 
     if warehouse_update.is_active is False:
         try:
-            stock = db.exec(select(Stock).where(Stock.warehouse_id == id)).first()
+            stock_result = await db.execute(select(Stock).where(Stock.warehouse_id == id))
+            stock = stock_result.scalars().first()
             if stock:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -208,16 +210,16 @@ def update_warehouse(
 
     try:
         db.add(warehouse)
-        db.commit()
-        db.refresh(warehouse)
+        await db.commit()
+        await db.refresh(warehouse)
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Integrity error in the database.",
         )
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while updating the warehouse.",
@@ -226,9 +228,9 @@ def update_warehouse(
 
 
 @router.delete("/{id}", response_model=WarehouseResponse)
-def deactivate_warehouse(
+async def deactivate_warehouse(
     id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
     """
@@ -237,7 +239,7 @@ def deactivate_warehouse(
     Only administrators can perform this action.
     """
     try:
-        warehouse = db.get(Warehouse, id)
+        warehouse = await db.get(Warehouse, id)
         if not warehouse:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -250,11 +252,12 @@ def deactivate_warehouse(
                 detail="Warehouse must be inactive before it can be deleted"
             )
         
-        stock = db.exec(
+        stock_r = await db.execute(
             select(1)
             .where(Stock.warehouse_id == id)
             .limit(1)
-        ).first()
+        )
+        stock = stock_r.scalars().first()
 
         if stock:
             raise HTTPException(
@@ -262,11 +265,12 @@ def deactivate_warehouse(
                 detail=f"Warehouse {id} is not empty and therefore cannot be deleted.",
             )
 
-        movement_exists = db.exec(
+        movement_r = await db.execute(
             select(1)
             .where(StockMoveLine.warehouse_id == id)
             .limit(1)
-        ).first()
+        )
+        movement_exists = movement_r.scalars().first()
 
         if movement_exists:
             raise HTTPException(
@@ -274,16 +278,16 @@ def deactivate_warehouse(
                 detail="Cannot delete this warehouse because it has registered movements."
             )
             
-        db.delete(warehouse)
-        db.commit()
+        await db.delete(warehouse)
+        await db.commit()
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Integrity error in the database."
         )
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while deleting the warehouse."

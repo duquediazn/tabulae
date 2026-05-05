@@ -13,6 +13,7 @@ TESTED ENDPOINTS:
 import jwt
 
 import pytest
+import pytest_asyncio
 from app.tests.utils import (
     create_user_in_db,
     get_auth_headers,
@@ -28,10 +29,10 @@ def register_data():
     }
 
 
-@pytest.fixture()
-def active_user(session):
+@pytest_asyncio.fixture()
+async def active_user(session):
     """Creates and returns an active user with default credentials."""
-    user = create_user_in_db(
+    user = await create_user_in_db(
         session,
         name="Active User",
         email="active@example.com",
@@ -46,28 +47,32 @@ def active_user(session):
 
 
 # POST   /auth/register
-def test_register_user_success(client, register_data):
-    response = client.post("/auth/register", json=register_data)
+@pytest.mark.asyncio
+async def test_register_user_success(client, register_data):
+    response = await client.post("/auth/register", json=register_data)
     assert response.status_code == 201
     assert response.json()["email"] == register_data["email"]
 
 
-def test_register_user_duplicate(client, register_data):
-    client.post("/auth/register", json=register_data)  # create user
-    response = client.post("/auth/register", json=register_data)  # duplicate
+@pytest.mark.asyncio
+async def test_register_user_duplicate(client, register_data):
+    await client.post("/auth/register", json=register_data)  # create user
+    response = await client.post("/auth/register", json=register_data)  # duplicate
     assert response.status_code == 409
 
 
-def test_register_missing_password(client):
-    response = client.post(
+@pytest.mark.asyncio
+async def test_register_missing_password(client):
+    response = await client.post(
         "/auth/register",
         json={"name": "User Without Password", "email": "new1@example.com"},
     )
     assert response.status_code == 422
 
 
-def test_register_invalid_email(client):
-    response = client.post(
+@pytest.mark.asyncio
+async def test_register_invalid_email(client):
+    response = await client.post(
         "/auth/register",
         json={
             "name": "Invalid Email",
@@ -78,8 +83,9 @@ def test_register_invalid_email(client):
     assert response.status_code == 422
 
 
-def test_register_short_password(client):
-    response = client.post(
+@pytest.mark.asyncio
+async def test_register_short_password(client):
+    response = await client.post(
         "/auth/register",
         json={
             "name": "Short Password",
@@ -90,17 +96,19 @@ def test_register_short_password(client):
     assert response.status_code == 422
 
 
-def test_register_short_name(client):
-    response = client.post(
+@pytest.mark.asyncio
+async def test_register_short_name(client):
+    response = await client.post(
         "/auth/register",
         json={"name": "Al", "email": "new3@example.com", "password": "validpass123"},
     )
     assert response.status_code == 422
 
 
-def test_register_role_is_ignored(client):
+@pytest.mark.asyncio
+async def test_register_role_is_ignored(client):
     """Even if a role is sent, it is ignored and the user is always created as 'user'."""
-    response = client.post(
+    response = await client.post(
         "/auth/register",
         json={
             "name": "Wrong Role",
@@ -114,13 +122,15 @@ def test_register_role_is_ignored(client):
 
 
 # POST   /auth/login
-def test_login_user(client, active_user):
-    token = get_token_for_user(client, active_user.email, "testpass123")
+@pytest.mark.asyncio
+async def test_login_user(client, active_user):
+    token = await get_token_for_user(client, active_user.email, "testpass123")
     assert token is not None
 
 
-def test_login_user_not_found(client):
-    response = client.post(
+@pytest.mark.asyncio
+async def test_login_user_not_found(client):
+    response = await client.post(
         "/auth/login",
         data={"username": "nonexistent@example.com", "password": "whateverpass"},
     )
@@ -128,8 +138,9 @@ def test_login_user_not_found(client):
     assert response.json()["detail"] == "Invalid credentials."
 
 
-def test_login_wrong_password(client, session, register_data):
-    user = create_user_in_db(
+@pytest.mark.asyncio
+async def test_login_wrong_password(client, session, register_data):
+    user = await create_user_in_db(
         session,
         register_data["name"],
         register_data["email"],
@@ -137,18 +148,19 @@ def test_login_wrong_password(client, session, register_data):
     )
     user.is_active = True
     session.add(user)
-    session.commit()
+    await session.commit()
 
-    response = client.post(
+    response = await client.post(
         "/auth/login",
         data={"username": register_data["email"], "password": "wrongpass"},
     )
     assert response.status_code == 401
 
 
-def test_login_inactive_user(client, session):
+@pytest.mark.asyncio
+async def test_login_inactive_user(client, session):
     # Create inactive user directly in DB
-    inactive = create_user_in_db(
+    inactive = await create_user_in_db(
         session,
         name="Inactive User",
         email="inactive@example.com",
@@ -156,7 +168,7 @@ def test_login_inactive_user(client, session):
         is_active=False,
     )
 
-    response = client.post(
+    response = await client.post(
         "/auth/login",
         data={"username": inactive.email, "password": "validpass123"},
     )
@@ -164,134 +176,147 @@ def test_login_inactive_user(client, session):
     assert "inactive" in response.json()["detail"].lower()
 
 
-def test_login_missing_fields(client):
-    response = client.post("/auth/login", data={})
+@pytest.mark.asyncio
+async def test_login_missing_fields(client):
+    response = await client.post("/auth/login", data={})
     assert response.status_code == 422
 
 
 # GET    /auth/profile
-def test_user_profile(client, active_user):
-    token = get_token_for_user(client, active_user.email, "testpass123")
+@pytest.mark.asyncio
+async def test_user_profile(client, active_user):
+    token = await get_token_for_user(client, active_user.email, "testpass123")
     headers = get_auth_headers(token)
-    response = client.get("/auth/profile", headers=headers)
+    response = await client.get("/auth/profile", headers=headers)
     assert response.status_code == 200
     assert response.json()["email"] == active_user.email
 
 
-def test_profile_no_token(client):
-    response = client.get("/auth/profile")
+@pytest.mark.asyncio
+async def test_profile_no_token(client):
+    response = await client.get("/auth/profile")
     assert response.status_code == 401
 
 
-def test_profile_invalid_token(client):
+@pytest.mark.asyncio
+async def test_profile_invalid_token(client):
     fake_token = jwt.encode({"sub": "fake"}, "invalidsecret", algorithm="HS256")  
     headers = {"Authorization": f"Bearer {fake_token}"}
-    response = client.get("/auth/profile", headers=headers)
+    response = await client.get("/auth/profile", headers=headers)
     assert response.status_code == 401
     assert "invalid" in response.json()["detail"].lower()
 
 
-def test_profile_deleted_user(client, session):
-    user = create_user_in_db(
+@pytest.mark.asyncio
+async def test_profile_deleted_user(client, session):
+    user = await create_user_in_db(
         session, "Ghost", "ghost@example.com", "ghostpass123", is_active=True
     )
-    token = get_token_for_user(client, user.email, "ghostpass123")
-    session.delete(user)
-    session.commit()
+    token = await get_token_for_user(client, user.email, "ghostpass123")
+    await session.delete(user)
+    await session.commit()
 
     headers = get_auth_headers(token)
-    response = client.get("/auth/profile", headers=headers)
+    response = await client.get("/auth/profile", headers=headers)
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 
 
-def test_profile_inactive_user(client, session):
-    user = create_user_in_db(
+@pytest.mark.asyncio
+async def test_profile_inactive_user(client, session):
+    user = await create_user_in_db(
         session, "Inactive", "inactive2@example.com", "pass1234", is_active=True
     )
-    token = get_token_for_user(client, user.email, "pass1234")
+    token = await get_token_for_user(client, user.email, "pass1234")
 
     user.is_active = False
     session.add(user)
-    session.commit()
+    await session.commit()
 
     headers = get_auth_headers(token)
-    response = client.get("/auth/profile", headers=headers)
+    response = await client.get("/auth/profile", headers=headers)
     assert response.status_code == 403
     assert "inactive" in response.json()["detail"].lower()
 
 
 # POST   /auth/refresh
-def test_refresh_token(client, active_user):
-    login_response = client.post(
+@pytest.mark.asyncio
+async def test_refresh_token(client, active_user):
+    login_response = await client.post(
         "/auth/login",
         data={"username": active_user.email, "password": "testpass123"},
     )
     assert login_response.status_code == 200
     cookies = login_response.cookies
 
-    refresh_response = client.post("/auth/refresh", cookies=cookies)
+    refresh_response = await client.post("/auth/refresh", cookies=cookies)
     assert refresh_response.status_code == 200
     json_data = refresh_response.json()
     assert "access_token" in json_data
     assert json_data["token_type"] == "bearer"
 
 
-def test_refresh_token_missing_cookie(client):
-    response = client.post("/auth/refresh")
+@pytest.mark.asyncio
+async def test_refresh_token_missing_cookie(client):
+    response = await client.post("/auth/refresh")
     assert response.status_code == 401
     assert response.json()["detail"] == "Refresh token not found in cookies."
 
 
-def test_refresh_token_invalid_token(client):
+@pytest.mark.asyncio
+async def test_refresh_token_invalid_token(client):
     cookies = {"refresh_token": "invalid.token.value"}
-    response = client.post("/auth/refresh", cookies=cookies)
+    response = await client.post("/auth/refresh", cookies=cookies)
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid token"
 
 
-def test_refresh_fails_with_access_token(client, active_user):
+@pytest.mark.asyncio
+async def test_refresh_fails_with_access_token(client, active_user):
     """An access token must not be accepted as a refresh token."""
-    access_token = get_token_for_user(client, active_user.email, "testpass123")
-    response = client.post("/auth/refresh", cookies={"refresh_token": access_token})
+    access_token = await get_token_for_user(client, active_user.email, "testpass123")
+    response = await client.post("/auth/refresh", cookies={"refresh_token": access_token})
     assert response.status_code == 401
 
 
-def test_profile_fails_with_refresh_token(client, active_user):
+@pytest.mark.asyncio
+async def test_profile_fails_with_refresh_token(client, active_user):
     """A refresh token must not be accepted as a bearer access token."""
-    login_response = client.post(
+    login_response = await client.post(
         "/auth/login",
         data={"username": active_user.email, "password": "testpass123"},
     )
     assert login_response.status_code == 200
     refresh_token_value = login_response.cookies.get("refresh_token")
     headers = {"Authorization": f"Bearer {refresh_token_value}"}
-    response = client.get("/auth/profile", headers=headers)
+    response = await client.get("/auth/profile", headers=headers)
     assert response.status_code == 401
 
 
-def test_refresh_token_deleted_user(client, session):
-    user = create_user_in_db(
+@pytest.mark.asyncio
+async def test_refresh_token_deleted_user(client, session):
+    user = await create_user_in_db(
         session, "Ghost", "ghost2@example.com", "ghostpass123", is_active=True
     )
-    login_response = client.post(
+    login_response = await client.post(
         "/auth/login",
         data={"username": user.email, "password": "ghostpass123"},
     )
     refresh_cookie = login_response.cookies.get("refresh_token")
-    session.delete(user)
-    session.commit()
+    await session.delete(user)
+    await session.commit()
 
-    response = client.post("/auth/refresh", cookies={"refresh_token": refresh_cookie})
+    response = await client.post("/auth/refresh", cookies={"refresh_token": refresh_cookie})
     assert response.status_code == 401
     assert "not found" in response.json()["detail"].lower()
 
 
-def test_refresh_token_inactive_user(client, session):
-    user = create_user_in_db(
+@pytest.mark.asyncio
+async def test_refresh_token_inactive_user(client, session):
+    user = await create_user_in_db(
         session, "Inactive", "inactive3@example.com", "pass1234", is_active=True
     )
-    login_response = client.post(
+    login_response = await client.post(
         "/auth/login",
         data={"username": user.email, "password": "pass1234"},
     )
@@ -300,19 +325,20 @@ def test_refresh_token_inactive_user(client, session):
     # Inactivate the user after login
     user.is_active = False
     session.add(user)
-    session.commit()
+    await session.commit()
 
-    response = client.post("/auth/refresh", cookies={"refresh_token": refresh_token})
+    response = await client.post("/auth/refresh", cookies={"refresh_token": refresh_token})
     assert response.status_code == 403
     assert "inactive" in response.json()["detail"].lower()
 
 
 # POST   /auth/verify-password
-def test_verify_password_success(client, active_user):
-    token = get_token_for_user(client, active_user.email, "testpass123")
+@pytest.mark.asyncio
+async def test_verify_password_success(client, active_user):
+    token = await get_token_for_user(client, active_user.email, "testpass123")
     headers = get_auth_headers(token)
 
-    response = client.post(
+    response = await client.post(
         "/auth/verify-password",
         headers=headers,
         json={"password": "testpass123"},
@@ -322,17 +348,19 @@ def test_verify_password_success(client, active_user):
     assert response.json()["message"] == "Password verified successfully"
 
 
-def test_verify_password_no_token(client):
-    response = client.post("/auth/verify-password", json={"password": "anypass"})
+@pytest.mark.asyncio
+async def test_verify_password_no_token(client):
+    response = await client.post("/auth/verify-password", json={"password": "anypass"})
     assert response.status_code == 401
 
 
-def test_verify_password_invalid_token(client):
+@pytest.mark.asyncio
+async def test_verify_password_invalid_token(client):
     fake_token = (
         "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9." "eyJzdWIiOiAiZmFrZSJ9.invalidsig"
     )
     headers = {"Authorization": f"Bearer {fake_token}"}
-    response = client.post(
+    response = await client.post(
         "/auth/verify-password",
         headers=headers,
         json={"password": "irrelevant"},
@@ -341,42 +369,45 @@ def test_verify_password_invalid_token(client):
     assert "invalid" in response.json()["detail"].lower()
 
 
-def test_verify_password_inactive_user(client, session):
-    user = create_user_in_db(
+@pytest.mark.asyncio
+async def test_verify_password_inactive_user(client, session):
+    user = await create_user_in_db(
         session,
         "Inactive Verify",
         "inactive.verify@example.com",
         "verify123",
         is_active=True,
     )
-    token = get_token_for_user(client, user.email, "verify123")
+    token = await get_token_for_user(client, user.email, "verify123")
 
     # Inactivate user after getting token
     user.is_active = False
     session.add(user)
-    session.commit()
+    await session.commit()
 
     headers = get_auth_headers(token)
-    response = client.post(
+    response = await client.post(
         "/auth/verify-password", headers=headers, json={"password": "verify123"}
     )
     assert response.status_code == 403
     assert "inactive" in response.json()["detail"].lower()
 
 
-def test_verify_password_missing_field(client, active_user):
-    token = get_token_for_user(client, active_user.email, "testpass123")
+@pytest.mark.asyncio
+async def test_verify_password_missing_field(client, active_user):
+    token = await get_token_for_user(client, active_user.email, "testpass123")
     headers = get_auth_headers(token)
 
-    response = client.post("/auth/verify-password", headers=headers, json={})
+    response = await client.post("/auth/verify-password", headers=headers, json={})
     assert response.status_code == 422
 
 
-def test_verify_password_failure(client, active_user):
-    token = get_token_for_user(client, active_user.email, "testpass123")
+@pytest.mark.asyncio
+async def test_verify_password_failure(client, active_user):
+    token = await get_token_for_user(client, active_user.email, "testpass123")
     headers = get_auth_headers(token)
 
-    response = client.post(
+    response = await client.post(
         "/auth/verify-password",
         headers=headers,
         json={"password": "wrongpassword"},
@@ -387,15 +418,16 @@ def test_verify_password_failure(client, active_user):
 
 
 # POST   /auth/logout
-def test_user_can_logout(client, active_user):
-    token = get_token_for_user(client, active_user.email, "testpass123")
+@pytest.mark.asyncio
+async def test_user_can_logout(client, active_user):
+    token = await get_token_for_user(client, active_user.email, "testpass123")
     headers = get_auth_headers(token)
 
-    login_response = client.post(
+    login_response = await client.post(
         "/auth/login",
         data={"username": active_user.email, "password": "testpass123"},
     )
-    logout_response = client.post(
+    logout_response = await client.post(
         "/auth/logout", headers=headers, cookies=login_response.cookies
     )
 
@@ -403,24 +435,26 @@ def test_user_can_logout(client, active_user):
     assert logout_response.json()["message"] == "Logged out successfully"
     assert "Max-Age=0" in logout_response.headers["set-cookie"]
 
-def test_user_token_is_revoked_after_logout(client, active_user):
-    token = get_token_for_user(client, active_user.email, "testpass123")
+@pytest.mark.asyncio
+async def test_user_token_is_revoked_after_logout(client, active_user):
+    token = await get_token_for_user(client, active_user.email, "testpass123")
     headers = get_auth_headers(token)
 
-    login_response = client.post(
+    login_response = await client.post(
         "/auth/login",
         data={"username": active_user.email, "password": "testpass123"},
     )
-    client.post("/auth/logout", headers=headers, cookies=login_response.cookies)
+    await client.post("/auth/logout", headers=headers, cookies=login_response.cookies)
 
     # After logout, the token should be revoked. Attempting to access a protected endpoint should fail.
-    response = client.get("/auth/profile", headers=headers)
+    response = await client.get("/auth/profile", headers=headers)
     assert response.status_code == 401
     assert "revoked" in response.json()["detail"].lower()
 
-def test_refresh_token_is_revoked_after_logout(client, active_user):
+@pytest.mark.asyncio
+async def test_refresh_token_is_revoked_after_logout(client, active_user):
     """Ensure the refresh token is also revoked on logout and cannot be used to get a new access token."""
-    login_response = client.post(
+    login_response = await client.post(
         "/auth/login",
         data={"username": active_user.email, "password": "testpass123"},
     )
@@ -429,15 +463,12 @@ def test_refresh_token_is_revoked_after_logout(client, active_user):
     token = login_response.json()["access_token"]
     headers = get_auth_headers(token)
 
-    client.post("/auth/logout", headers=headers, cookies=cookies)
+    await client.post("/auth/logout", headers=headers, cookies=cookies)
 
-    refresh_response = client.post("/auth/refresh", cookies=cookies)
+    refresh_response = await client.post("/auth/refresh", cookies=cookies)
     assert refresh_response.status_code == 401
 
-def test_user_token_is_revoked_after_logout(client, active_user):
-    token = get_token_for_user(client, active_user.email, "testpass123")
-    headers = get_auth_headers(token)
-
-def test_user_cannot_logout_without_token(client):
-    response = client.post("/auth/logout")
+@pytest.mark.asyncio
+async def test_user_cannot_logout_without_token(client):
+    response = await client.post("/auth/logout")
     assert response.status_code == 401

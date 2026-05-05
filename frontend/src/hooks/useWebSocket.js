@@ -1,9 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import API_URL from "../api/config";
 import { useAuth } from "../context/useAuth";
 
 export default function useWebSocket(onMessageCallback) {
   const { accessToken } = useAuth();
+  const callbackRef = useRef(onMessageCallback);
+
+  useEffect(() => {
+    callbackRef.current = onMessageCallback;
+  }, [onMessageCallback]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -22,12 +27,11 @@ export default function useWebSocket(onMessageCallback) {
     };
 
     socket.onmessage = (event) => {
-      //console.log("Message received:", event.data);
-      onMessageCallback(event.data);
+      callbackRef.current(event.data);
     };
 
     return () => {
       socket.close();
     };
-  }, [onMessageCallback, accessToken]);
+  }, [accessToken]);
 }

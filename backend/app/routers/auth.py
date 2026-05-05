@@ -1,13 +1,12 @@
 from datetime import timedelta, datetime, timezone
-import os
 from fastapi import Request, Response
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel
 from app.dependencies import get_current_user, oauth2
 from app.utils.getenv import get_required_env
 from app.schemas.auth import PasswordCheckRequest
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
 from app.models.user import User
@@ -29,7 +28,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post(
     "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
 )
-def register(user_data: UserSelfRegister, db: Session = Depends(get_db)):
+async def register(user_data: UserSelfRegister, db: AsyncSession = Depends(get_db)):
     """Registers a new user with encrypted password."""
     # Create user
     new_user = User(
@@ -37,21 +36,21 @@ def register(user_data: UserSelfRegister, db: Session = Depends(get_db)):
         email=user_data.email,
         password=hash_password(user_data.password),
         role="user",  # Always assign role "user"
-        is_active=False,  # Inactive by default
+        is_active=False, 
     )
 
     try:
         db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
+        await db.commit()
+        await db.refresh(new_user)
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email is already registered.",
         )
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while registering user.",
@@ -62,17 +61,18 @@ def register(user_data: UserSelfRegister, db: Session = Depends(get_db)):
 
 ### USER LOGIN ###
 @router.post("/login")
-def login(
+async def login(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """Authenticates the user and generates a JWT token."""
     try:
         statement = select(User).where(
             User.email == form_data.username
         )  # OAuth2PasswordRequestForm expects 'username' and 'password' — we treat 'username' as email
-        user = db.exec(statement).first()
+        result = await db.execute(statement)
+        user = result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -130,14 +130,14 @@ def login(
 
 ### GET AUTHENTICATED USER DATA ###
 @router.get("/profile", response_model=UserResponse)
-def get_profile(user: User = Depends(get_current_user)):
+async def get_profile(user: User = Depends(get_current_user)):
     """Returns the authenticated user's data."""
     return user
 
 
 ### REFRESH TOKEN FOR AUTHENTICATED USER ###
 @router.post("/refresh")
-def refresh_token(request: Request, db: Session = Depends(get_db)):
+async def refresh_token(request: Request, db: AsyncSession = Depends(get_db)):
     """Generates a new access token using the refresh token stored in an HttpOnly cookie."""
     refresh_token = request.cookies.get("refresh_token")
 
@@ -151,7 +151,7 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
 
     jti = payload.get("jti")
     try:
-        if jti and db.get(RevokedToken, jti):
+        if jti and await db.get(RevokedToken, jti):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Refresh token has been revoked.",
@@ -171,7 +171,8 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
 
     try:
         statement = select(User).where(User.id == user_id)
-        user = db.exec(statement).first()
+        result = await db.execute(statement)
+        user = result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -199,7 +200,7 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/verify-password")
-def verify_user_password(
+async def verify_user_password(
     data: PasswordCheckRequest, current_user: User = Depends(get_current_user)
 ):
     """Verifies that the provided password matches the one stored for the authenticated user."""
@@ -212,11 +213,11 @@ def verify_user_password(
 
 ### LOGOUT ###
 @router.post("/logout")
-def logout(
+async def logout(
     request: Request,
     response: Response,
     token: str = Depends(oauth2),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """Deletes the refresh token cookie and revokes the access and refresh tokens when the user logs out."""
    
@@ -231,13 +232,13 @@ def logout(
 
     # Revoke both the access token and the refresh token by storing their JTIs.
     try:
-        access_payload = decode_access_token(token)
+        access_payload = decode_access_token(token, expected_type="access")
         access_jti = access_payload.get("jti")
         access_exp = access_payload.get("exp")
         if access_jti and access_exp:
             db.add(RevokedToken(
                 jti=access_jti,
-                expires_at=datetime.fromtimestamp(access_exp, timezone.utc),
+                expires_at=datetime.fromtimestamp(access_exp, timezone.utc).replace(tzinfo=None),
             ))
 
         refresh_token_value = request.cookies.get("refresh_token")
@@ -249,17 +250,18 @@ def logout(
                 if refresh_jti and refresh_exp:
                     db.add(RevokedToken(
                         jti=refresh_jti,
-                        expires_at=datetime.fromtimestamp(refresh_exp, timezone.utc),
+                        expires_at=datetime.fromtimestamp(refresh_exp, timezone.utc).replace(tzinfo=None),
                     ))
             except HTTPException:
                 pass  # If the refresh token is invalid or expired, we can ignore it since it's already unusable.
 
-        db.commit()
+        await db.commit()
     except HTTPException:
         pass  
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
     except SQLAlchemyError:
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error while revoking token.",
