@@ -2,8 +2,8 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List
 from app.utils.authentication import decode_access_token
-from app.models.database import engine
-from sqlmodel import Session, select
+from app.models.database import AsyncSessionLocal
+from sqlmodel import select
 from app.models.user import User
 
 router = APIRouter()
@@ -17,13 +17,14 @@ class ConnectionManager:
         self.active_connections: List[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
-        await websocket.accept()  # Establish the connection with the client.
+        await websocket.accept()
     
-    def authorize(self, websocket: WebSocket):
+    async def authorize(self, websocket: WebSocket):
         self.active_connections.append(websocket)  
     
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)  
+    async def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str):
         """This method sends a text message to all connected clients."""
@@ -47,28 +48,29 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
 
     try:
-        # Expect the client to send the token immediately after connecting
         token = await websocket.receive_text()
-        payload = decode_access_token(token)  # This will raise an exception if the token is invalid or expired
+        payload = decode_access_token(token)
+    except WebSocketDisconnect:
+        return # Client disconnected before sending token  
     except Exception:
         await websocket.close(code=1008)  # 1008 = Policy Violation
         return
 
     # Authenticate with a short-lived DB session, then release the connection back to the pool.
     user_id = int(payload.get("sub"))
-    with Session(engine) as db:
-        user = db.exec(select(User).where(User.id == user_id)).first()
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalars().first()
         is_valid = user is not None and user.is_active
 
     if not is_valid:
         await websocket.close(code=1008)
         return
 
-    manager.authorize(websocket)  # Add to active connections after successful authentication.
+    await manager.authorize(websocket)
 
     try:
-        # Keep the connection alive with an infinite loop.
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        await manager.disconnect(websocket)

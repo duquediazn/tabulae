@@ -1,39 +1,55 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
+from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 from app.utils.authentication import create_access_token, ACCESS_TOKEN_DURATION
-from app.routers.websocket import ConnectionManager
+from app.routers.websocket import ConnectionManager, websocket_endpoint
+from app.main import app
 import pytest
-from app.tests.utils import create_user_in_db, get_token_for_user
+from app.tests.utils import create_user_in_db
 
 
-def test_active_user_can_connect_websocket(client, session):
-    create_user_in_db(session, "User", "user@example.com", "pass123", is_active=True)
-    token = get_token_for_user(client, "user@example.com", "pass123")
+@pytest.mark.asyncio
+async def test_active_user_can_connect_websocket(session):
+    user = await create_user_in_db(
+        session, "User", "user@example.com", "pass123", is_active=True
+    )
+    token = create_access_token(
+        {"sub": str(user.id), "role": user.role},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_DURATION),
+    )
 
-    with client.websocket_connect("/ws/stock-moves") as ws:
-        ws.send_text(token)
-        # If the connection is successful and the token is valid, we should be able to receive messages (or at least not get an error).
+    with TestClient(app) as ws_client:
+        with ws_client.websocket_connect("/ws/stock-moves") as ws:
+            ws.send_text(token)
+            # If the connection is successful and token is valid, the socket remains open.
 
-def test_user_cannot_connect_websocket_with_invalid_token(client, session):
+
+@pytest.mark.asyncio
+async def test_user_cannot_connect_websocket_with_invalid_token():
     with pytest.raises(Exception):
-        with client.websocket_connect("/ws/stock-moves") as ws:
-            ws.send_text("este.token.es.falso")
-            ws.receive_text()
-            # We expect an exception because the token is invalid, so the connection should be closed by the server.
+        with TestClient(app) as ws_client:
+            with ws_client.websocket_connect("/ws/stock-moves") as ws:
+                ws.send_text("este.token.es.falso")
+                ws.receive_text()
+                # We expect an exception because the token is invalid.
 
-def test_inactive_user_cannot_connect_websocket(client, session):
-    user = create_user_in_db(
+
+@pytest.mark.asyncio
+async def test_inactive_user_cannot_connect_websocket(session):
+    user = await create_user_in_db(
         session, "Inactive", "inactive@example.com", "pass123", is_active=False
     )
     token = create_access_token(
-        {"sub": str(user.id)},  
+        {"sub": str(user.id), "role": user.role},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_DURATION),
     )
 
     with pytest.raises(Exception):
-        with client.websocket_connect("/ws/stock-moves") as ws:
-            ws.send_text(token)
-            ws.receive_text()
+        with TestClient(app) as ws_client:
+            with ws_client.websocket_connect("/ws/stock-moves") as ws:
+                ws.send_text(token)
+                ws.receive_text()
 
 @pytest.mark.asyncio
 async def test_broadcast_removes_dead_connections_and_delivers_to_live_ones():
@@ -50,3 +66,14 @@ async def test_broadcast_removes_dead_connections_and_delivers_to_live_ones():
     good_ws.send_text.assert_called_once_with("hello")
     assert good_ws in manager.active_connections
     assert dead_ws not in manager.active_connections
+
+
+@pytest.mark.asyncio
+async def test_disconnect_before_sending_token_does_not_try_to_close_again():
+    websocket = AsyncMock()
+    websocket.receive_text.side_effect = WebSocketDisconnect(code=1001)
+
+    await websocket_endpoint(websocket)
+
+    websocket.accept.assert_called_once()
+    websocket.close.assert_not_called()

@@ -31,10 +31,13 @@ This structure ensures:
 - Stable and repeatable test runs
 """
 
-from app.tests.utils import create_user_in_db
 from app.models.stock import Stock
+import asyncio
 import pytest
-from sqlmodel import SQLModel, create_engine, Session, delete
+import pytest_asyncio
+from sqlmodel import SQLModel, delete
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 from app.models.database import get_db
 from app.models.user import User
 from app.models.revoked_token import RevokedToken
@@ -43,13 +46,15 @@ from app.models.stock_move_line import StockMoveLine
 from app.models.warehouse import Warehouse
 from app.models.product import Product
 from app.models.product_category import ProductCategory
+from httpx import ASGITransport, AsyncClient
 from app.main import app
 
 # Connection string for the PostgreSQL test database
-TEST_DATABASE_URL = "postgresql://test_user:test_pass@db_test:5432/test_db"
+TEST_DATABASE_URL = "postgresql+asyncpg://test_user:test_pass@db_test:5432/test_db"
 
-# Create the test engine (SQLModel)
-engine = create_engine(TEST_DATABASE_URL, echo=True)
+# Create the test engine (async)
+engine = create_async_engine(TEST_DATABASE_URL, echo=True, poolclass=NullPool)
+TestAsyncSession = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 
 # Create tables once before running any tests
@@ -58,63 +63,69 @@ def create_test_database():
     """
     This fixture runs once per test session to create tables if they don't exist.
     """
-    SQLModel.metadata.create_all(engine)
+    async def _create():
+        tmp_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+        async with tmp_engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+        await tmp_engine.dispose()
+
+    asyncio.run(_create())
 
 
 # Create a fresh, clean session for each test
-@pytest.fixture()
-def session():
+@pytest_asyncio.fixture()
+async def session():
     """
-    This fixture returns a clean SQLModel session and deletes all users before each test.
-    You can expand it to clear more tables (e.g., products, stock).
+    This fixture returns a clean AsyncSession and deletes all rows before each test.
     """
-    with Session(engine) as session:
+    async with TestAsyncSession() as session:
         # Clean tables before each test in correct FK order
-        session.exec(delete(StockMoveLine))
-        session.exec(delete(StockMove))
-        session.exec(delete(Stock))
-        session.exec(delete(Product))
-        session.exec(delete(User))
-        session.exec(delete(Warehouse))
-        session.exec(delete(ProductCategory))
-        session.exec(delete(RevokedToken))
-        session.commit()
+        await session.execute(delete(StockMoveLine))
+        await session.execute(delete(StockMove))
+        await session.execute(delete(Stock))
+        await session.execute(delete(Product))
+        await session.execute(delete(User))
+        await session.execute(delete(Warehouse))
+        await session.execute(delete(ProductCategory))
+        await session.execute(delete(RevokedToken))
+        await session.commit()
         yield session
 
 
 # Override FastAPI's get_db dependency with the test session
-@pytest.fixture()
-def client(session):
+@pytest_asyncio.fixture()
+async def client(session):
     """
     This fixture injects the test session into FastAPI via dependency override.
     It ensures all API routes use the same session used in the test.
     """
 
-    def override_get_db():
+    async def override_get_db():
         yield session
 
     app.dependency_overrides[get_db] = override_get_db
 
-    from fastapi.testclient import TestClient
-
-    with TestClient(app) as client:
-        yield client
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as ac:
+        yield ac
 
     app.dependency_overrides.clear()
 
 
-@pytest.fixture()
-def base_data(session):
+@pytest_asyncio.fixture()
+async def base_data(session):
     """Provides a default category, active warehouse, and active product for tests."""
     from types import SimpleNamespace
 
     category = ProductCategory(name="BaseCat")
     session.add(category)
-    session.commit()
+    await session.commit()
 
     warehouse = Warehouse(name="Base WH", is_active=True)
     product = Product(sku="BASESKU", short_name="Base Product", category_id=category.id, is_active=True)
     session.add_all([warehouse, product])
-    session.commit()
+    await session.commit()
 
     return SimpleNamespace(category=category, warehouse=warehouse, product=product)

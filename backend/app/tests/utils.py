@@ -4,7 +4,7 @@ from app.utils.authentication import hash_password
 from app.models.user import User
 
 
-def create_user_in_db(session, name, email, password, role="user", is_active=True):
+async def create_user_in_db(session, name, email, password, role="user", is_active=True):
     """Inserts a user directly into the test database."""
     user = User(
         name=name,
@@ -14,14 +14,14 @@ def create_user_in_db(session, name, email, password, role="user", is_active=Tru
         is_active=is_active,
     )
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
     return user
 
 
-def get_token_for_user(client, email, password):
+async def get_token_for_user(client, email, password):
     """Logs in via the API and returns the access token."""
-    response = client.post("/auth/login", data={"username": email, "password": password})
+    response = await client.post("/auth/login", data={"username": email, "password": password})
     if response.status_code != 200:
         raise RuntimeError(
             f"Login failed for {email}: {response.status_code} — {response.json()}"
@@ -34,10 +34,10 @@ def get_auth_headers(token):
     return {"Authorization": f"Bearer {token}"}
 
 
-def get_admin_headers(client, session, email="admin@example.com", password="adminpass"):
+async def get_admin_headers(client, session, email="admin@example.com", password="adminpass"):
     """
     Creates an admin user in the test DB and returns auth headers.
     """
-    admin = create_user_in_db(session, "Admin", email, password, role="admin")
-    token = get_token_for_user(client, email, password)
+    admin = await create_user_in_db(session, "Admin", email, password, role="admin")
+    token = await get_token_for_user(client, email, password)
     return get_auth_headers(token), admin
