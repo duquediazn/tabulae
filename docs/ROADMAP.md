@@ -27,7 +27,7 @@ This file outlines the planned features and improvements for **Tabulae**, both t
 ## Performance
 
 - [ ] **Performance improvements**
-  - [ ] Use async SQLAlchemy sessions where possible.
+  - [x] Use async SQLAlchemy sessions where possible.
   - [ ] Optimize rendering and API usage in frontend.
 
 ---

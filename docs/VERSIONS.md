@@ -4,6 +4,17 @@ This file lists the tagged versions of the project and their key milestones.
 
 ---
 
+## v1.3.2 – May 2026
+
+- Migrated backend data layer to async SQLAlchemy (`AsyncSession`) with `asyncpg`
+- Migrated backend test suite to async (`pytest-asyncio`, `httpx.AsyncClient`)
+- Fixed timezone typing drift in tests by explicitly mapping `stock_move.created_at` as timezone-aware timestamp
+- Fixed `/stock-movements/last-year` aggregation stability with explicit datetime casting
+- Hardened WebSocket endpoint disconnect handling to avoid double-close ASGI runtime errors
+- Fixed WebSocket notification delivery and reconnection behavior (`await` connection manager calls + stable frontend socket hook callback)
+
+---
+
 ## v1.3.1 – April 2026
 
 - Hardened authentication security: enforced token type validation (`expected_type`) 

@@ -23,7 +23,7 @@ The production environment uses `docker-compose.yml` to build and run the full a
 ### Services included
 
 - `db`: PostgreSQL database with persistent volume
-- `backend`: FastAPI app served with Gunicorn
+- `backend`: FastAPI app served with Gunicorn + Uvicorn workers (ASGI)
 - `frontend`: React static build served with Nginx
 
 ### Steps to run in production mode
@@ -81,7 +81,7 @@ docker compose down
 Once the containers are running, the services will be available at the following URLs:
 
 - **Frontend (Nginx)**: [http://localhost:8080](http://localhost:8080)
-- **Backend API (FastAPI + Gunicorn)**: [http://localhost:8000](http://localhost:8000)
+- **Backend API (FastAPI + ASGI workers)**: [http://localhost:8000](http://localhost:8000)
 - **API Docs (Swagger UI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 > ⚠️ In production, the backend URL is passed to the frontend as a build argument (`VITE_API_URL`) during the image build step.
@@ -230,7 +230,7 @@ cp .env.template .env
 | `TABULAE_DB_USER`          | PostgreSQL username              | db, backend |
 | `TABULAE_DB_PASSWORD`      | PostgreSQL password              | db, backend |
 | `TABULAE_DB_NAME`          | PostgreSQL database name         | db, backend |
-| `DATABASE_URL`             | SQLAlchemy DB URI for FastAPI    | backend     |
+| `DATABASE_URL`             | Async SQLAlchemy DB URI (e.g. `postgresql+asyncpg://...`) | backend     |
 | `SECRET_KEY`               | Secret key for JWT               | backend     |
 | `ACCESS_TOKEN_DURATION`    | Access token lifetime in minutes | backend     |
 | `REFRESH_TOKEN_DURATION`   | Refresh token lifetime in days   | backend     |

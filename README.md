@@ -84,7 +84,8 @@ The name _Tabulae_ comes from Latin — meaning boards, records, or tablets — 
 - **Isolated test database** — Pytest uses a dedicated PostgreSQL container (port 5433) with per-test session cleanup, ensuring fully isolated and reproducible tests.
 - **Paginated responses** — All list endpoints return a consistent `{ data, total, limit, offset }` shape, ready for frontend pagination.
 - **Real-time WebSocket notifications** — Stock movement events broadcast to authenticated clients via a WebSocket endpoint. Authentication uses a first-message pattern to avoid token exposure in URLs.
-- **Docker Compose orchestration** — Separate dev (hot reload, pgAdmin) and production (Nginx + Gunicorn) configurations with independent Dockerfiles per service.
+- **Async-first backend runtime** — FastAPI routes, dependencies, and database access now run end-to-end with `AsyncSession` + `asyncpg`.
+- **Docker Compose orchestration** — Separate dev (hot reload, pgAdmin) and production (Nginx + Gunicorn/Uvicorn worker) configurations with independent Dockerfiles per service.
 
 ---
 
@@ -93,8 +94,9 @@ The name _Tabulae_ comes from Latin — meaning boards, records, or tablets — 
 ### Backend
 
 - **FastAPI** — Python web framework for building RESTful APIs
-- **SQLModel** + **SQLAlchemy** — ORM and models for database access
+- **SQLModel** + **SQLAlchemy Async** — ORM and asynchronous session layer (`AsyncSession`)
 - **PostgreSQL** — Relational database for data persistence
+- **asyncpg** — Async PostgreSQL driver used by SQLAlchemy
 - **Pydantic v2** — Data validation and serialization
 - **JWT (PyJWT)** — Authentication with access and refresh tokens
 - **WebSockets** — Real-time notifications for stock movements
@@ -325,7 +327,7 @@ To deploy the full application stack (frontend, backend, and PostgreSQL):
 docker compose up --build
 ```
 
-The frontend is built with Vite and served by Nginx, while the backend runs under Gunicorn.
+The frontend is built with Vite and served by Nginx, while the backend runs under Gunicorn with Uvicorn workers (ASGI).
 
 > ⚙️ See [Production Setup](./docs/SETUP.md#production-setup) for details on services, ports, volumes, and environment configuration.
 
@@ -349,7 +351,7 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
 - Stable versions are tagged on `main` using annotated Git tags.
 - Each version represents a stable milestone of the application.
 
-Current version: `v1.3.1`
+Current version: `v1.3.2`
 
 > 🏷️ See [docs/VERSIONS.md](./docs/VERSIONS.md) for version history and changelog.
 

@@ -1,7 +1,8 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from app.models.user import User
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.database import get_db
 from app.utils.authentication import decode_access_token
@@ -10,7 +11,7 @@ from app.models.revoked_token import RevokedToken
 # OAuth2 auth scheme configuration
 oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)):
+async def get_current_user(token: str = Depends(oauth2), db: AsyncSession = Depends(get_db)):
     """Retrieves the current user based on the JWT token."""
     payload = decode_access_token(token, expected_type="access")
 
@@ -24,7 +25,7 @@ def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)
     # Check if the token has been revoked by looking up its jti in the RevokedToken table.
     jti = payload.get("jti")
     try:
-        if jti and db.get(RevokedToken, jti):
+        if jti and await db.get(RevokedToken, jti):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked.")
     except HTTPException:
         raise
@@ -39,7 +40,8 @@ def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)
     # Check if the user still exists in the database
     try:
         statement = select(User).where(User.id == user_id)
-        user = db.exec(statement).first()
+        result = await db.execute(statement)
+        user = result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -60,7 +62,7 @@ def get_current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)
     return user
 
 
-def require_admin(user: User = Depends(get_current_user)) -> User:
+async def require_admin(user: User = Depends(get_current_user)) -> User:
     """Checks if the user is an administrator. Raises an exception if not."""
     if user.role.strip().lower() != "admin":
         raise HTTPException(

@@ -22,7 +22,7 @@ load_dotenv()
 # Create the database and tables when the app starts
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    await create_db_and_tables()
     yield  # This is where connections or other resources can be closed
 
 

@@ -161,11 +161,11 @@ Seven tables make up the schema. The diagram below shows the foreign key relatio
 | `product_category`  | `id`                                  | `name` (unique)                                     |
 | `product`           | `id`                                  | `sku` (unique), `category_id` FK, `is_active`       |
 | `stock`             | (`warehouse_id`, `product_id`, `lot`) | `quantity`, `expiration_date`                       |
-| `stock_move`        | `id`                                  | `move_type` (`IN`/`OUT`), `user_id` FK, `created_at`|
+| `stock_move`        | `id`                                  | `move_type` (`incoming`/`outgoing`), `user_id` FK, `created_at`|
 | `stock_move_line`   | (`move_id`, `line_id`)                | `warehouse_id`, `product_id`, `lot`, `quantity`     |
 | `revoked_tokens`    | `jti`                                 | `expires_at` — used to invalidate tokens on logout  |
 
-The schema is created at application startup by SQLModel's `create_db_and_tables()`. SQL init scripts in `db_init/` run once on first PostgreSQL volume creation and seed the initial data and database triggers.
+In Dockerized environments, SQL init scripts in `db_init/` are the authoritative schema/bootstrap source and run once on first PostgreSQL volume creation (including seed data and triggers). The backend also keeps `create_db_and_tables()` as a startup safety net for non-Docker/local runs.
 
 ---
 
@@ -231,7 +231,7 @@ Page/Component
               └─ FastAPI router function
                     ├─ Depends(get_current_user) → decodes JWT, fetches User from DB
                     ├─ Depends(require_admin)    → checks role (admin-only routes)
-                    ├─ Depends(get_db)           → opens SQLModel Session
+                    ├─ Depends(get_db)           → opens SQLAlchemy AsyncSession
                     └─ try/except SQLAlchemyError → wraps all DB queries
 ```
 

@@ -2,7 +2,8 @@ import logging
 from datetime import date
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.product import Product
 from app.models.stock_move import StockMove
 from app.models.stock_move_line import StockMoveLine
@@ -38,13 +39,14 @@ def _validate_movement_input(movement_data: StockMoveCreate) -> None:
                 )
 
 
-def _validate_active_warehouses(db: Session, warehouse_ids: list[int]) -> None:
+async def _validate_active_warehouses(db: AsyncSession, warehouse_ids: list[int]) -> None:
     """Checks all warehouse IDs exist and are active. Raises 400 if any are not."""
-    active_warehouses = db.exec(
+    result = await db.execute(
         select(Warehouse.id).where(
             Warehouse.id.in_(warehouse_ids), Warehouse.is_active == True
         )
-    ).all()
+    )
+    active_warehouses = result.scalars().all()
 
     missing = set(warehouse_ids) - set(active_warehouses)
     if missing:
@@ -54,13 +56,14 @@ def _validate_active_warehouses(db: Session, warehouse_ids: list[int]) -> None:
         )
 
 
-def _validate_active_products(db: Session, product_ids: list[int]) -> None:
+async def _validate_active_products(db: AsyncSession, product_ids: list[int]) -> None:
     """Checks all product IDs exist and are active. Raises 400 if any are not."""
-    active_products = db.exec(
+    result = await db.execute(
         select(Product.id).where(
             Product.id.in_(product_ids), Product.is_active == True
         )
-    ).all()
+    )
+    active_products = result.scalars().all()
 
     missing_products = set(product_ids) - set(active_products)
     if missing_products:
@@ -70,10 +73,10 @@ def _validate_active_products(db: Session, product_ids: list[int]) -> None:
         )
 
 
-def create_stock_movement(
+async def create_stock_movement(
     movement_data: StockMoveCreate,
     user_id: int,
-    db: Session,
+    db: AsyncSession,
 ) -> tuple[StockMove, list[StockMoveLine]]:
     """
     Creates a StockMove and its StockMoveLines in a single transaction.
@@ -96,11 +99,11 @@ def create_stock_movement(
 
     try:
         # Read-only validation queries first — no writes until both pass.
-        _validate_active_warehouses(db, warehouse_ids)
-        _validate_active_products(db, product_ids)
+        await _validate_active_warehouses(db, warehouse_ids)
+        await _validate_active_products(db, product_ids)
 
         db.add(new_movement)
-        db.flush()  # Obtain new_movement.move_id for the FK in lines.
+        await db.flush()  # Obtain new_movement.move_id for the FK in lines.
 
         created_lines: list[StockMoveLine] = []
         for i, line_data in enumerate(movement_data.lines, 1):
@@ -116,22 +119,22 @@ def create_stock_movement(
             db.add(new_line)
             created_lines.append(new_line)
 
-        db.commit()
-        db.refresh(new_movement)
+        await db.commit()
+        await db.refresh(new_movement)
         for line in created_lines:
-            db.refresh(line)
+            await db.refresh(line)
 
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Integrity error: duplicate or invalid reference.",
         )
     except HTTPException:
-        db.rollback()
+        await db.rollback()
         raise
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database internal server error",

@@ -1,7 +1,8 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session, func, select
+from sqlmodel import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.database import get_db
 from app.models.stock_move import StockMove
@@ -21,8 +22,8 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("/", response_model=PaginatedUserResponse)
-def get_users(
-    db: Session = Depends(get_db),
+async def get_users(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
     limit: int = Query(10, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -44,11 +45,13 @@ def get_users(
                 | func.lower(User.email).like(search_like)
             )
 
-        total_records = db.exec(
+        total_result = await db.execute(
             select(func.count()).select_from(statement.subquery())
-        ).first()
+        )
+        total_records = total_result.scalars().first()
 
-        users = db.exec(statement.order_by(User.name).limit(limit).offset(offset)).all()
+        users_result = await db.execute(statement.order_by(User.name).limit(limit).offset(offset))
+        users = users_result.scalars().all()
 
     except SQLAlchemyError:
         raise HTTPException(
@@ -60,9 +63,9 @@ def get_users(
 
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def create_user(
+async def create_user(
     user_data: UserAdminCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
     """Only an admin can create users and assign roles."""
@@ -70,7 +73,8 @@ def create_user(
     # Check if the email is already registered
     try:
         statement = select(User).where(User.email == user_data.email)
-        existing_user = db.exec(statement).first()
+        result = await db.execute(statement)
+        existing_user = result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -91,16 +95,16 @@ def create_user(
 
     try:
         db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
+        await db.commit()
+        await db.refresh(new_user)
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Database integrity error.",
         )
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while registering the user.",
@@ -110,9 +114,9 @@ def create_user(
 
 
 @router.get("/{id}", response_model=UserResponse)
-def get_user(
+async def get_user(
     id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -122,7 +126,8 @@ def get_user(
     """
     try:
         statement = select(User).where(User.id == id)
-        user = db.exec(statement).first()
+        result = await db.execute(statement)
+        user = result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -144,14 +149,15 @@ def get_user(
 
 
 @router.put("/bulk-status", response_model=BulkStatusUpdateResponse)
-def bulk_update_user_status(
+async def bulk_update_user_status(
     data: BulkStatusUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
     """Allows an admin to activate or deactivate multiple users at once."""
     try:
-        users = db.exec(select(User).where(User.id.in_(data.ids))).all()
+        result = await db.execute(select(User).where(User.id.in_(data.ids)))
+        users = result.scalars().all()
         updated = []
 
         for user in users:
@@ -167,10 +173,10 @@ def bulk_update_user_status(
             db.add(user)
             updated.append(user)
 
-        db.commit()
+        await db.commit()
 
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error updating users",
@@ -183,10 +189,10 @@ def bulk_update_user_status(
 
 
 @router.put("/{id}", response_model=UserResponse)
-def update_user(
+async def update_user(
     id: int,
     user_update: UserUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Allows a user to update their profile or an admin to edit any user."""
@@ -194,7 +200,8 @@ def update_user(
     # Search for the user in the database
     try:
         statement = select(User).where(User.id == id)
-        user = db.exec(statement).first()
+        result = await db.execute(statement)
+        user = result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -223,9 +230,10 @@ def update_user(
     if user_update.email is not None:
         # Check if the new email is already used by another user
         try:
-            existing_user = db.exec(
+            existing_result = await db.execute(
                 select(User).where(User.email == user_update.email, User.id != user.id)
-            ).first()
+            )
+            existing_user = existing_result.scalars().first()
         except SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -265,16 +273,16 @@ def update_user(
 
     try:
         db.add(user)
-        db.commit()
-        db.refresh(user)
+        await db.commit()
+        await db.refresh(user)
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Database integrity error. Please verify the submitted data.",
         )
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while updating the user.",
@@ -283,13 +291,14 @@ def update_user(
 
 
 @router.delete("/{id}", response_model=UserResponse)
-def delete_user(
-    id: int, db: Session = Depends(get_db), current_user: User = Depends(require_admin)
+async def delete_user(
+    id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_admin)
 ):
     """Allows an admin to delete a user as long as they have no associated stock movements."""
     # Look for the user in the database
     try:
-        user = db.exec(select(User).where(User.id == id)).first()
+        user_result = await db.execute(select(User).where(User.id == id))
+        user = user_result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -304,7 +313,8 @@ def delete_user(
     # Check if the user has any stock movements
     try:
         statement = select(StockMove).where(StockMove.user_id == id)
-        has_movements = db.exec(statement).first()
+        movements_result = await db.execute(statement)
+        has_movements = movements_result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -318,10 +328,10 @@ def delete_user(
         )
 
     try:
-        db.delete(user)
-        db.commit()
+        await db.delete(user)
+        await db.commit()
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error deleting the user",
