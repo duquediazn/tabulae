@@ -178,9 +178,12 @@ This will start a PostgreSQL container with:
 - **User**: `test_user`
 - **Password**: `test_pass`
 - **Database**: `test_db`
-- **Port**: `5433` (to avoid conflicts with the main database on `5432`)
+- **Host port**: `5434` (to avoid conflicts with the local PostgreSQL service on `5432` and the main Docker DB on `5433`)
 
 You can use this service for running unit tests without affecting development data.
+
+When running `pytest` locally from the host machine, use `127.0.0.1:5434`.
+When running tests inside Docker, use the internal service address `db_test:5432`.
 
 ---
 
@@ -299,14 +302,14 @@ Common issues and tips when working with the Tabulae project.
 If a container fails to start due to a port conflict:
 
 ```bash
-ERROR: for ... Bind for 0.0.0.0:5432 failed: port is already allocated
+ERROR: for ... Bind for 0.0.0.0:5433 failed: port is already allocated
 ```
 
 ✅ Solution:
 
 - Make sure no other service (e.g. local PostgreSQL) is using that port.
 - Stop all containers: `docker ps -a`, then `docker stop <container_id>`
-- Or change the exposed port in `docker-compose.yml` (e.g. `5432:5432` → `5434:5432`)
+- Or change the exposed port in `docker-compose.yml` (e.g. `5433:5432` → `5435:5432`)
 
 ---
 

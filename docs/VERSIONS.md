@@ -4,6 +4,16 @@ This file lists the tagged versions of the project and their key milestones.
 
 ---
 
+## v1.3.3 – May 2026
+
+- Clarified local vs Docker PostgreSQL setup across `.env.template`, `README.md`, `docs/SETUP.md` and `docs/ARCHITECTURE.md`
+- Standardized Docker host ports for development: main DB published on `5433` and isolated test DB on `5434` to avoid conflicts with local PostgreSQL
+- Moved `.env` loading into the environment helper so local development keeps automatic dotenv support without relying on app startup side effects
+- Cleaned backend development configuration: removed unused imports/dependencies and aligned Python package declarations in `requirements.txt`
+- Reorganized `docs/ROADMAP.md` into clearer priority sections for foundations, high-value improvements and exploratory work
+
+---
+
 ## v1.3.2 – May 2026
 
 - Migrated backend data layer to async SQLAlchemy (`AsyncSession`) with `asyncpg`

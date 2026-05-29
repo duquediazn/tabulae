@@ -25,7 +25,7 @@ services:
       - pgdata:/var/lib/postgresql/data # Persistent volume for production data
       - ./db_init:/docker-entrypoint-initdb.d # Scripts in this folder are executed on first init (in aphabetical order)
     ports:
-      - "5432:5432"
+      - "5433:5432" # Publish container PostgreSQL on host port 5433 to avoid conflicts with local PostgreSQL
     networks:
       - tabulae-network # Shared network for internal service communication
 
