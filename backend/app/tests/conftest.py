@@ -49,7 +49,8 @@ from app.models.product_category import ProductCategory
 from httpx import ASGITransport, AsyncClient
 from app.main import app
 
-# Connection string for the PostgreSQL test database
+# Connection string for the PostgreSQL test database.
+# Reminder: inside Docker use db_test:5432; from the host machine use 127.0.0.1:5434.
 TEST_DATABASE_URL = "postgresql+asyncpg://test_user:test_pass@db_test:5432/test_db"
 
 # Create the test engine (async)

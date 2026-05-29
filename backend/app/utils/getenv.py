@@ -1,4 +1,9 @@
-import os  # To access environment variables
+import os  
+from dotenv import load_dotenv  # To load environment variables from a .env file (local development)
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+if ENVIRONMENT != "production":
+    load_dotenv()
 
 def get_required_env(name: str, fallback: str=None) -> str:
     value = os.getenv(name)

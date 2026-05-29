@@ -27,7 +27,6 @@ from app.schemas.stock_move_line import (
 )
 from app.routers.websocket import manager
 from app.services.stock_move_service import create_stock_movement
-import anyio
 
 logger = logging.getLogger(__name__)
 

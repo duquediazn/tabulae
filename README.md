@@ -81,7 +81,7 @@ The name _Tabulae_ comes from Latin — meaning boards, records, or tablets — 
 
 - **Layered backend architecture** — Clear separation between models (SQLModel), schemas (Pydantic), and routers (FastAPI), with shared `Depends()` injection for auth, sessions, and permissions.
 - **JWT access + refresh token flow** — Short-lived access tokens with `jti` claims paired with HttpOnly refresh token cookies. Token revocation on logout via a `revoked_tokens` blocklist, with role-based guards (`require_admin`) applied at the dependency layer.
-- **Isolated test database** — Pytest uses a dedicated PostgreSQL container (port 5433) with per-test session cleanup, ensuring fully isolated and reproducible tests.
+- **Isolated test database** — Pytest uses a dedicated PostgreSQL container (host port 5434) with per-test session cleanup, ensuring fully isolated and reproducible tests.
 - **Paginated responses** — All list endpoints return a consistent `{ data, total, limit, offset }` shape, ready for frontend pagination.
 - **Real-time WebSocket notifications** — Stock movement events broadcast to authenticated clients via a WebSocket endpoint. Authentication uses a first-message pattern to avoid token exposure in URLs.
 - **Async-first backend runtime** — FastAPI routes, dependencies, and database access now run end-to-end with `AsyncSession` + `asyncpg`.
@@ -229,6 +229,13 @@ uvicorn app.main:app --reload
 
 Make sure PostgreSQL is running and the DATABASE_URL in .env is valid.
 
+For local backend development, you can connect to either of these setups:
+
+- **PostgreSQL running locally on your machine**: use `127.0.0.1:5432`
+- **PostgreSQL running in Docker Compose**: use `127.0.0.1:5433` from your local backend, because the container listens on `5432` internally but is published on host port `5433`
+
+If the backend itself runs inside Docker Compose, use `db:5432` instead of a host address.
+
 **Frontend only**
 
 ```bash
@@ -300,7 +307,7 @@ cd backend
 pytest
 ```
 
-> 🔎 The test database runs on port `5433` to avoid conflicts with the main DB.
+> 🔎 The test database runs on host port `5434` to avoid conflicts with the local PostgreSQL service and the main Docker DB.
 
 ### Test structure
 
