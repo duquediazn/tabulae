@@ -45,21 +45,21 @@ All three tiers run as Docker containers orchestrated by Docker Compose. The fro
 
 ### Development (`docker-compose.dev.yml`)
 
-| Service    | Image / Build        | Port    | Notes                              |
-| ---------- | -------------------- | ------- | ---------------------------------- |
-| `db`       | `postgres:17`        | `5432`  | Persistent volume `pgdata_dev`     |
-| `backend`  | `./backend` (dev)    | `8000`  | Uvicorn with `--reload`            |
-| `frontend` | `./frontend` (dev)   | `5173`  | Vite dev server, hot reload        |
-| `pgadmin`  | `dpage/pgadmin4`     | `5050`  | Optional DB GUI                    |
-| `db_test`  | `postgres:17`        | `5433`  | Isolated test DB (`--profile test`)|
+| Service    | Image / Build        | Host Port | Notes                                           |
+| ---------- | -------------------- | --------- | ----------------------------------------------- |
+| `db`       | `postgres:17`        | `5433`    | PostgreSQL listens on `5432` inside the container |
+| `backend`  | `./backend` (dev)    | `8000`    | Uvicorn with `--reload`                         |
+| `frontend` | `./frontend` (dev)   | `5173`    | Vite dev server, hot reload                     |
+| `pgadmin`  | `dpage/pgadmin4`     | `5050`    | Optional DB GUI                                 |
+| `db_test`  | `postgres:17`        | `5434`    | Isolated test DB (`--profile test`)             |
 
 ### Production (`docker-compose.yml`)
 
-| Service    | Image / Build     | Port   | Notes                           |
-| ---------- | ----------------- | ------ | ------------------------------- |
-| `db`       | `postgres:17`     | `5432` | Persistent volume `pgdata`      |
-| `backend`  | `./backend`       | `8000` | Gunicorn multi-worker           |
-| `frontend` | `./frontend`      | `8080` | Static build served by Nginx    |
+| Service    | Image / Build     | Host Port | Notes                                           |
+| ---------- | ----------------- | --------- | ----------------------------------------------- |
+| `db`       | `postgres:17`     | `5433`    | PostgreSQL listens on `5432` inside the container |
+| `backend`  | `./backend`       | `8000`    | Gunicorn multi-worker                           |
+| `frontend` | `./frontend`      | `8080`    | Static build served by Nginx                    |
 
 All services share a Docker bridge network (`tabulae-network`) for internal communication. The frontend never contacts the database directly.
 

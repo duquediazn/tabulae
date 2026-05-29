@@ -20,6 +20,7 @@ from app.models.user import User
 from app.utils.authentication import ACCESS_TOKEN_DURATION, create_access_token, hash_password
 from datetime import timedelta
 
+# Reminder: inside Docker use db_test:5432; from the host machine use 127.0.0.1:5434.
 TEST_DATABASE_URL = "postgresql+asyncpg://test_user:test_pass@db_test:5432/test_db"
 
 test_engine = create_async_engine(TEST_DATABASE_URL, echo=True)
